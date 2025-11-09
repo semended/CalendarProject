@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalendarName</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Сайдбар -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>CalendarName</h2>
+            </div>
+            
+            <nav class="main-nav">
+                <div class="nav-section">
+                    <h3 class="nav-title">ПРОЕКТЫ</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item active">
+                            <span class="nav-icon">📁</span>
+                            <span>Все проекты</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="nav-section">
+                    <h3 class="nav-title">ЗАДАЧИ</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <span class="nav-icon">📋</span>
+                            <span>Все задачи</span>
+                        </li>
+                        <li class="nav-item">
+                            <span class="nav-icon">👤</span>
+                            <span>Назначенные мне</span>
+                        </li>
+                        <li class="nav-item">
+                            <span class="nav-icon">📅</span>
+                            <span>Предстоящие</span>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <!-- Хедер -->
+            <header class="header">
+                <div class="header-left">
+                    <h1>Все проекты</h1>
+                    <div class="breadcrumb">Проекты / Все проекты</div>
+                </div>
+                <div class="header-right">
+                    <button class="btn-primary">
+                        <span>+ Новый проект</span>
+                    </button>
+                    <div class="user-avatar">👤</div>
+                </div>
+            </header>
+
+            <!-- Статистика проектов -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">Всего проектов</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Активные</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">4</div>
+                        <div class="stat-label">Завершены</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1</div>
+                        <div class="stat-label">На паузе</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Сетка проектов -->
+            <section class="projects-section">
+                <div class="projects-header">
+                    <h2>Мои проекты</h2>
+                    <div class="projects-actions">
+                        <button class="btn-secondary">Фильтр</button>
+                        <button class="btn-secondary">Сортировка</button>
+                        <button class="btn-secondary">Вид</button>
+                    </div>
+                </div>
+
+                <div class="projects-grid">
+                    <!-- Проект 1 -->
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div class="project-color" style="background-color: var(--primary)"></div>
+                            <h3>Веб-разработка</h3>
+                        </div>
+                        <div class="project-content">
+                            <p>Разработка корпоративного сайта с системой управления контентом</p>
+                            <div class="project-meta">
+                                <div class="project-stats">
+                                    <span class="stat">📋 24 задачи</span>
+                                    <span class="stat">👥 5 участников</span>
+                                </div>
+                                <div class="project-date">Срок: 25 дек</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Проект 2 -->
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div class="project-color" style="background-color: var(--success)"></div>
+                            <h3>Мобильное приложение</h3>
+                        </div>
+                        <div class="project-content">
+                            <p>Разработка кроссплатформенного мобильного приложения</p>
+                            <div class="project-meta">
+                                <div class="project-stats">
+                                    <span class="stat">📋 18 задач</span>
+                                    <span class="stat">👥 3 участника</span>
+                                </div>
+                                <div class="project-date">Срок: 15 янв</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Проект 3 -->
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div class="project-color" style="background-color: var(--warning)"></div>
+                            <h3>Маркетинг кампания</h3>
+                        </div>
+                        <div class="project-content">
+                            <p>Запуск рекламной кампании для нового продукта</p>
+                            <div class="project-meta">
+                                <div class="project-stats">
+                                    <span class="stat">📋 12 задач</span>
+                                    <span class="stat">👥 4 участника</span>
+                                </div>
+                                <div class="project-date completed">Завершен</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Проект 4 -->
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div class="project-color" style="background-color: var(--info)"></div>
+                            <h3>Дизайн система</h3>
+                        </div>
+                        <div class="project-content">
+                            <p>Создание единой дизайн системы для всех продуктов компании</p>
+                            <div class="project-meta">
+                                <div class="project-stats">
+                                    <span class="stat">📋 32 задачи</span>
+                                    <span class="stat">👥 6 участников</span>
+                                </div>
+                                <div class="project-date">Срок: 10 фев</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Проект 5 -->
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div class="project-color" style="background-color: var(--error)"></div>
+                            <h3>API интеграция</h3>
+                        </div>
+                        <div class="project-content">
+                            <p>Интеграция с внешними API сервисами</p>
+                            <div class="project-meta">
+                                <div class="project-stats">
+                                    <span class="stat">📋 8 задач</span>
+                                    <span class="stat">👥 2 участника</span>
+                                </div>
+                                <div class="project-date paused">На паузе</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Проект 6 -->
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div class="project-color" style="background-color: #8B5CF6"></div>
+                            <h3>Обновление БД</h3>
+                        </div>
+                        <div class="project-content">
+                            <p>Миграция и оптимизация базы данных</p>
+                            <div class="project-meta">
+                                <div class="project-stats">
+                                    <span class="stat">📋 15 задач</span>
+                                    <span class="stat">👥 3 участника</span>
+                                </div>
+                                <div class="project-date">Срок: 5 янв</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
