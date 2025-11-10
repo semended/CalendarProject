@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль - CalendarName</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Сайдбар -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>CalendarName</h2>
+            </div>
+            
+            <nav class="main-nav">
+                <div class="nav-section">
+                    <h3 class="nav-title">ПРОЕКТЫ</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a href="main.html" class="nav-link">
+                                <span class="nav-icon">📁</span>
+                                <span>Все проекты</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="nav-section">
+                    <h3 class="nav-title">ЗАДАЧИ</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <span class="nav-icon">📋</span>
+                            <span>Все задачи</span>
+                        </li>
+                        <li class="nav-item">
+                            <span class="nav-icon">👤</span>
+                            <span>Назначенные мне</span>
+                        </li>
+                        <li class="nav-item">
+                            <span class="nav-icon">📅</span>
+                            <span>Предстоящие</span>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <!-- Хедер -->
+            <header class="header">
+                <div class="header-left">
+                    <h1>Мой профиль</h1>
+                    <div class="breadcrumb">Профиль</div>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu-container">
+                        <div class="user-avatar">👤</div>
+                        <div class="user-dropdown">
+                            <a href="profile.html" class="dropdown-item">
+                                <span class="dropdown-icon">👤</span>
+                                <span>Мой профиль</span>
+                            </a>
+                            <a href="settings.html" class="dropdown-item">
+                                <span class="dropdown-icon">⚙️</span>
+                                <span>Настройки</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item">
+                                <span class="dropdown-icon">🚪</span>
+                                <span>Выйти из аккаунта</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Основной контент профиля -->
+            <section class="profile-section">
+                <div class="profile-container">
+                    <!-- Левая колонка - информация профиля -->
+                    <div class="profile-sidebar">
+                        <div class="profile-card">
+                            <div class="profile-avatar-large">
+                                👤
+                            </div>
+                            <div class="profile-info">
+                                <h2>Иван Иванов</h2>
+                                <p class="profile-username">@ivanov</p>
+                                <p class="profile-bio">Full-stack разработчик с опытом работы в веб-разработке. Увлекаюсь современными технологиями и созданием удобных интерфейсов.</p>
+                                
+                                <div class="profile-details">
+                                    <div class="detail-item">
+                                        <span class="detail-icon">💼</span>
+                                        <span>Software Engineer</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-icon">🏢</span>
+                                        <span>IT & Technology</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-icon">📍</span>
+                                        <span>Acme Corp</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-icon">🏠</span>
+                                        <span>ул. Примерная, 123</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-icon">🕒</span>
+                                        <span>12:34 PM (Москва, MSK)</span>
+                                    </div>
+                                </div>
+
+                                <button class="btn-primary full-width" style="margin-top: 20px;">
+                                    Редактировать профиль
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Правая колонка - активность -->
+                    <div class="profile-content">
+                        <!-- Статистика -->
+                        <div class="profile-stats">
+                            <div class="stat-card">
+                                <div class="stat-value">24</div>
+                                <div class="stat-label">Проектов</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">156</div>
+                                <div class="stat-label">Задач выполнено</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">89%</div>
+                                <div class="stat-label">Эффективность</div>
+                            </div>
+                        </div>
+
+                        <!-- Последняя активность -->
+                        <div class="activity-section">
+                            <h3>Недавняя активность</h3>
+                            <div class="activity-list">
+                                <div class="activity-item">
+                                    <div class="activity-icon">📝</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">План улучшений технического долга</div>
+                                        <div class="activity-description">Командная документация - Вы и Иван работали над этим.</div>
+                                        <div class="activity-time">Сегодня</div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon">📋</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Заметки к встрече</div>
+                                        <div class="activity-description">Командная документация - Иван редактировал сегодня.</div>
+                                        <div class="activity-time">Сегодня</div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon">🐛</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">FEL-661 Футеры главной страницы используют inline стили</div>
+                                        <div class="activity-description">Frontend библиотека - Иван прокомментировал сегодня.</div>
+                                        <div class="activity-time">Сегодня</div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon">🔧</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">FEL-354 Пользователям iPhone нужен доступ к вертикальному виду</div>
+                                        <div class="activity-description">Frontend библиотека - Иван редактировал вчера.</div>
+                                        <div class="activity-time">Вчера</div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon">📊</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Что говорят наши клиенты? Инсайты из 3 раундов</div>
+                                        <div class="activity-description">Исследования - Вы и Иван работали над этим.</div>
+                                        <div class="activity-time">2 дня назад</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="btn-secondary full-width" style="margin-top: 16px;">
+                                Показать больше
+                            </button>
+                        </div>
+
+                        <!-- Рабочие пространства -->
+                        <div class="workspaces-section">
+                            <h3>Рабочие пространства</h3>
+                            <div class="workspace-item">
+                                <div class="workspace-icon">📊</div>
+                                <div class="workspace-name">Jira Software</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
