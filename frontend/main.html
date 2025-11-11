@@ -19,8 +19,10 @@
                     <h3 class="nav-title">ПРОЕКТЫ</h3>
                     <ul class="nav-list">
                         <li class="nav-item active">
-                            <span class="nav-icon">📁</span>
-                            <span>Все проекты</span>
+                            <a href="main.html" class="nav-link">
+                                <span class="nav-icon">📁</span>
+                                <span>Все проекты</span>
+                            </a>
                         </li>
                     </ul>
                 </div>
@@ -57,7 +59,24 @@
                     <button class="btn-primary">
                         <span>+ Новый проект</span>
                     </button>
-                    <div class="user-avatar">👤</div>
+                    <div class="user-menu-container">
+                        <div class="user-avatar">👤</div>
+                        <div class="user-dropdown">
+                            <a href="profile.html" class="dropdown-item">
+                                <span class="dropdown-icon">👤</span>
+                                <span>Мой профиль</span>
+                            </a>
+                            <a href="settings.html" class="dropdown-item">
+                                <span class="dropdown-icon">⚙️</span>
+                                <span>Настройки</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item">
+                                <span class="dropdown-icon">🚪</span>
+                                <span>Выйти из аккаунта</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -206,5 +225,26 @@
             </section>
         </main>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuButton = document.getElementById('userMenuButton');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            userMenuButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+            
+            // Закрытие меню при клике вне его
+            document.addEventListener('click', function() {
+                userDropdown.classList.remove('show');
+            });
+            
+            // Предотвращаем закрытие при клике на само меню
+            userDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+    </script>
 </body>
 </html>
