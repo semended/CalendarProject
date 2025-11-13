@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки - CalendarName</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Сайдбар -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>CalendarName</h2>
+            </div>
+            
+            <nav class="main-nav">
+                <div class="nav-section">
+                    <h3 class="nav-title">ПРОЕКТЫ</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a href="main.html" class="nav-link">
+                                <span class="nav-icon">📁</span>
+                                <span>Все проекты</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="nav-section">
+                    <h3 class="nav-title">ЗАДАЧИ</h3>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <span class="nav-icon">📋</span>
+                            <span>Все задачи</span>
+                        </li>
+                        <li class="nav-item">
+                            <span class="nav-icon">👤</span>
+                            <span>Назначенные мне</span>
+                        </li>
+                        <li class="nav-item">
+                            <span class="nav-icon">📅</span>
+                            <span>Предстоящие</span>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <!-- Хедер -->
+            <header class="header">
+                <div class="header-left">
+                    <h1>Настройки профиля</h1>
+                    <div class="breadcrumb">Настройки / Профиль</div>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu-container">
+                        <div class="user-avatar" id="userMenuButton">👤</div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <a href="profile.html" class="dropdown-item">
+                                <span class="dropdown-icon">👤</span>
+                                <span>Мой профиль</span>
+                            </a>
+                            <a href="settings.html" class="dropdown-item">
+                                <span class="dropdown-icon">⚙️</span>
+                                <span>Настройки</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item">
+                                <span class="dropdown-icon">🚪</span>
+                                <span>Выйти из аккаунта</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Основной контент настроек -->
+            <section class="settings-section">
+                <div class="settings-container">
+                    <!-- Левая колонка - навигация -->
+                    <div class="settings-sidebar">
+                        <div class="settings-nav">
+                            <div class="nav-item active">
+                                <span class="nav-icon">👤</span>
+                                <span>Профиль</span>
+                            </div>
+                            <div class="nav-item">
+                                <span class="nav-icon">🔔</span>
+                                <span>Уведомления</span>
+                            </div>
+                            <div class="nav-item">
+                                <span class="nav-icon">🎨</span>
+                                <span>Внешний вид</span>
+                            </div>
+                            <div class="nav-item">
+                                <span class="nav-icon">🔒</span>
+                                <span>Безопасность</span>
+                            </div>
+                            <div class="nav-item">
+                                <span class="nav-icon">💼</span>
+                                <span>Рабочее пространство</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Правая колонка - форма -->
+                    <div class="settings-content">
+                        <div class="settings-card">
+                            <h2>Публичный профиль</h2>
+                            <p class="settings-description">
+                                Ваша информация может отображаться в различных местах системы. 
+                                Вы можете изменить её в любое время.
+                            </p>
+
+                            <form class="settings-form">
+                                <!-- Аватар -->
+                                <div class="form-section">
+                                    <h3>Фотография профиля</h3>
+                                    <div class="avatar-upload">
+                                        <div class="avatar-preview">
+                                            <div class="avatar-image">👤</div>
+                                        </div>
+                                        <div class="avatar-actions">
+                                            <button type="button" class="btn-secondary">Изменить</button>
+                                            <button type="button" class="btn-secondary btn-remove">Удалить</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Имя -->
+                                <div class="form-group">
+                                    <label for="name">Имя</label>
+                                    <input type="text" id="name" placeholder="Введите ваше имя" value="Иван Иванов">
+                                    <div class="form-hint">
+                                        Ваше имя может отображаться в системе где вы участвуете или упоминаетесь.
+                                    </div>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="form-group">
+                                    <label for="email">Публичный Email</label>
+                                    <select id="email" class="form-select">
+                                        <option value="ivan@example.com">ivan@example.com</option>
+                                        <option value="ivan.work@example.com">ivan.work@example.com</option>
+                                    </select>
+                                    <div class="form-hint">
+                                        Выберите проверенный email для отображения
+                                    </div>
+                                </div>
+
+                                <!-- Bio -->
+                                <div class="form-group">
+                                    <label for="bio">О себе</label>
+                                    <textarea id="bio" class="form-textarea" placeholder="Расскажите немного о себе">Full-stack разработчик с опытом работы в веб-разработке. Увлекаюсь современными технологиями и созданием удобных интерфейсов.</textarea>
+                                    <div class="form-hint">
+                                        Вы можете упоминать других пользователей и организации, ссылаясь на них.
+                                    </div>
+                                </div>
+
+                                <!-- Pronouns -->
+                                <div class="form-group">
+                                    <label for="pronouns">Местоимения</label>
+                                    <select id="pronouns" class="form-select">
+                                        <option value="">Не указывать</option>
+                                        <option value="he">Он/Его</option>
+                                        <option value="she">Она/Её</option>
+                                    </select>
+                                </div>
+
+                                <!-- URL -->
+                                <div class="form-group">
+                                    <label for="url">URL</label>
+                                    <input type="url" id="url" placeholder="https://example.com" value="https://calendar-name.com/ivanov">
+                                </div>
+
+                                <!-- Кнопки -->
+                                <div class="form-actions">
+                                    <button type="button" class="btn-secondary">Отмена</button>
+                                    <button type="submit" class="btn-primary">Сохранить изменения</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuButton = document.getElementById('userMenuButton');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userMenuButton && userDropdown) {
+                userMenuButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('show');
+                });
+                
+                // Закрытие меню при клике вне его
+                document.addEventListener('click', function() {
+                    userDropdown.classList.remove('show');
+                });
+                
+                // Предотвращаем закрытие при клике на само меню
+                userDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            // Обработка формы настроек
+            const settingsForm = document.querySelector('.settings-form');
+            if (settingsForm) {
+                settingsForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    // Здесь будет логика сохранения настроек
+                    alert('Настройки сохранены!');
+                });
+            }
+
+            // Обработка кнопки "Отмена"
+            const cancelButton = settingsForm?.querySelector('.btn-secondary');
+            if (cancelButton) {
+                cancelButton.addEventListener('click', function() {
+                    settingsForm.reset();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
