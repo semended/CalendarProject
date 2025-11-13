@@ -56,12 +56,12 @@
                     <div class="breadcrumb">Проекты / Все проекты</div>
                 </div>
                 <div class="header-right">
-                    <button class="btn-primary">
+                    <button class="btn-primary" id="createProjectBtn">
                         <span>+ Новый проект</span>
                     </button>
                     <div class="user-menu-container">
-                        <div class="user-avatar">👤</div>
-                        <div class="user-dropdown">
+                        <div class="user-avatar" id="userMenuButton">👤</div>
+                        <div class="user-dropdown" id="userDropdown">
                             <a href="profile.html" class="dropdown-item">
                                 <span class="dropdown-icon">👤</span>
                                 <span>Мой профиль</span>
@@ -84,19 +84,19 @@
             <section class="stats-section">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-value">8</div>
+                        <div class="stat-value" id="totalProjects">8</div>
                         <div class="stat-label">Всего проектов</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">3</div>
+                        <div class="stat-value" id="activeProjects">3</div>
                         <div class="stat-label">Активные</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">4</div>
+                        <div class="stat-value" id="completedProjects">4</div>
                         <div class="stat-label">Завершены</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">1</div>
+                        <div class="stat-value" id="pausedProjects">1</div>
                         <div class="stat-label">На паузе</div>
                     </div>
                 </div>
@@ -107,126 +107,150 @@
                 <div class="projects-header">
                     <h2>Мои проекты</h2>
                     <div class="projects-actions">
-                        <button class="btn-secondary">Фильтр</button>
-                        <button class="btn-secondary">Сортировка</button>
-                        <button class="btn-secondary">Вид</button>
+                        <div class="dropdown">
+                            <button class="btn-secondary dropdown-toggle" id="filterDropdown">
+                                Фильтр
+                            </button>
+                            <div class="dropdown-menu" id="filterMenu">
+                                <div class="dropdown-item" data-filter="all">Все проекты</div>
+                                <div class="dropdown-item" data-filter="active">Активные</div>
+                                <div class="dropdown-item" data-filter="completed">Завершенные</div>
+                                <div class="dropdown-item" data-filter="paused">На паузе</div>
+                            </div>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn-secondary dropdown-toggle" id="sortDropdown">
+                                Сортировка
+                            </button>
+                            <div class="dropdown-menu" id="sortMenu">
+                                <div class="dropdown-item" data-sort="deadline-asc">Завершается раньше</div>
+                                <div class="dropdown-item" data-sort="deadline-desc">Завершается позже</div>
+                                <div class="dropdown-item" data-sort="name-asc">По названию (А-Я)</div>
+                                <div class="dropdown-item" data-sort="name-desc">По названию (Я-А)</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="projects-grid">
-                    <!-- Проект 1 -->
-                    <div class="project-card">
-                        <div class="project-header">
-                            <div class="project-color" style="background-color: var(--primary)"></div>
-                            <h3>Веб-разработка</h3>
-                        </div>
-                        <div class="project-content">
-                            <p>Разработка корпоративного сайта с системой управления контентом</p>
-                            <div class="project-meta">
-                                <div class="project-stats">
-                                    <span class="stat">📋 24 задачи</span>
-                                    <span class="stat">👥 5 участников</span>
-                                </div>
-                                <div class="project-date">Срок: 25 дек</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Проект 2 -->
-                    <div class="project-card">
-                        <div class="project-header">
-                            <div class="project-color" style="background-color: var(--success)"></div>
-                            <h3>Мобильное приложение</h3>
-                        </div>
-                        <div class="project-content">
-                            <p>Разработка кроссплатформенного мобильного приложения</p>
-                            <div class="project-meta">
-                                <div class="project-stats">
-                                    <span class="stat">📋 18 задач</span>
-                                    <span class="stat">👥 3 участника</span>
-                                </div>
-                                <div class="project-date">Срок: 15 янв</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Проект 3 -->
-                    <div class="project-card">
-                        <div class="project-header">
-                            <div class="project-color" style="background-color: var(--warning)"></div>
-                            <h3>Маркетинг кампания</h3>
-                        </div>
-                        <div class="project-content">
-                            <p>Запуск рекламной кампании для нового продукта</p>
-                            <div class="project-meta">
-                                <div class="project-stats">
-                                    <span class="stat">📋 12 задач</span>
-                                    <span class="stat">👥 4 участника</span>
-                                </div>
-                                <div class="project-date completed">Завершен</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Проект 4 -->
-                    <div class="project-card">
-                        <div class="project-header">
-                            <div class="project-color" style="background-color: var(--info)"></div>
-                            <h3>Дизайн система</h3>
-                        </div>
-                        <div class="project-content">
-                            <p>Создание единой дизайн системы для всех продуктов компании</p>
-                            <div class="project-meta">
-                                <div class="project-stats">
-                                    <span class="stat">📋 32 задачи</span>
-                                    <span class="stat">👥 6 участников</span>
-                                </div>
-                                <div class="project-date">Срок: 10 фев</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Проект 5 -->
-                    <div class="project-card">
-                        <div class="project-header">
-                            <div class="project-color" style="background-color: var(--error)"></div>
-                            <h3>API интеграция</h3>
-                        </div>
-                        <div class="project-content">
-                            <p>Интеграция с внешними API сервисами</p>
-                            <div class="project-meta">
-                                <div class="project-stats">
-                                    <span class="stat">📋 8 задач</span>
-                                    <span class="stat">👥 2 участника</span>
-                                </div>
-                                <div class="project-date paused">На паузе</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Проект 6 -->
-                    <div class="project-card">
-                        <div class="project-header">
-                            <div class="project-color" style="background-color: #8B5CF6"></div>
-                            <h3>Обновление БД</h3>
-                        </div>
-                        <div class="project-content">
-                            <p>Миграция и оптимизация базы данных</p>
-                            <div class="project-meta">
-                                <div class="project-stats">
-                                    <span class="stat">📋 15 задач</span>
-                                    <span class="stat">👥 3 участника</span>
-                                </div>
-                                <div class="project-date">Срок: 5 янв</div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="projects-grid" id="projectsGrid">
+                    <!-- Проекты будут загружаться динамически -->
                 </div>
             </section>
         </main>
     </div>
+
+    <!-- Модальное окно создания проекта -->
+    <div id="createProjectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Создать новый проект</h2>
+                <span class="close" onclick="closeCreateProjectModal()">&times;</span>
+            </div>
+            <form class="auth-form" id="createProjectForm">
+                <div class="form-group">
+                    <label for="projectName">Название проекта *</label>
+                    <input type="text" id="projectName" name="projectName" placeholder="Введите название проекта" required>
+                </div>
+                <div class="form-group">
+                    <label for="projectDescription">Описание</label>
+                    <textarea id="projectDescription" name="projectDescription" placeholder="Опишите ваш проект" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="projectDeadline">Срок выполнения</label>
+                    <input type="date" id="projectDeadline" name="projectDeadline">
+                </div>
+                <div class="form-group">
+                    <label for="projectColor">Цвет проекта</label>
+                    <div class="color-picker">
+                        <input type="color" id="projectColor" name="projectColor" value="#0ea5e9">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeCreateProjectModal()">Отмена</button>
+                    <button type="submit" class="btn-primary">Создать проект</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        // Данные проектов (заглушка - в будущем будет загрузка с бэкенда)
+        let projects = [
+            {
+                id: 1,
+                name: "Веб-разработка",
+                description: "Разработка корпоративного сайта с системой управления контентом",
+                color: "#0ea5e9",
+                tasks: 24,
+                members: 5,
+                deadline: "2024-12-25",
+                status: "active"
+            },
+            {
+                id: 2,
+                name: "Мобильное приложение",
+                description: "Разработка кроссплатформенного мобильного приложения",
+                color: "#10b981",
+                tasks: 18,
+                members: 3,
+                deadline: "2025-01-15",
+                status: "active"
+            },
+            {
+                id: 3,
+                name: "Маркетинг кампания",
+                description: "Запуск рекламной кампании для нового продукта",
+                color: "#f59e0b",
+                tasks: 12,
+                members: 4,
+                deadline: "2024-11-30",
+                status: "completed"
+            },
+            {
+                id: 4,
+                name: "Дизайн система",
+                description: "Создание единой дизайн системы для всех продуктов компании",
+                color: "#8b5cf6",
+                tasks: 32,
+                members: 6,
+                deadline: "2025-02-10",
+                status: "active"
+            },
+            {
+                id: 5,
+                name: "API интеграция",
+                description: "Интеграция с внешними API сервисами",
+                color: "#ef4444",
+                tasks: 8,
+                members: 2,
+                deadline: "2025-01-20",
+                status: "paused"
+            },
+            {
+                id: 6,
+                name: "Обновление БД",
+                description: "Миграция и оптимизация базы данных",
+                color: "#8B5CF6",
+                tasks: 15,
+                members: 3,
+                deadline: "2025-01-05",
+                status: "active"
+            }
+        ];
+
+        // Текущие настройки фильтрации и сортировки
+        let currentFilter = 'all';
+        let currentSort = 'deadline-asc';
+
         document.addEventListener('DOMContentLoaded', function() {
+            initializeUserMenu();
+            initializeProjects();
+            initializeDropdowns();
+            initializeCreateProject();
+        });
+
+        // Инициализация пользовательского меню
+        function initializeUserMenu() {
             const userMenuButton = document.getElementById('userMenuButton');
             const userDropdown = document.getElementById('userDropdown');
             
@@ -235,16 +259,201 @@
                 userDropdown.classList.toggle('show');
             });
             
-            // Закрытие меню при клике вне его
             document.addEventListener('click', function() {
                 userDropdown.classList.remove('show');
             });
             
-            // Предотвращаем закрытие при клике на само меню
             userDropdown.addEventListener('click', function(e) {
                 e.stopPropagation();
             });
-        });
+        }
+
+        // Инициализация проектов
+        function initializeProjects() {
+            renderProjects();
+            updateStats();
+        }
+
+        // Инициализация выпадающих меню
+        function initializeDropdowns() {
+            // Фильтр
+            const filterDropdown = document.getElementById('filterDropdown');
+            const filterMenu = document.getElementById('filterMenu');
+            
+            filterDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+                filterMenu.classList.toggle('show');
+            });
+
+            // Сортировка
+            const sortDropdown = document.getElementById('sortDropdown');
+            const sortMenu = document.getElementById('sortMenu');
+            
+            sortDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+                sortMenu.classList.toggle('show');
+            });
+
+            // Обработчики для элементов фильтра
+            document.querySelectorAll('#filterMenu .dropdown-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    currentFilter = this.getAttribute('data-filter');
+                    filterDropdown.textContent = this.textContent;
+                    filterMenu.classList.remove('show');
+                    renderProjects();
+                });
+            });
+
+            // Обработчики для элементов сортировки
+            document.querySelectorAll('#sortMenu .dropdown-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    currentSort = this.getAttribute('data-sort');
+                    sortDropdown.textContent = this.textContent;
+                    sortMenu.classList.remove('show');
+                    renderProjects();
+                });
+            });
+
+            // Закрытие меню при клике вне
+            document.addEventListener('click', function() {
+                filterMenu.classList.remove('show');
+                sortMenu.classList.remove('show');
+            });
+        }
+
+        // Инициализация создания проекта
+        function initializeCreateProject() {
+            const createBtn = document.getElementById('createProjectBtn');
+            const modal = document.getElementById('createProjectModal');
+            const form = document.getElementById('createProjectForm');
+
+            createBtn.addEventListener('click', function() {
+                modal.style.display = 'flex';
+            });
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                createNewProject();
+            });
+
+            // Закрытие модального окна при клике вне
+            window.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeCreateProjectModal();
+                }
+            });
+        }
+
+        // Функции для работы с проектами
+        function renderProjects() {
+            const grid = document.getElementById('projectsGrid');
+            const filteredProjects = filterProjects(projects);
+            const sortedProjects = sortProjects(filteredProjects);
+            
+            grid.innerHTML = sortedProjects.map(project => `
+                <div class="project-card" data-project-id="${project.id}">
+                    <div class="project-header">
+                        <div class="project-color" style="background-color: ${project.color}"></div>
+                        <h3>${project.name}</h3>
+                    </div>
+                    <div class="project-content">
+                        <p>${project.description}</p>
+                        <div class="project-meta">
+                            <div class="project-stats">
+                                <span class="stat">📋 ${project.tasks} задач</span>
+                                <span class="stat">👥 ${project.members} участников</span>
+                            </div>
+                            <div class="project-date ${getStatusClass(project.status)}">${getStatusText(project)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterProjects(projects) {
+            if (currentFilter === 'all') return projects;
+            return projects.filter(project => project.status === currentFilter);
+        }
+
+        function sortProjects(projects) {
+            return projects.sort((a, b) => {
+                switch (currentSort) {
+                    case 'deadline-asc':
+                        return new Date(a.deadline) - new Date(b.deadline);
+                    case 'deadline-desc':
+                        return new Date(b.deadline) - new Date(a.deadline);
+                    case 'name-asc':
+                        return a.name.localeCompare(b.name);
+                    case 'name-desc':
+                        return b.name.localeCompare(a.name);
+                    default:
+                        return 0;
+                }
+            });
+        }
+
+        function getStatusClass(status) {
+            const classes = {
+                'active': '',
+                'completed': 'completed',
+                'paused': 'paused'
+            };
+            return classes[status] || '';
+        }
+
+        function getStatusText(project) {
+            if (project.status === 'completed') return 'Завершен';
+            if (project.status === 'paused') return 'На паузе';
+            return `Срок: ${formatDate(project.deadline)}`;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU', {
+                day: 'numeric',
+                month: 'short'
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('totalProjects').textContent = projects.length;
+            document.getElementById('activeProjects').textContent = projects.filter(p => p.status === 'active').length;
+            document.getElementById('completedProjects').textContent = projects.filter(p => p.status === 'completed').length;
+            document.getElementById('pausedProjects').textContent = projects.filter(p => p.status === 'paused').length;
+        }
+
+        function createNewProject() {
+            const form = document.getElementById('createProjectForm');
+            const formData = new FormData(form);
+            
+            const newProject = {
+                id: projects.length + 1,
+                name: formData.get('projectName'),
+                description: formData.get('projectDescription'),
+                color: formData.get('projectColor'),
+                tasks: 0,
+                members: 1,
+                deadline: formData.get('projectDeadline'),
+                status: 'active'
+            };
+
+            projects.push(newProject);
+            renderProjects();
+            updateStats();
+            closeCreateProjectModal();
+            form.reset();
+        }
+
+        function closeCreateProjectModal() {
+            document.getElementById('createProjectModal').style.display = 'none';
+        }
+
+        // Функция для обновления проектов из бэкенда (заглушка для будущей реализации)
+        function updateProjectsFromBackend(newProjects) {
+            projects = newProjects;
+            renderProjects();
+            updateStats();
+        }
     </script>
 </body>
 </html>

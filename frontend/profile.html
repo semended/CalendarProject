@@ -57,8 +57,8 @@
                 </div>
                 <div class="header-right">
                     <div class="user-menu-container">
-                        <div class="user-avatar">👤</div>
-                        <div class="user-dropdown">
+                        <div class="user-avatar" id="userMenuButton">👤</div>
+                        <div class="user-dropdown" id="userDropdown">
                             <a href="profile.html" class="dropdown-item">
                                 <span class="dropdown-icon">👤</span>
                                 <span>Мой профиль</span>
@@ -207,5 +207,46 @@
             </section>
         </main>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuButton = document.getElementById('userMenuButton');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userMenuButton && userDropdown) {
+                userMenuButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('show');
+                });
+                
+                // Закрытие меню при клике вне его
+                document.addEventListener('click', function() {
+                    userDropdown.classList.remove('show');
+                });
+                
+                // Предотвращаем закрытие при клике на само меню
+                userDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            // Обработка кнопки "Редактировать профиль"
+            const editProfileButton = document.querySelector('.btn-primary.full-width');
+            if (editProfileButton) {
+                editProfileButton.addEventListener('click', function() {
+                    window.location.href = 'settings.html';
+                });
+            }
+
+            // Обработка кнопки "Показать больше"
+            const showMoreButton = document.querySelector('.btn-secondary.full-width');
+            if (showMoreButton) {
+                showMoreButton.addEventListener('click', function() {
+                    alert('Загружается больше активностей...');
+                    // Здесь будет логика загрузки дополнительных активностей
+                });
+            }
+        });
+    </script>
 </body>
 </html>

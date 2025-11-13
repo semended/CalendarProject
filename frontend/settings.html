@@ -44,24 +44,6 @@
                         </li>
                     </ul>
                 </div>
-
-                <div class="nav-section">
-                    <h3 class="nav-title">НАСТРОЙКИ</h3>
-                    <ul class="nav-list">
-                        <li class="nav-item active">
-                            <span class="nav-icon">👤</span>
-                            <span>Профиль</span>
-                        </li>
-                        <li class="nav-item">
-                            <span class="nav-icon">🔔</span>
-                            <span>Уведомления</span>
-                        </li>
-                        <li class="nav-item">
-                            <span class="nav-icon">🎨</span>
-                            <span>Внешний вид</span>
-                        </li>
-                    </ul>
-                </div>
             </nav>
         </aside>
 
@@ -75,8 +57,8 @@
                 </div>
                 <div class="header-right">
                     <div class="user-menu-container">
-                        <div class="user-avatar">👤</div>
-                        <div class="user-dropdown">
+                        <div class="user-avatar" id="userMenuButton">👤</div>
+                        <div class="user-dropdown" id="userDropdown">
                             <a href="profile.html" class="dropdown-item">
                                 <span class="dropdown-icon">👤</span>
                                 <span>Мой профиль</span>
@@ -185,7 +167,6 @@
                                         <option value="">Не указывать</option>
                                         <option value="he">Он/Его</option>
                                         <option value="she">Она/Её</option>
-                                        <option value="they">Они/Их</option>
                                     </select>
                                 </div>
 
@@ -207,5 +188,47 @@
             </section>
         </main>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuButton = document.getElementById('userMenuButton');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userMenuButton && userDropdown) {
+                userMenuButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('show');
+                });
+                
+                // Закрытие меню при клике вне его
+                document.addEventListener('click', function() {
+                    userDropdown.classList.remove('show');
+                });
+                
+                // Предотвращаем закрытие при клике на само меню
+                userDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            // Обработка формы настроек
+            const settingsForm = document.querySelector('.settings-form');
+            if (settingsForm) {
+                settingsForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    // Здесь будет логика сохранения настроек
+                    alert('Настройки сохранены!');
+                });
+            }
+
+            // Обработка кнопки "Отмена"
+            const cancelButton = settingsForm?.querySelector('.btn-secondary');
+            if (cancelButton) {
+                cancelButton.addEventListener('click', function() {
+                    settingsForm.reset();
+                });
+            }
+        });
+    </script>
 </body>
 </html>
