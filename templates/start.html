@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CalendarName</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
     <div class="container start-page">
@@ -34,7 +34,7 @@
                         CalendarName - это (красивое описание)
                     </p>
                     <div class="hero-actions">
-                        <button class="btn-primary large" onclick="location.href='main.html'">
+                        <button class="btn-primary large" onclick="location.href='/main'">
                             <span>Начать работу</span>
                         </button>
                     </div>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CalendarName</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -60,11 +60,11 @@
                     <div class="user-menu-container">
                         <div class="user-avatar" id="userMenuButton">👤</div>
                         <div class="user-dropdown" id="userDropdown">
-                            <a href="profile.html" class="dropdown-item">
+                            <a href="/user/0" class="dropdown-item">
                                 <span class="dropdown-icon">👤</span>
                                 <span>Мой профиль</span>
                             </a>
-                            <a href="settings.html" class="dropdown-item">
+                            <a href="/user/settings" class="dropdown-item">
                                 <span class="dropdown-icon">⚙️</span>
                                 <span>Настройки</span>
                             </a>
