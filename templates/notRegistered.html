@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalendarName</title>
+    <title>Требуется авторизация - CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
@@ -14,20 +14,19 @@
             <header class="header">
                 <div class="header-left">
                     <h1>CalendarName</h1>
-                    <div class="breadcrumb">Умная цитата</div>
+                    <div class="breadcrumb">Доступ ограничен</div>
                 </div>
-                <!-- Кнопки авторизации и регистрации убраны из хедера -->
             </header>
 
-            <!-- Герой секция -->
+            <!-- Основное содержимое -->
             <section class="hero-section">
                 <div class="hero-content">
-                    <h2>Умная цитата 2</h2>
+                    <h2>Требуется авторизация</h2>
                     <p class="hero-description">
-                        CalendarName - это (красивое описание)
+                        Для доступа к этой странице необходимо войти в свой аккаунт. 
+                        Пожалуйста, авторизуйтесь или зарегистрируйтесь, чтобы продолжить работу с системой.
                     </p>
                     <div class="hero-actions">
-                        <!-- Заменяем кнопку "Начать работу" на кнопки авторизации и регистрации -->
                         <button class="btn-secondary large" onclick="openAuthModal()">
                             <span>Авторизация</span>
                         </button>
@@ -52,24 +51,24 @@
                 </div>
             </section>
 
-            <!-- Особенности -->
+            <!-- Информация о возможностях -->
             <section class="features-section">
-                <h2>Ключевые возможности</h2>
+                <h2>Что вы получите после регистрации?</h2>
                 <div class="features-grid">
                     <div class="feature-card">
-                        <div class="feature-icon">📋</div>
-                        <h3>Канбан доски</h3>
-                        <p>Визуальное управление задачами с помощью интуитивных досок</p>
+                        <div class="feature-icon">👤</div>
+                        <h3>Личный профиль</h3>
+                        <p>Создайте свой профиль с фотографией, описанием и контактной информацией</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">📅</div>
-                        <h3>Календарь</h3>
-                        <p>Планирование и отслеживание сроков выполнения задач</p>
+                        <div class="feature-icon">⚙️</div>
+                        <h3>Настройки</h3>
+                        <p>Настройте систему под свои предпочтения и рабочие процессы</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">👥</div>
-                        <h3>Команды</h3>
-                        <p>Эффективное взаимодействие с участниками проекта</p>
+                        <div class="feature-icon">📊</div>
+                        <h3>Статистика</h3>
+                        <p>Отслеживайте свою продуктивность и прогресс по задачам</p>
                     </div>
                 </div>
             </section>
