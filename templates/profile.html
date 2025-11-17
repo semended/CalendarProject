@@ -55,26 +55,7 @@
                     <h1>Мой профиль</h1>
                     <div class="breadcrumb">Профиль</div>
                 </div>
-                <div class="header-right">
-                    <div class="user-menu-container">
-                        <div class="user-avatar" id="userMenuButton">👤</div>
-                        <div class="user-dropdown" id="userDropdown">
-                            <a href="/user/0" class="dropdown-item">
-                                <span class="dropdown-icon">👤</span>
-                                <span>Мой профиль</span>
-                            </a>
-                            <a href="/settings" class="dropdown-item">
-                                <span class="dropdown-icon">⚙️</span>
-                                <span>Настройки</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item">
-                                <span class="dropdown-icon">🚪</span>
-                                <span>Выйти из аккаунта</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                <!-- Аватарка удалена -->
             </header>
 
             <!-- Основной контент профиля -->
@@ -210,26 +191,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const userMenuButton = document.getElementById('userMenuButton');
-            const userDropdown = document.getElementById('userDropdown');
-            
-            if (userMenuButton && userDropdown) {
-                userMenuButton.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    userDropdown.classList.toggle('show');
-                });
-                
-                // Закрытие меню при клике вне его
-                document.addEventListener('click', function() {
-                    userDropdown.classList.remove('show');
-                });
-                
-                // Предотвращаем закрытие при клике на само меню
-                userDropdown.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-            }
-
             // Обработка кнопки "Редактировать профиль"
             const editProfileButton = document.querySelector('.btn-primary.full-width');
             if (editProfileButton) {

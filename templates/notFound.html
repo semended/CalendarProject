@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Страница не найдена - CalendarName</title>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="error-page">
+    <!-- Декоративные элементы -->
+    <div class="decoration decoration-1">📅</div>
+    <div class="decoration decoration-2">📋</div>
+
+    <div class="error-container">
+        <!-- Иконка -->
+        <div class="error-icon">📄</div>
+        
+        <!-- Код ошибки -->
+        <div class="error-code">404</div>
+        
+        <!-- Заголовок -->
+        <h1 class="error-title">Страница не найдена</h1>
+        
+        <!-- Описание -->
+        <p class="error-description">
+            К сожалению, запрашиваемая страница не существует. 
+            Возможно, она была перемещена или удалена. 
+            Проверьте правильность адреса или вернитесь на главную страницу.
+        </p>
+
+        <!-- Действия -->
+        <div class="error-actions">
+            <a href="/" class="btn-primary">На главную</a>
+            <a href="javascript:history.back()" class="btn-secondary">Вернуться назад</a>
+        </div>
+
+        <!-- Быстрые ссылки -->
+        <div class="quick-links">
+            <a href="/main" class="quick-link">Проекты</a>
+            <a href="/calendar" class="quick-link">Календарь</a>
+            <a href="/tasks" class="quick-link">Задачи</a>
+            <a href="/help" class="quick-link">Помощь</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Простая логика для кнопок
+            const quickLinks = document.querySelectorAll('.quick-link');
+            quickLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('Переход на страницу: ' + this.textContent);
+                    // В реальном приложении: window.location.href = this.href;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

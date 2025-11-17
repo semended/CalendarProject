@@ -1426,3 +1426,147 @@ body {
         max-width: calc(100% - 10px);
     }
 }
+
+/* Стили для страницы 404 */
+.error-page {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.error-container {
+    text-align: center;
+    padding: 40px;
+    max-width: 600px;
+    width: 100%;
+}
+
+.error-icon {
+    font-size: 8rem;
+    margin-bottom: 20px;
+}
+
+.error-code {
+    font-size: 6rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.error-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.error-description {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+    line-height: 1.6;
+}
+
+.error-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+}
+
+.quick-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.quick-link {
+    background: var(--bg-primary);
+    padding: 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    border: 1px solid var(--bg-tertiary);
+    text-align: center;
+}
+
+.quick-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    color: var(--primary);
+    border-color: var(--primary-light);
+}
+
+.decoration {
+    position: fixed;
+    opacity: 0.1;
+    font-size: 10rem;
+    z-index: 0;
+}
+
+.decoration-1 {
+    top: 10%;
+    left: 10%;
+}
+
+.decoration-2 {
+    bottom: 10%;
+    right: 10%;
+}
+
+@media (max-width: 768px) {
+    .error-container {
+        padding: 20px;
+    }
+    
+    .error-icon {
+        font-size: 6rem;
+    }
+    
+    .error-code {
+        font-size: 4rem;
+    }
+    
+    .error-title {
+        font-size: 1.5rem;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-primary, .btn-secondary {
+        width: 100%;
+        max-width: 250px;
+    }
+    
+    .quick-links {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .error-icon {
+        font-size: 4rem;
+    }
+    
+    .error-code {
+        font-size: 3rem;
+    }
+    
+    .error-title {
+        font-size: 1.25rem;
+    }
+    
+    .error-description {
+        font-size: 1rem;
+    }
+}
