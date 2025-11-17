@@ -83,7 +83,7 @@
                 <h2>Вход в аккаунт</h2>
                 <span class="close" onclick="closeAuthModal()">&times;</span>
             </div>
-            <form class="auth-form" method="POST" action="/login">
+            <form class="auth-form" method="POST">
                 <div class="form-group">
                     <label for="auth_slug">ID пользователя</label>
                     <input type="text" id="auth_slug" name="slug" placeholder="Введите ваш ID пользователя" required>
@@ -107,7 +107,7 @@
                 <h2>Регистрация</h2>
                 <span class="close" onclick="closeRegModal()">&times;</span>
             </div>
-            <form class="auth-form reg-form" method="POST" action="/register">
+            <form class="auth-form reg-form" method="POST">
                 <div class="form-group">
                     <label for="reg_slug">ID пользователя *</label>
                     <input type="text" id="reg_slug" name="slug" placeholder="Придумайте ID" required>
@@ -201,12 +201,6 @@
                 }
             });
         }
-
-        // Обработка формы авторизации
-        document.querySelector('.auth-form[action="/login"]').addEventListener('submit', function(e) {
-            console.log('Отправка формы авторизации');
-            // Можно добавить дополнительную валидацию здесь
-        });
 
         // Обработка формы регистрации
         document.querySelector('.reg-form').addEventListener('submit', function(e) {
