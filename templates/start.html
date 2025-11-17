@@ -83,14 +83,14 @@
                 <h2>Вход в аккаунт</h2>
                 <span class="close" onclick="closeAuthModal()">&times;</span>
             </div>
-            <form class="auth-form">
+            <form class="auth-form" method="POST" action="/login">
                 <div class="form-group">
-                    <label for="login">Email или ID пользователя</label>
-                    <input type="text" id="login" name="login" placeholder="Введите почту или ID пользователя" required>
+                    <label for="auth_slug">ID пользователя</label>
+                    <input type="text" id="auth_slug" name="slug" placeholder="Введите ваш ID пользователя" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">Пароль</label>
-                    <input type="password" id="password" name="password" placeholder="Введите пароль" required>
+                    <label for="auth_password">Пароль</label>
+                    <input type="password" id="auth_password" name="password" placeholder="Введите пароль" required>
                 </div>
                 <button type="submit" class="btn-primary full-width">Войти</button>
                 <div class="auth-links">
@@ -107,28 +107,29 @@
                 <h2>Регистрация</h2>
                 <span class="close" onclick="closeRegModal()">&times;</span>
             </div>
-            <form class="auth-form reg-form">
+            <form class="auth-form reg-form" method="POST" action="/register">
                 <div class="form-group">
-                    <label for="username">ID пользователя *</label>
-                    <input type="text" id="username" name="username" placeholder="Придумайте ID" required>
+                    <label for="reg_slug">ID пользователя *</label>
+                    <input type="text" id="reg_slug" name="slug" placeholder="Придумайте ID" required>
+                    <small class="form-hint">Этот ID будет использоваться для входа в систему</small>
                 </div>
                 <div class="form-group">
-                    <label for="password">Пароль *</label>
-                    <input type="password" id="password" name="password" placeholder="Придумайте пароль" required>
+                    <label for="reg_password">Пароль *</label>
+                    <input type="password" id="reg_password" name="password" placeholder="Придумайте пароль" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="lastName">Фамилия *</label>
-                        <input type="text" id="lastName" name="lastName" placeholder="Введите фамилию" required>
+                        <label for="surname">Фамилия *</label>
+                        <input type="text" id="surname" name="surname" placeholder="Введите фамилию" required>
                     </div>
                     <div class="form-group">
-                        <label for="firstName">Имя *</label>
-                        <input type="text" id="firstName" name="firstName" placeholder="Введите имя" required>
+                        <label for="name">Имя *</label>
+                        <input type="text" id="name" name="name" placeholder="Введите имя" required>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="middleName">Отчество</label>
-                    <input type="text" id="middleName" name="middleName" placeholder="Введите отчество (при наличии)">
+                    <label for="patronymic">Отчество</label>
+                    <input type="text" id="patronymic" name="patronymic" placeholder="Введите отчество (при наличии)">
                 </div>
                 <button type="submit" class="btn-primary full-width">Зарегистрироваться</button>
             </form>
@@ -150,6 +151,19 @@
             </div>
         </div>
     </div>
+
+    <!-- Блок для отображения flash сообщений -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
     <script>
         // Функции для управления модальными окнами
@@ -189,19 +203,24 @@
         }
 
         // Обработка формы авторизации
-        document.querySelector('.auth-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            // Здесь будет логика авторизации
-            alert('Форма авторизации отправлена!');
-            closeAuthModal();
+        document.querySelector('.auth-form[action="/login"]').addEventListener('submit', function(e) {
+            console.log('Отправка формы авторизации');
+            // Можно добавить дополнительную валидацию здесь
         });
 
         // Обработка формы регистрации
         document.querySelector('.reg-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            closeRegModal();
-            showSuccessModal();
+            console.log('Отправка формы регистрации');
+            // Можно добавить дополнительную валидацию здесь
         });
+
+        // Автоматическое закрытие flash сообщений
+        setTimeout(function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(message) {
+                message.style.display = 'none';
+            });
+        }, 5000);
     </script>
 </body>
 </html>
