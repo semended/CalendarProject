@@ -31,6 +31,9 @@ def user_page(user_id):
 def settings_page():
   return render_template('settings.html')
 
+@app.route('/<path:invalid_path>')
+def not_found(invalid_path):
+    return render_template('notFound.html')
 
 if __name__ == '__main__':
   app.run(port=8080, host='127.0.0.1')
