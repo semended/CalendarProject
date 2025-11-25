@@ -101,8 +101,10 @@ def main_page():
 
 @app.route('/user/<user_id>')
 def user_page(user_id):
-  print('Зашёл в user_page. User_id ->', current_user.get_id())
-  return render_template('profile.html')
+    print('Зашёл в user_page. User_id ->', current_user.get_id())
+    # Получаем данные пользователя из базы
+    user = get_user_by_id(user_id)
+    return render_template('profile.html', user=user)
 
 
 @app.route('/user/settings')
