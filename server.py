@@ -113,6 +113,9 @@ def settings_page():
   print('Зашёл в settings. User_id ->', current_user.get_id())
   return render_template('settings.html')
 
+@app.route('/<path:invalid_path>')
+def not_found(invalid_path):
+    return render_template('notFound.html')
 
 if __name__ == '__main__':
   app.run(port=8080, host='127.0.0.1')

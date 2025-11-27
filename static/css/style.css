@@ -1427,30 +1427,23 @@ body {
     }
 }
 
-/* Стили для страницы 404 */
-.error-page {
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
+/* ===== СТИЛИ ДЛЯ СТРАНИЦЫ 404 ===== */
 .error-container {
     text-align: center;
     padding: 40px;
     max-width: 600px;
     width: 100%;
+    margin: 0 auto;
 }
 
 .error-icon {
-    font-size: 8rem;
+    font-size: 6rem;
     margin-bottom: 20px;
+    color: var(--primary);
 }
 
 .error-code {
-    font-size: 6rem;
+    font-size: 4rem;
     font-weight: 800;
     color: var(--primary);
     margin-bottom: 10px;
@@ -1495,6 +1488,8 @@ body {
     transition: all 0.3s ease;
     border: 1px solid var(--bg-tertiary);
     text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
 }
 
 .quick-link:hover {
@@ -1502,36 +1497,21 @@ body {
     box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     color: var(--primary);
     border-color: var(--primary-light);
+    text-decoration: none;
 }
 
-.decoration {
-    position: fixed;
-    opacity: 0.1;
-    font-size: 10rem;
-    z-index: 0;
-}
-
-.decoration-1 {
-    top: 10%;
-    left: 10%;
-}
-
-.decoration-2 {
-    bottom: 10%;
-    right: 10%;
-}
-
+/* Адаптивность для страницы 404 */
 @media (max-width: 768px) {
     .error-container {
         padding: 20px;
     }
     
     .error-icon {
-        font-size: 6rem;
+        font-size: 4rem;
     }
     
     .error-code {
-        font-size: 4rem;
+        font-size: 3rem;
     }
     
     .error-title {
@@ -1555,11 +1535,11 @@ body {
 
 @media (max-width: 480px) {
     .error-icon {
-        font-size: 4rem;
+        font-size: 3rem;
     }
     
     .error-code {
-        font-size: 3rem;
+        font-size: 2.5rem;
     }
     
     .error-title {
@@ -1569,4 +1549,20 @@ body {
     .error-description {
         font-size: 1rem;
     }
+}
+
+.btn-back, .btn-return {
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-back:hover, .btn-return:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
