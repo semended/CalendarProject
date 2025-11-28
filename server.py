@@ -88,12 +88,18 @@ def start_page():
 
       return redirect(url_for('user_page'))
 
+#страница регистрации - нужно добавить поля
+@app.route('/register', methods=['GET', 'POST'])
+def register_page():
+  return render_template('register.html')
+
 @app.route('/main', methods=['GET', 'POST'])
 @login_required
 def main_page():
   print('Зашёл в main_page. User_id ->', current_user.get_id())
   if request.method == 'GET':
-    return render_template('main.html')
+    user = get_user_by_id(current_user.get_id())
+    return render_template('main.html', active_page='all_projects', user=user)
   else:
     #Добавить обработку создания проекта
     return render_template('main.html')
@@ -101,16 +107,22 @@ def main_page():
 
 @app.route('/user/<user_id>')
 def user_page(user_id):
-  print('Зашёл в user_page. User_id ->', current_user.get_id())
-  return render_template('profile.html')
+    print('Зашёл в user_page. User_id ->', current_user.get_id())
+    # Получаем данные пользователя из базы
+    user = get_user_by_id(user_id)
+    return render_template('profile.html', user=user)
 
 
 @app.route('/user/settings')
 @login_required
 def settings_page():
   print('Зашёл в settings. User_id ->', current_user.get_id())
-  return render_template('settings.html')
+  user = get_user_by_id(current_user.get_id())
+  return render_template('settings.html', user=user)
 
+@app.route('/<path:invalid_path>')
+def not_found(invalid_path):
+    return render_template('notFound.html')
 
 if __name__ == '__main__':
   app.run(port=8080, host='127.0.0.1')

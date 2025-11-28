@@ -9,43 +9,7 @@
 <body>
     <div class="container">
         <!-- Сайдбар -->
-        <aside class="sidebar">
-            <div class="logo">
-                <h2>CalendarName</h2>
-            </div>
-            
-            <nav class="main-nav">
-                <div class="nav-section">
-                    <h3 class="nav-title">ПРОЕКТЫ</h3>
-                    <ul class="nav-list">
-                        <li class="nav-item">
-                            <a href="/main" class="nav-link">
-                                <span class="nav-icon">📁</span>
-                                <span>Все проекты</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                
-                <div class="nav-section">
-                    <h3 class="nav-title">ЗАДАЧИ</h3>
-                    <ul class="nav-list">
-                        <li class="nav-item">
-                            <span class="nav-icon">📋</span>
-                            <span>Все задачи</span>
-                        </li>
-                        <li class="nav-item">
-                            <span class="nav-icon">👤</span>
-                            <span>Назначенные мне</span>
-                        </li>
-                        <li class="nav-item">
-                            <span class="nav-icon">📅</span>
-                            <span>Предстоящие</span>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-        </aside>
+        {% include 'sidebar.html' %}
 
         <!-- Основной контент -->
         <main class="main-content">
@@ -102,7 +66,11 @@
                                     <h3>Фотография профиля</h3>
                                     <div class="avatar-upload">
                                         <div class="avatar-preview">
-                                            <div class="avatar-image">👤</div>
+                                            {% if user and user.avatar_url %}
+                                                <img src="{{ user.avatar_url }}" alt="Avatar" class="profile-avatar-img">
+                                            {% else %}
+                                                <div class="avatar-image">👤</div>
+                                            {% endif %}
                                         </div>
                                         <div class="avatar-actions">
                                             <button type="button" class="btn-secondary">Изменить</button>
@@ -114,7 +82,8 @@
                                 <!-- Имя -->
                                 <div class="form-group">
                                     <label for="name">Имя</label>
-                                    <input type="text" id="name" placeholder="Введите ваше имя" value="Иван Иванов">
+                                    <input type="text" id="name" placeholder="Введите ваше имя" 
+                                        value="{{ user.name }} {{ user.surname }} {{ user.patronymic }}">
                                     <div class="form-hint">
                                         Ваше имя может отображаться в системе где вы участвуете или упоминаетесь.
                                     </div>
@@ -135,12 +104,30 @@
                                 <!-- Bio -->
                                 <div class="form-group">
                                     <label for="bio">О себе</label>
-                                    <textarea id="bio" class="form-textarea" placeholder="Расскажите немного о себе">Full-stack разработчик с опытом работы в веб-разработке. Увлекаюсь современными технологиями и созданием удобных интерфейсов.</textarea>
+                                    <textarea id="bio" class="form-textarea" placeholder="Расскажите немного о себе">{{ user.bio }}</textarea>
                                     <div class="form-hint">
                                         Вы можете упоминать других пользователей и организации, ссылаясь на них.
                                     </div>
                                 </div>
 
+                                <!-- Position -->
+                                <div class="form-group">
+                                    <label for="position">Должность</label>
+                                    <input type="text" id="position" placeholder="Ваша должность" value="{{ user.position }}">
+                                </div>
+
+                                <!-- Company -->
+                                <div class="form-group">
+                                    <label for="company">Компания</label>
+                                    <input type="text" id="company" placeholder="Название компании" value="{{ user.company }}">
+                                </div>
+
+                                <!-- Workplace -->
+                                <div class="form-group">
+                                    <label for="workplace">Место работы</label>
+                                    <input type="text" id="workplace" placeholder="Место работы" value="{{ user.workplace }}">
+                                </div>
+                                
                                 <!-- Pronouns -->
                                 <div class="form-group">
                                     <label for="pronouns">Местоимения</label>
