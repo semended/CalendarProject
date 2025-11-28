@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - CalendarName</title>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container register-page">
+        <main class="main-content">
+            <!-- Хедер -->
+            <header class="header">
+                <div class="header-left">
+                    <h1><a href="{{ url_for('start_page') }}">CalendarName</a></h1>
+                    <div class="breadcrumb">Регистрация нового аккаунта</div>
+                </div>
+            </header>
+
+            <!-- Форма регистрации -->
+            <section class="register-section">
+                <div class="register-container">
+                    <h2>Создание аккаунта</h2>
+                    <p class="register-description">
+                        Заполните все необходимые поля для регистрации в системе
+                    </p>
+                    
+                    <form class="register-form" method="POST" action="/register">
+                        <!--контейнер ошибок -->
+                        {% if error %}
+                        <div class="error-container">
+                            <div class="error-message">
+                                {{ error }}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label for="reg_slug">ID пользователя *</label>
+                            <input type="text" id="reg_slug" name="slug" placeholder="Придумайте ID" required>
+                            <small class="form-hint">Этот ID будет использоваться для входа в систему</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reg_password">Пароль *</label>
+                            <input type="password" id="reg_password" name="password" placeholder="Придумайте пароль" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="surname">Фамилия *</label>
+                                <input type="text" id="surname" name="surname" placeholder="Введите фамилию" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="name">Имя *</label>
+                                <input type="text" id="name" name="name" placeholder="Введите имя" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="patronymic">Отчество</label>
+                            <input type="text" id="patronymic" name="patronymic" placeholder="Введите отчество (при наличии)">
+                        </div>
+                        
+                        <button type="submit" class="btn-primary full-width">Зарегистрироваться</button>
+                        
+                        <div class="register-links">
+                            <p>Уже есть аккаунт? <a href="{{ url_for('start_page') }}">Войдите здесь</a></p>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Блок для отображения flash сообщений -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <script>
+        // Автоматическое закрытие flash сообщений
+        setTimeout(function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(message) {
+                message.style.display = 'none';
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

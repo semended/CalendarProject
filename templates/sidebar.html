@@ -1,0 +1,39 @@
+<aside class="sidebar">
+    <div class="logo center-logo">
+        <a href="/main" style="text-decoration: none; color: inherit;">
+            <h2>CalendarName</h2>
+        </a>
+    </div>
+    
+    <nav class="main-nav">
+        <div class="nav-section">
+            <h3 class="nav-title">ПРОЕКТЫ</h3>
+            <ul class="nav-list">
+                <li class="nav-item {% if active_page == 'all_projects' %}active{% endif %}">
+                    <a href="/main" class="nav-link">
+                        <span class="nav-icon">📁</span>
+                        <span>Все проекты</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="nav-section">
+            <h3 class="nav-title">ЗАДАЧИ</h3>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    <span>Все задачи</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-icon">👤</span>
+                    <span>Назначенные мне</span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-icon">📅</span>
+                    <span>Предстоящие</span>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</aside>
