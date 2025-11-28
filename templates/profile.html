@@ -43,20 +43,35 @@
                                 <div class="profile-details">
                                     <div class="detail-item">
                                         <span class="detail-icon">💼</span>
-                                        <span>{{ user['position'] }}</span>
+                                        {% if user['position'] %}
+                                            <span>{{ user['position'] }}</span>
+                                        {% else %}
+                                            <span>Отсутствует</span>
+                                        {% endif %}
                                     </div>
                                     <div class="detail-item">
                                         <span class="detail-icon">🏢</span>
-                                        <span>{{ user['company'] }}</span>
+                                        {% if user['company'] %}
+                                            <span>{{ user['company'] }}</span>
+                                        {% else %}
+                                            <span>Отсутствует</span>
+                                        {% endif %}
                                     </div>
                                     <div class="detail-item">
                                         <span class="detail-icon">📍</span>
-                                        <span>{{ user['workplace'] }}</span>
+                                        {% if user['workplace'] %}
+                                            <span>{{ user['workplace'] }}</span>
+                                        {% else %}
+                                            <span>Отсутствует</span>
+                                        {% endif %}
                                     </div>
-                                    <!-- УДАЛЕНО: строка с адресом -->
                                     <div class="detail-item">
                                         <span class="detail-icon">🕒</span>
-                                        <span>{{ user['last_login'] }}</span>
+                                        {% if user['last_login'] %}
+                                            <span>{{ user['last_login'] }}</span>
+                                        {% else %}
+                                            <span>Отсутствует</span>
+                                        {% endif %}
                                     </div>
                                 </div>
 
