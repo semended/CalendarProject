@@ -47,13 +47,15 @@ def exit_page():
 
 
 @app.route('/', methods=['GET', 'POST'])
-def start_page(error=None):
+def start_page():
 	print('Зашёл в start_page. User_id ->', current_user.get_id())
 
 	if current_user.get_id() is not None:
 		return redirect(url_for('main_page'))
 
 	if request.method == 'GET':
+		# Получаем текст ошибки из query-параметра, если он есть
+		error = request.args.get('error')
 		return render_template('start.html', error=error)
 	else:
 		if request.form.get('name') is None:
