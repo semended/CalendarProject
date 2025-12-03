@@ -532,6 +532,22 @@ body {
     padding: 20px 24px;
 }
 
+/* ===== СТРАНИЦА РЕГИСТРАЦИИ ===== */
+.register-page {
+    flex-direction: column;
+}
+
+.register-page .sidebar {
+    display: none;
+}
+
+.register-page .main-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 24px;
+}
+
 .hero-section {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -929,7 +945,7 @@ body {
 
 /* ===== ФОРМЫ ===== */
 .auth-form {
-    padding: 24px;
+    padding: 12px 24px 24px 24px;
 }
 
 .form-group {
@@ -1797,16 +1813,41 @@ body {
 }
 
 .error-container {
-    margin-bottom: 15px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
 }
 
 .error-message {
-    background-color: #fee;
-    border: 1px solid #fcc;
-    color: #c33;
-    padding: 10px 15px;
-    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #fef2f2;
+    border: 1px solid var(--error);
+    border-radius: 8px;
+    padding: 6px 8px;
+    color: var(--error);
     font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.error-icon {
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
 .flash-message.error {

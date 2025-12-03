@@ -3,10 +3,10 @@
 # 3. Выполнить команду: createdb testdb
 # 4. Запустить скрипт
 
-from sqlalchemy import create_engine, Column, BigInteger, String, Boolean, DateTime, func, select
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, func, select
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = "postgresql+psycopg2://@localhost:5432/testdb"
+DATABASE_URL = "sqlite:///database.db"
 
 engine = create_engine(DATABASE_URL, echo=True)
 Base = declarative_base()
@@ -14,19 +14,20 @@ SessionLocal = sessionmaker(bind=engine)
 
 class Role(Base):
     __tablename__ = "roles"
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     slug = Column(String(255), unique=True, nullable=False)
     name = Column(String(255), nullable=False)
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     slug = Column(String(255), unique=True, nullable=False)
     name = Column(String(255), nullable=False)
     surname = Column(String(255), nullable=False)
     patronymic = Column(String(255))
     password = Column(String(255), nullable=False)
-    role_id = Column(BigInteger, nullable=False, default=1)
+    email = Column(String(255), nullable=False)
+    role_id = Column(Integer, nullable=False, default=1)
     avatar_url = Column(String(255), nullable=False, default="")
     organization = Column(Boolean, nullable=False, default=False)
     confirmed = Column(Boolean, nullable=False, default=False)
@@ -43,7 +44,7 @@ def add_role(slug: str, name: str):
     session.close()
     print(f"Added role {slug} with name {name}")
 
-def add_user(slug: str, password: str, name: str, surname: str, patronymic: str = None):
+def add_user(slug: str, password: str, name: str, surname: str, patronymic: str = None, email: str = "test@example.com"):
     session = SessionLocal()
     user = User(
         slug=slug, # unique slug
@@ -51,6 +52,7 @@ def add_user(slug: str, password: str, name: str, surname: str, patronymic: str 
         surname=surname,
         patronymic=patronymic,
         password=password,
+        email=email,
         role_id=1,
         avatar_url="",
         organization=False,
@@ -58,8 +60,9 @@ def add_user(slug: str, password: str, name: str, surname: str, patronymic: str 
     )
     session.add(user)
     session.commit()
+    user_id = user.id
     session.close()
-    print(f"User {id} added.")
+    print(f"User {user_id} added.")
 
 def get_user(user_id: int):
     session = SessionLocal()

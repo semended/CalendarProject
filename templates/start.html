@@ -22,18 +22,19 @@
                     <p class="hero-description">
                         CalendarName - это (красивое описание)
                     </p>
-                    
+
+                    <!--контейнер ошибок-->
+                    {% if error %}
+                    <div class="error-container">
+                        <div class="error-message">
+                            <span class="error-icon">⚠️</span>
+                            {{ error }}
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="auth-section">
                         <form class="auth-form" method="POST" action="{{ url_for('start_page') }}">
-                            <!--контейнер ошибок-->
-                            {% if error %}
-                            <div class="error-container">
-                                <div class="error-message">
-                                    {{ error }}
-                                </div>
-                            </div>
-                            {% endif %}
-
                             <div class="form-group">
                                 <label for="auth_slug">ID пользователя</label>
                                 <input type="text" id="auth_slug" name="slug" placeholder="Введите ваш ID пользователя" required>

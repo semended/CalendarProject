@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Настройки - CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -60,7 +62,9 @@
                                 Вы можете изменить её в любое время.
                             </p>
 
-                            <form class="settings-form">
+                            <form class="settings-form" method="POST" action="{{ url_for('settings_page') }}" enctype="multipart/form-data">
+                                <input type="hidden" id="remove_avatar" name="remove_avatar" value="false">
+                                <input type="hidden" id="cropped_image" name="cropped_image" value="">
                                 <!-- Аватар -->
                                 <div class="form-section">
                                     <h3>Фотография профиля</h3>
@@ -73,8 +77,9 @@
                                             {% endif %}
                                         </div>
                                         <div class="avatar-actions">
-                                            <button type="button" class="btn-secondary">Изменить</button>
-                                            <button type="button" class="btn-secondary btn-remove">Удалить</button>
+                                            <input type="file" id="avatar" name="avatar" accept="image/*" style="display: none;" onchange="previewAvatar(event)">
+                                            <button type="button" class="btn-secondary" onclick="document.getElementById('avatar').click();">Изменить</button>
+                                            <button type="button" class="btn-secondary btn-remove" onclick="document.getElementById('remove_avatar').value='true'; document.querySelector('.settings-form').submit();">Удалить</button>
                                         </div>
                                     </div>
                                 </div>
@@ -82,29 +87,41 @@
                                 <!-- Имя -->
                                 <div class="form-group">
                                     <label for="name">Имя</label>
-                                    <input type="text" id="name" placeholder="Введите ваше имя" 
-                                        value="{{ user.name }} {{ user.surname }} {{ user.patronymic }}">
+                                    <input type="text" id="name" name="name" placeholder="Введите ваше имя" 
+                                        value="{{ user.name }}">
                                     <div class="form-hint">
                                         Ваше имя может отображаться в системе где вы участвуете или упоминаетесь.
                                     </div>
                                 </div>
 
+                                <!-- Фамилия -->
+                                <div class="form-group">
+                                    <label for="surname">Фамилия</label>
+                                    <input type="text" id="surname" name="surname" placeholder="Введите вашу фамилию" 
+                                        value="{{ user.surname }}">
+                                </div>
+
+                                <!-- Отчество -->
+                                <div class="form-group">
+                                    <label for="patronymic">Отчество</label>
+                                    <input type="text" id="patronymic" name="patronymic" placeholder="Введите ваше отчество" 
+                                        value="{{ user.patronymic }}">
+                                </div>
+
                                 <!-- Email -->
                                 <div class="form-group">
-                                    <label for="email">Публичный Email</label>
-                                    <select id="email" class="form-select">
-                                        <option value="ivan@example.com">ivan@example.com</option>
-                                        <option value="ivan.work@example.com">ivan.work@example.com</option>
-                                    </select>
+                                    <label for="email">Email</label>
+                                    <input type="email" id="email" name="email" placeholder="Введите ваш email" 
+                                        value="{{ user.email }}">
                                     <div class="form-hint">
-                                        Выберите проверенный email для отображения
+                                        Ваш email адрес
                                     </div>
                                 </div>
 
                                 <!-- Bio -->
                                 <div class="form-group">
                                     <label for="bio">О себе</label>
-                                    <textarea id="bio" class="form-textarea" placeholder="Расскажите немного о себе">{{ user.bio }}</textarea>
+                                    <textarea id="bio" name="bio" class="form-textarea" placeholder="Расскажите немного о себе">{{ user.bio or '' }}</textarea>
                                     <div class="form-hint">
                                         Вы можете упоминать других пользователей и организации, ссылаясь на них.
                                     </div>
@@ -113,35 +130,35 @@
                                 <!-- Position -->
                                 <div class="form-group">
                                     <label for="position">Должность</label>
-                                    <input type="text" id="position" placeholder="Ваша должность" value="{{ user.position }}">
+                                    <input type="text" id="position" name="position" placeholder="Ваша должность" value="{{ user.position or '' }}">
                                 </div>
 
                                 <!-- Company -->
                                 <div class="form-group">
                                     <label for="company">Компания</label>
-                                    <input type="text" id="company" placeholder="Название компании" value="{{ user.company }}">
+                                    <input type="text" id="company" name="company" placeholder="Название компании" value="{{ user.company or '' }}">
                                 </div>
 
                                 <!-- Workplace -->
                                 <div class="form-group">
                                     <label for="workplace">Место работы</label>
-                                    <input type="text" id="workplace" placeholder="Место работы" value="{{ user.workplace }}">
+                                    <input type="text" id="workplace" name="workplace" placeholder="Место работы" value="{{ user.workplace or '' }}">
                                 </div>
-                                
+
                                 <!-- Pronouns -->
                                 <div class="form-group">
                                     <label for="pronouns">Местоимения</label>
-                                    <select id="pronouns" class="form-select">
+                                    <select id="pronouns" name="pronouns" class="form-select">
                                         <option value="">Не указывать</option>
-                                        <option value="he">Он/Его</option>
-                                        <option value="she">Она/Её</option>
+                                        <option value="he" {% if user.pronouns == 'he' %}selected{% endif %}>Он/Его</option>
+                                        <option value="she" {% if user.pronouns == 'she' %}selected{% endif %}>Она/Её</option>
                                     </select>
                                 </div>
 
                                 <!-- URL -->
                                 <div class="form-group">
                                     <label for="url">URL</label>
-                                    <input type="url" id="url" placeholder="https://example.com" value="https://calendar-name.com/ivanov">
+                                    <input type="url" id="url" name="url" placeholder="https://example.com" value="{{ user.url or 'https://example.com' }}">
                                 </div>
 
                                 <!-- Кнопки -->
@@ -157,23 +174,144 @@
         </main>
     </div>
 
+    <!-- Модальное окно для кропа -->
+    <div id="cropModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Выберите область фотографии</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <img id="cropImage" src="" alt="Crop Image" style="max-width: 100%;">
+            </div>
+            <div class="modal-footer" style="padding: 10px; text-align: right;">
+                <button id="cropSave" class="btn-primary">Сохранить</button>
+                <button id="cropCancel" class="btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Блок для отображения flash сообщений -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Обработка формы настроек
-            const settingsForm = document.querySelector('.settings-form');
-            if (settingsForm) {
-                settingsForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    // Здесь будет логика сохранения настроек
-                    alert('Настройки сохранены!');
-                });
+        setTimeout(function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(message) {
+                message.style.display = 'none';
+            });
+        }, 5000);
+    </script>
+
+    <script>
+        let cropper;
+
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Показать модальное окно с кроппером
+                    const cropImage = document.getElementById('cropImage');
+                    cropImage.src = e.target.result;
+                    document.getElementById('cropModal').style.display = 'flex';
+
+                    // Инициализировать кроппер
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    cropper = new Cropper(cropImage, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        autoCropArea: 1,
+                        responsive: true,
+                        restore: false,
+                        checkCrossOrigin: false,
+                        checkOrientation: false,
+                        modal: true,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        background: false,
+                        scalable: true,
+                        zoomable: true,
+                        zoomOnTouch: true,
+                        zoomOnWheel: true,
+                        wheelZoomRatio: 0.1,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        toggleDragModeOnDblclick: true,
+                    });
+                };
+                reader.readAsDataURL(file);
             }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Закрытие модального окна
+            document.querySelector('.close').onclick = function() {
+                document.getElementById('cropModal').style.display = 'none';
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            };
+
+            document.getElementById('cropCancel').onclick = function() {
+                document.getElementById('cropModal').style.display = 'none';
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            };
+
+            document.getElementById('cropSave').onclick = function() {
+                if (cropper) {
+                    const canvas = cropper.getCroppedCanvas({
+                        width: 120,
+                        height: 120,
+                    });
+                    const croppedImage = canvas.toDataURL('image/jpeg');
+
+                    // Обновить превью
+                    const avatarPreview = document.querySelector('.avatar-preview');
+                    avatarPreview.innerHTML = '<img src="' + croppedImage + '" alt="Avatar Preview" class="profile-avatar-img">';
+
+                    // Сохранить base64 в hidden field
+                    document.getElementById('cropped_image').value = croppedImage;
+
+                    document.getElementById('cropModal').style.display = 'none';
+                    cropper.destroy();
+                    cropper = null;
+                }
+            };
+
+            // Обработка формы настроек - теперь отправляется POST
 
             // Обработка кнопки "Отмена"
+            const settingsForm = document.querySelector('.settings-form');
             const cancelButton = settingsForm?.querySelector('.btn-secondary');
             if (cancelButton) {
                 cancelButton.addEventListener('click', function() {
                     settingsForm.reset();
+                    // Сбросить превью к оригиналу
+                    const avatarPreview = document.querySelector('.avatar-preview');
+                    const originalAvatar = '{{ user.avatar_url if user and user.avatar_url else "" }}';
+                    if (originalAvatar) {
+                        avatarPreview.innerHTML = '<img src="' + originalAvatar + '" alt="Avatar" class="profile-avatar-img">';
+                    } else {
+                        avatarPreview.innerHTML = '<div class="avatar-image">👤</div>';
+                    }
                 });
             }
         });
