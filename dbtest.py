@@ -10,7 +10,7 @@ from sqlalchemy.sql import func
 from datetime import datetime
 from typing import Optional, List
 
-DATABASE_URL = "sqlite:///database.db"
+DATABASE_URL = "postgresql+psycopg2://@localhost:5432/testdb"
 
 engine = create_engine(DATABASE_URL, echo=True)
 Base = declarative_base()
