@@ -94,6 +94,10 @@ def register_page():
 		return render_template('register.html')
 	else:
 		user_dict = request.form.to_dict()
+		user_dict['email'] = 'replace@me.please'
+		user_dict['role_id'] = 1
+		user_dict['avatar_url'] = '-1.jpg'
+		user_dict['confirmed'] = False
 		if get_user_by_slug(user_dict['slug']) != None:
 			return render_template('register.html', error='Пользователь с таким ID уже существует!')
 		add_user(user_dict)
@@ -108,6 +112,7 @@ def main_page():
 	print('Зашёл в main_page. User_id ->', current_user.get_id())
 	if request.method == 'GET':
 		user = get_user_by_id(current_user.get_id())
+		print(user.avatar_url)
 		return render_template('main.html', active_page='all_projects', user=user)
 	else:
 		# Добавить обработку создания проекта
