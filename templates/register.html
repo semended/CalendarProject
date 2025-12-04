@@ -37,6 +37,11 @@
                         {% endif %}
 
                         <div class="form-group">
+                            <label for="reg_email">Email *</label>
+                            <input type="email" id="reg_email" name="email" placeholder="Введите email" required>
+                        </div>
+
+                        <div class="form-group">
                             <label for="reg_slug">ID пользователя *</label>
                             <input type="text" id="reg_slug" name="slug" placeholder="Придумайте ID" required>
                             <small class="form-hint">Этот ID будет использоваться для входа в систему</small>
@@ -45,11 +50,6 @@
                         <div class="form-group">
                             <label for="reg_password">Пароль *</label>
                             <input type="password" id="reg_password" name="password" placeholder="Придумайте пароль" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="reg_email">Email *</label>
-                            <input type="email" id="reg_email" name="email" placeholder="Введите email" required>
                         </div>
 
                         <div class="form-row">
