@@ -71,9 +71,9 @@
                                     <div class="avatar-upload">
                                         <div class="avatar-preview">
                                             {% if user and user.avatar_url %}
-                                                <img src="{{ user.avatar_url }}" alt="Avatar" class="profile-avatar-img">
+                                                <img src="{{ user.avatar_url }}" alt="Avatar" class="avatar-preview-img">
                                             {% else %}
-                                                <div class="avatar-image">👤</div>
+                                                <div class="avatar-placeholder">👤</div>
                                             {% endif %}
                                         </div>
                                         <div class="avatar-actions">
@@ -284,8 +284,9 @@
                     const croppedImage = canvas.toDataURL('image/jpeg');
 
                     // Обновить превью
+                    // Внутри функции cropSave
                     const avatarPreview = document.querySelector('.avatar-preview');
-                    avatarPreview.innerHTML = '<img src="' + croppedImage + '" alt="Avatar Preview" class="profile-avatar-img">';
+                    avatarPreview.innerHTML = '<img src="' + croppedImage + '" alt="Avatar Preview" class="avatar-preview-img">';
 
                     // Сохранить base64 в hidden field
                     document.getElementById('cropped_image').value = croppedImage;
@@ -307,10 +308,11 @@
                     // Сбросить превью к оригиналу
                     const avatarPreview = document.querySelector('.avatar-preview');
                     const originalAvatar = '{{ user.avatar_url if user and user.avatar_url else "" }}';
+                    // В обработчике кнопки "Отмена"
                     if (originalAvatar) {
-                        avatarPreview.innerHTML = '<img src="' + originalAvatar + '" alt="Avatar" class="profile-avatar-img">';
+                        avatarPreview.innerHTML = '<img src="' + originalAvatar + '" alt="Avatar" class="avatar-preview-img">';
                     } else {
-                        avatarPreview.innerHTML = '<div class="avatar-image">👤</div>';
+                        avatarPreview.innerHTML = '<div class="avatar-placeholder">👤</div>';
                     }
                 });
             }
