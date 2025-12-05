@@ -71,7 +71,7 @@
                                     <div class="avatar-upload">
                                         <div class="avatar-preview">
                                             {% if user and user.avatar_url %}
-                                                <img src="{{ url_for('static', filename='user_avatars/' ~ user.avatar_url ~ 'jpg') }}" alt="Avatar" class="avatar-preview-img">
+                                                <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}" alt="Avatar" class="avatar-preview-img">
                                             {% else %}
                                                 <div class="avatar-placeholder">👤</div>
                                             {% endif %}
