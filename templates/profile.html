@@ -30,7 +30,7 @@
                         <div class="profile-card">
                             <div class="profile-avatar-large">
                                 {% if user and user.avatar_url %}
-                                    <img src="{{ user.avatar_url }}" alt="Avatar" class="profile-avatar-img">
+                                    <img src="{{ url_for('static', filename='user_avatars/' ~ user.avatar_url ~ '.jpg') }}" alt="Avatar" class="profile-avatar-img">
                                 {% else %}
                                     👤
                                 {% endif %}

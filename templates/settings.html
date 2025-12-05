@@ -71,7 +71,7 @@
                                     <div class="avatar-upload">
                                         <div class="avatar-preview">
                                             {% if user and user.avatar_url %}
-                                                <img src="{{ user.avatar_url }}" alt="Avatar" class="avatar-preview-img">
+                                                <img src="{{ url_for('static', filename='user_avatars/' ~ user.avatar_url ~ '.jpg') }}" alt="Avatar" class="avatar-preview-img">
                                             {% else %}
                                                 <div class="avatar-placeholder">👤</div>
                                             {% endif %}
@@ -307,7 +307,7 @@
                     settingsForm.reset();
                     // Сбросить превью к оригиналу
                     const avatarPreview = document.querySelector('.avatar-preview');
-                    const originalAvatar = '{{ user.avatar_url if user and user.avatar_url else "" }}';
+                    const originalAvatar = "{{ url_for('static', filename='user_avatars/' ~ user.avatar_url ~ '.jpg') if user and user.avatar_url else '' }}";
                     // В обработчике кнопки "Отмена"
                     if (originalAvatar) {
                         avatarPreview.innerHTML = '<img src="' + originalAvatar + '" alt="Avatar" class="avatar-preview-img">';
