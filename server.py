@@ -1,10 +1,20 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+import os
+import base64
+from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 
 from db_requests import *
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '(*#HF(@#*hqED*(QH@#OhlihO(#*'
+
+UPLOAD_FOLDER = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -47,13 +57,15 @@ def exit_page():
 
 
 @app.route('/', methods=['GET', 'POST'])
-def start_page(error=None):
+def start_page():
 	print('Зашёл в start_page. User_id ->', current_user.get_id())
 
 	if current_user.get_id() is not None:
 		return redirect(url_for('main_page'))
 
 	if request.method == 'GET':
+		# Получаем текст ошибки из query-параметра, если он есть
+		error = request.args.get('error')
 		return render_template('start.html', error=error)
 	else:
 		if request.form.get('name') is None:
@@ -64,11 +76,11 @@ def start_page(error=None):
 			if user is None:
 				# Такой пользователь не найден
 				print('Пользователь не найден -> ' + slug)
-				return redirect(url_for('start_page', error='Неправильный логин'))
+				return redirect(url_for('start_page', error='Пользователь не найден. Проверьте ID или зарегистрируйтесь.'))
 			elif user.password != password:
 				# Введён неправильный пароль
 				print('Неправильный пароль -> ', user.id)
-				return redirect(url_for('start_page', error='Неправильный пароль'))
+				return redirect(url_for('start_page', error='Неверный пароль. Попробуйте ещё раз.'))
 
 			# Урааа всё хорошо
 			login_user(User(user.id))
@@ -127,10 +139,52 @@ def user_page(user_id):
 	return render_template('profile.html', user=user)
 
 
-@app.route('/user/settings')
+@app.route('/user/settings', methods=['GET', 'POST'])
 @login_required
 def settings_page():
 	print('Зашёл в settings. User_id ->', current_user.get_id())
+	if request.method == 'POST':
+		user_dict = request.form.to_dict()
+		# Обработка удаления аватара
+		if user_dict.get('remove_avatar') == 'true':
+			user_dict['avatar_url'] = ""
+			# Удалить файл, если существует
+			user = get_user_by_id(current_user.get_id())
+			if user and user.avatar_url:
+				filepath = user.avatar_url.lstrip('/')
+				if os.path.exists(filepath):
+					os.remove(filepath)
+		# Обработка кропнутого изображения
+		elif user_dict.get('cropped_image'):
+			cropped_data = user_dict['cropped_image']
+			if cropped_data.startswith('data:image'):
+				# Декодировать base64
+				header, encoded = cropped_data.split(',', 1)
+				image_data = base64.b64decode(encoded)
+				# Сохранить как файл
+				user_id = current_user.get_id()
+				filename = f"user_{user_id}_avatar.jpg"
+				filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+				os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+				with open(filepath, 'wb') as f:
+					f.write(image_data)
+				user_dict['avatar_url'] = f"/{filepath}"
+		# Обработка файла аватара
+		elif 'avatar' in request.files:
+			file = request.files['avatar']
+			if file and allowed_file(file.filename):
+				filename = secure_filename(file.filename)
+				# Создать уникальное имя файла
+				user_id = current_user.get_id()
+				ext = filename.rsplit('.', 1)[1].lower()
+				filename = f"user_{user_id}_avatar.{ext}"
+				filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+				os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+				file.save(filepath)
+				user_dict['avatar_url'] = f"/{filepath}"
+		update_user(current_user.get_id(), user_dict)
+		flash('Настройки сохранены', 'success')
+		return redirect(url_for('settings_page'))
 	user = get_user_by_id(current_user.get_id())
 	return render_template('settings.html', user=user)
 

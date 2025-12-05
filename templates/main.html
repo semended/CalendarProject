@@ -26,7 +26,7 @@
                     <div class="user-menu-container">
                         <div class="user-avatar" id="userMenuButton">
                             {% if user and user.avatar_url %}
-                                <img src="{{ user.avatar_url }}" alt="Avatar" class="user-avatar-img">
+                                <img src="{{ url_for('static', filename='user_avatars/' ~ user.avatar_url ~ 'jpg') }}" alt="Avatar" class="user-avatar-img">
                             {% else %}
                                 👤
                             {% endif %}
