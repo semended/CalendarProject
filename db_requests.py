@@ -10,7 +10,7 @@ from sqlalchemy.sql import func
 from datetime import datetime
 from typing import Optional, List
 
-DATABASE_URL = "sqlite:///database.db"
+DATABASE_URL = "postgresql+psycopg2://postgres:123@localhost:5432/testdb"
 
 engine = create_engine(DATABASE_URL, echo=True)
 Base = declarative_base()
@@ -41,6 +41,13 @@ class User(Base):
     surname = Column(String(255), nullable=False)
     patronymic = Column(String(255), nullable=True)
     password = Column(String(255), nullable=False)
+    bio = Column(Text, nullable=True)  
+    position = Column(String(255), nullable=True)
+    company = Column(String(255), nullable=True)
+    workplace = Column(String(255), nullable=True)
+    pronouns = Column(String(50), nullable=True)
+    url = Column(String(255), nullable=True)
+    organization = Column(Boolean, nullable=False, default=False)
     role_id = Column(BigInteger, ForeignKey("roles.id"), nullable=False)
     avatar_url = Column(String(255), nullable=False, default="")
     confirmed = Column(Boolean, nullable=False, default=False)
@@ -52,7 +59,7 @@ class User(Base):
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', name='{self.name} {self.surname}')>"
-
+    
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -181,13 +188,77 @@ def add_user(user_dict) -> User:
             email=user_dict['email'],
             name=user_dict['name'],
             surname=user_dict['surname'],
-            patronymic=user_dict['patronymic'],
+            patronymic=user_dict.get('patronymic'),
             password=user_dict['password'],
+            bio=user_dict.get('bio'),
+            position=user_dict.get('position'),
+            company=user_dict.get('company'),
+            workplace=user_dict.get('workplace'),
+            pronouns=user_dict.get('pronouns'),
+            url=user_dict.get('url', 'https://example.com'),
+            organization=user_dict.get('organization', False),
             role_id=user_dict['role_id'],
-            avatar_url=user_dict['avatar_url'],
-            confirmed=user_dict['confirmed']
+            avatar_url=user_dict.get('avatar_url', ""),
+            confirmed=user_dict.get('confirmed', False)
         )
         session.add(user)
+        session.commit()
+        session.refresh(user)
+        return user
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+
+
+def update_user(user_id: int, user_dict: dict) -> Optional[User]:
+    """Обновление данных пользователя"""
+    session = SessionLocal()
+
+    try:
+        user = session.get(User, user_id)
+        if not user:
+            return None
+        
+        # Обновляем только те поля, которые есть в словаре и разрешены
+        allowed_fields = [
+            'name', 'surname', 'patronymic', 'email', 'avatar_url',
+            'bio', 'position', 'company', 'workplace', 'pronouns', 'url'
+        ]
+        
+        for key, value in user_dict.items():
+            if key in allowed_fields and hasattr(user, key):
+                if value is not None and value != '':
+                    setattr(user, key, value)
+                elif key in ['patronymic', 'bio', 'position', 'company', 'workplace', 'pronouns']:
+                    # Поля, которые могут быть None
+                    setattr(user, key, None)
+                elif key == 'avatar_url' and (value is None or value == ''):
+                    setattr(user, key, "")
+                elif key == 'url' and (value is None or value == ''):
+                    setattr(user, key, 'https://example.com')
+        
+        session.commit()
+        session.refresh(user)
+        return user
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+
+
+def update_user_avatar(user_id: int, avatar_url: str) -> Optional[User]:
+    """Обновление аватара пользователя"""
+    session = SessionLocal()
+
+    try:
+        user = session.get(User, user_id)
+        if not user:
+            return None
+        
+        user.avatar_url = avatar_url
         session.commit()
         session.refresh(user)
         return user
@@ -499,21 +570,23 @@ if __name__ == '__main__':
     # Добавление начальных ролей
     add_initial_roles()
 
-    # Создание тестового пользователя
+    # Создание тестового пользователя - ИСПРАВЛЕННЫЙ ВЫЗОВ
     test_user = get_user_by_id(1)
     if test_user is None:
-        test_user = add_user(
-            slug="test_user",
-            email="test@example.com",
-            name="Иван",
-            surname="Иванов",
-            password="hashed_password_here",
-            role_id=3  # Разработчик
-        )
+        test_user = add_user({
+            'slug': "test_user",
+            'email': "test@example.com",
+            'name': "Иван",
+            'surname': "Иванов",
+            'patronymic': None,
+            'password': "hashed_password_here",
+            'role_id': 3,  # Разработчик
+            'avatar_url': "",  # Добавлено
+            'confirmed': False  # Добавлено
+        })
 
     if test_user:
-        pass
-        #print(f"Создан пользователь: {test_user}")
+        print(f"Создан пользователь: {test_user}")
 
     # Создание тестовой задачи
     if test_user:
@@ -528,7 +601,7 @@ if __name__ == '__main__':
         )
 
         if test_task:
-            #print(f"Создана задача: {test_task}")
+            print(f"Создана задача: {test_task}")
 
             # Создание роли для задачи
             task_role = create_task_role(
@@ -538,7 +611,7 @@ if __name__ == '__main__':
             )
 
             if task_role:
-                #print(f"Создана роль для задачи: {task_role}")
+                print(f"Создана роль для задачи: {task_role}")
 
                 # Добавление разрешения к роли
                 permission = add_permission_to_task_role(
@@ -547,7 +620,7 @@ if __name__ == '__main__':
                     permission="task.edit"
                 )
 
-                #print(f"Добавлено разрешение: {permission}")
+                print(f"Добавлено разрешение: {permission}")
 
                 # Назначение пользователя на роль в задаче
                 assignment = assign_user_to_task_role(
@@ -556,23 +629,21 @@ if __name__ == '__main__':
                     task_role_id=task_role.id
                 )
 
-                #print(f"Пользователь назначен на роль: {assignment}")
+                print(f"Пользователь назначен на роль: {assignment}")
 
     # Получение пользователя по email
     user_by_email = get_user_by_email("test@example.com")
     if user_by_email:
-        pass
-        #print(f"Найден пользователь по email: {user_by_email}")
+        print(f"Найден пользователь по email: {user_by_email}")
 
     # Получение всех пользователей
     all_users = get_all_users()
-    #print(f"Всего пользователей: {len(all_users)}")
+    print(f"Всего пользователей: {len(all_users)}")
 
     # Получение всех ролей
     session = SessionLocal()
     all_roles = session.query(Role).all()
-    #print(f"Всего ролей в системе: {len(all_roles)}")
+    print(f"Всего ролей в системе: {len(all_roles)}")
     for role in all_roles:
-        pass
-        #print(f"  - {role}")
+        print(f"  - {role}")
     session.close()

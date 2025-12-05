@@ -23,7 +23,7 @@
                         CalendarName - это (красивое описание)
                     </p>
 
-                    <!--контейнер ошибок-->
+                    <!--контейнер ошибок - аналогично регистрации-->
                     {% if error %}
                     <div class="error-container">
                         <div class="error-message">
@@ -77,6 +77,7 @@
         </main>
     </div>
 
+    <!-- Flash сообщения (оставьте только если действительно нужны) -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="flash-messages">
@@ -88,14 +89,5 @@
             </div>
         {% endif %}
     {% endwith %}
-
-    <script>
-        setTimeout(function() {
-            const flashMessages = document.querySelectorAll('.flash-message');
-            flashMessages.forEach(function(message) {
-                message.style.display = 'none';
-            });
-        }, 5000);
-    </script>
 </body>
 </html>

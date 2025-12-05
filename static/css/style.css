@@ -686,6 +686,7 @@ body {
     text-align: center;
 }
 
+/* ===== СТРАНИЦА ПРОФИЛЯ ===== */
 .profile-avatar-large {
     width: 120px;
     height: 120px;
@@ -697,6 +698,16 @@ body {
     font-size: 3rem;
     color: var(--primary);
     margin: 0 auto 20px;
+    overflow: hidden; /* Это обрежет изображение по кругу */
+    position: relative; /* Для позиционирования изображения */
+}
+
+.profile-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Это сохранит пропорции изображения */
+    object-position: center; /* Центрирует изображение */
+    display: block; /* Убирает лишние отступы */
 }
 
 .profile-info h2 {
@@ -1456,42 +1467,48 @@ body {
 }
 
 /* ===== СТИЛИ ДЛЯ СТРАНИЦЫ 404 ===== */
-.error-container {
+.not-found-container {
     text-align: center;
-    padding: 40px;
+    padding: 80px 20px;
     max-width: 600px;
     width: 100%;
     margin: 0 auto;
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
-.error-icon {
+.not-found-icon {
     font-size: 6rem;
     margin-bottom: 20px;
     color: var(--primary);
 }
 
-.error-code {
+.not-found-code {
     font-size: 4rem;
     font-weight: 800;
     color: var(--primary);
     margin-bottom: 10px;
 }
 
-.error-title {
+.not-found-title {
     font-size: 2rem;
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 16px;
 }
 
-.error-description {
+.not-found-description {
     font-size: 1.125rem;
     color: var(--text-secondary);
     margin-bottom: 40px;
     line-height: 1.6;
+    max-width: 500px;
 }
 
-.error-actions {
+.not-found-actions {
     display: flex;
     gap: 16px;
     justify-content: center;
@@ -1499,7 +1516,7 @@ body {
     margin-bottom: 40px;
 }
 
-.quick-links {
+.not-found-links {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 16px;
@@ -1507,7 +1524,7 @@ body {
     margin: 0 auto;
 }
 
-.quick-link {
+.not-found-link {
     background: var(--bg-primary);
     padding: 16px;
     border-radius: 8px;
@@ -1520,7 +1537,7 @@ body {
     font-weight: 500;
 }
 
-.quick-link:hover {
+.not-found-link:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     color: var(--primary);
@@ -1528,57 +1545,100 @@ body {
     text-decoration: none;
 }
 
+/* Стили для ошибок авторизации (переименованные) */
+.auth-error-container {
+    margin-top: 0;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.auth-error-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #fef2f2;
+    border: 1px solid var(--error);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--error);
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auth-error-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+/* Удалите старый стиль .error-container из вашего CSS, 
+   так как он конфликтует с вышеуказанными стилями */
+
 /* Адаптивность для страницы 404 */
 @media (max-width: 768px) {
-    .error-container {
-        padding: 20px;
+    .not-found-container {
+        padding: 60px 20px;
     }
     
-    .error-icon {
+    .not-found-icon {
         font-size: 4rem;
     }
     
-    .error-code {
+    .not-found-code {
         font-size: 3rem;
     }
     
-    .error-title {
+    .not-found-title {
         font-size: 1.5rem;
     }
     
-    .error-actions {
+    .not-found-actions {
         flex-direction: column;
         align-items: center;
     }
     
-    .btn-primary, .btn-secondary {
+    .not-found-actions .btn-primary,
+    .not-found-actions .btn-secondary {
         width: 100%;
         max-width: 250px;
     }
     
-    .quick-links {
+    .not-found-links {
         grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 480px) {
-    .error-icon {
+    .not-found-icon {
         font-size: 3rem;
     }
     
-    .error-code {
+    .not-found-code {
         font-size: 2.5rem;
     }
     
-    .error-title {
+    .not-found-title {
         font-size: 1.25rem;
     }
     
-    .error-description {
+    .not-found-description {
         font-size: 1rem;
     }
 }
 
+/* Кнопки для 404 страницы */
 .btn-back, .btn-return {
     padding: 12px 32px;
     border-radius: 8px;
@@ -1588,6 +1648,7 @@ body {
     text-decoration: none;
     display: inline-block;
     text-align: center;
+    min-width: 180px;
 }
 
 .btn-back:hover, .btn-return:hover {

@@ -10,36 +10,30 @@
     <div class="container start-page">
         <!-- Основной контент -->
         <main class="main-content">
-            <div class="error-container">
+            <div class="not-found-container">
                 <!-- Иконка -->
-                <div class="error-icon">📄</div>
+                <div class="not-found-icon">🔍</div>
                 
                 <!-- Код ошибки -->
-                <div class="error-code">404</div>
+                <div class="not-found-code">404</div>
                 
                 <!-- Заголовок -->
-                <h1 class="error-title">Страница не найдена</h1>
+                <h1 class="not-found-title">Страница не найдена</h1>
                 
                 <!-- Описание -->
-                <p class="error-description">
+                <p class="not-found-description">
                     К сожалению, запрашиваемая страница не существует. 
                     Возможно, она была перемещена или удалена. 
                     Проверьте правильность адреса или вернитесь на главную страницу.
                 </p>
 
                 <!-- Действия -->
-                <div class="error-actions">
+                <div class="not-found-actions">
                     <a href="javascript:history.back()" class="btn-secondary btn-back">Вернуться назад</a>
-                    <a href="/" class="btn-primary btn-return">Вернуться в начало</a>
+                    <a href="{{ url_for('start_page') }}" class="btn-primary btn-return">Вернуться в начало</a>
                 </div>
             </div>
         </main>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Убрана логика для быстрых ссылок, так как они удалены
-        });
-    </script>
 </body>
 </html>
