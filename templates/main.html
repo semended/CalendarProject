@@ -106,8 +106,6 @@
         </main>
     </div>
 
-
-
     <script>
         // Данные проектов из сервера
         let projects = {{ projects|tojson }};
@@ -146,8 +144,6 @@
             renderProjects();
             updateStats();
         }
-
-
 
         // Инициализация выпадающих меню
         function initializeDropdowns() {
@@ -273,8 +269,6 @@
             document.getElementById('completedProjects').textContent = projects.filter(p => p.status === 'completed').length;
             document.getElementById('pausedProjects').textContent = projects.filter(p => p.status === 'paused').length;
         }
-
-
     </script>
 </body>
 </html>

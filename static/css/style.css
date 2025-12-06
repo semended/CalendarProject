@@ -277,6 +277,9 @@ body {
     padding: 20px;
     transition: all 0.2s;
     cursor: pointer;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
 }
 
 .project-card:hover {
@@ -291,16 +294,22 @@ body {
 }
 
 .project-header .project-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
+    width: 4px;
+    height: 24px;
+    border-radius: 2px;
     margin-right: 12px;
+    flex-shrink: 0;
 }
 
 .project-header h3 {
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
 }
 
 .project-content p {
@@ -308,12 +317,18 @@ body {
     color: var(--text-secondary);
     margin-bottom: 16px;
     line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
 }
 
 .project-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: auto;
 }
 
 .project-stats {
@@ -1732,7 +1747,6 @@ body {
     padding: 2rem;
     border-radius: 8px;
     border: 1px solid var(--bg-tertiary);
-    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
 }
 
 .create-project-layout {
@@ -1847,31 +1861,15 @@ body {
     border-radius: 12px;
     background: var(--bg-primary);
     color: var(--text-primary);
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .project-name-input-wrapper input:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-light), 0 4px 16px rgba(14, 165, 233, 0.15);
-    transform: translateY(-1px);
 }
 
 .project-name-input-wrapper input::placeholder {
     color: var(--text-tertiary);
     font-weight: 400;
-}
-
-.input-decoration {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    width: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary), var(--primary-light));
-    border-radius: 2px;
-    transition: all 0.3s ease;
-    transform: translateX(-50%);
 }
 
 .project-name-input-wrapper input:focus + .input-decoration {
@@ -1909,31 +1907,17 @@ body {
     background: var(--bg-primary);
     color: var(--text-primary);
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     resize: vertical;
 }
 
 .project-description-wrapper textarea:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-light), 0 4px 16px rgba(14, 165, 233, 0.15);
-    transform: translateY(-1px);
+    box-shadow: none;
+    outline: none;
 }
 
 .project-description-wrapper textarea::placeholder {
     color: var(--text-tertiary);
-    font-style: italic;
-}
-
-.textarea-decoration {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    width: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary), var(--primary-light));
-    border-radius: 2px;
-    transition: all 0.3s ease;
-    transform: translateX(-50%);
 }
 
 .project-description-wrapper textarea:focus + .textarea-decoration {
@@ -2059,6 +2043,9 @@ body {
     border-radius: 8px;
     padding: 20px;
     transition: all 0.2s;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
 }
 
 .project-card-preview:hover {
@@ -2073,10 +2060,11 @@ body {
 }
 
 .project-card-preview .project-header .project-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
+    width: 4px;
+    height: 24px;
+    border-radius: 2px;
     margin-right: 12px;
+    flex-shrink: 0;
 }
 
 .project-card-preview .project-header h4 {
@@ -2084,6 +2072,11 @@ body {
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
 }
 
 .project-card-preview .project-content p {
@@ -2091,12 +2084,18 @@ body {
     color: var(--text-secondary);
     margin-bottom: 16px;
     line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
 }
 
 .project-card-preview .project-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: auto;
 }
 
 .project-card-preview .project-stats {
