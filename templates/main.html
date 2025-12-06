@@ -20,9 +20,6 @@
                     <div class="breadcrumb">Проекты / Все проекты</div>
                 </div>
                 <div class="header-right">
-                    <button class="btn-primary" id="createProjectBtn">
-                        <span>+ Новый проект</span>
-                    </button>
                     <div class="user-menu-container">
                         <div class="user-avatar" id="userMenuButton">
                             {% if user and user.avatar_url %}
@@ -109,104 +106,96 @@
         </main>
     </div>
 
-    <!-- Модальное окно создания проекта -->
-    <div id="createProjectModal" class="modal">
-        <div class="modal-content">
+    <!-- Модальное окно проекта -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content project-modal-content">
             <div class="modal-header">
-                <h2>Создать новый проект</h2>
-                <span class="close" onclick="closeCreateProjectModal()">&times;</span>
-            </div>
-            <form class="auth-form" id="createProjectForm">
-                <div class="form-group">
-                    <label for="projectName">Название проекта *</label>
-                    <input type="text" id="projectName" name="projectName" placeholder="Введите название проекта" required>
-                </div>
-                <div class="form-group">
-                    <label for="projectDescription">Описание</label>
-                    <textarea id="projectDescription" name="projectDescription" placeholder="Опишите ваш проект" rows="3"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="projectDeadline">Срок выполнения</label>
-                    <input type="date" id="projectDeadline" name="projectDeadline">
-                </div>
-                <div class="form-group">
-                    <label for="projectColor">Цвет проекта</label>
-                    <div class="color-picker">
-                        <input type="color" id="projectColor" name="projectColor" value="#0ea5e9">
+                <div class="project-modal-header">
+                    <div class="project-modal-color" id="modalProjectColor"></div>
+                    <div class="project-modal-info">
+                        <h2 id="modalProjectName">Название проекта</h2>
+                        <div class="project-modal-meta">
+                            <span class="project-status" id="modalProjectStatus">Активный</span>
+                            <span class="project-date" id="modalProjectDate">Срок: 25 дек</span>
+                        </div>
                     </div>
                 </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeCreateProjectModal()">Отмена</button>
-                    <button type="submit" class="btn-primary">Создать проект</button>
+                <span class="close" onclick="closeProjectModal()">&times;</span>
+            </div>
+
+            <div class="modal-body">
+                <div class="project-details-grid">
+                    <!-- Описание проекта -->
+                    <div class="project-detail-section">
+                        <h3>📖 Описание проекта</h3>
+                        <p id="modalProjectDescription">Описание проекта появится здесь...</p>
+                    </div>
+
+                    <!-- Создатель проекта -->
+                    <div class="project-detail-section">
+                        <h3>👤 Создатель проекта</h3>
+                        <div class="creator-info" id="modalProjectCreator">
+                            <div class="creator-avatar">👤</div>
+                            <div class="creator-details">
+                                <div class="creator-name">Имя пользователя</div>
+                                <div class="creator-email">email@example.com</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Участники проекта -->
+                    <div class="project-detail-section">
+                        <h3>👥 Участники проекта (<span id="modalMembersCount">0</span>)</h3>
+                        <div class="project-members" id="modalProjectMembers">
+                            <!-- Участники будут загружаться динамически -->
+                        </div>
+                    </div>
+
+                    <!-- Статистика проекта -->
+                    <div class="project-detail-section">
+                        <h3>📊 Статистика</h3>
+                        <div class="project-stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-number" id="modalTasksCount">0</div>
+                                <div class="stat-label">Всего задач</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="modalCompletedTasks">0</div>
+                                <div class="stat-label">Выполнено</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="modalActiveTasks">0</div>
+                                <div class="stat-label">Активных</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Недавняя активность -->
+                    <div class="project-detail-section">
+                        <h3>🕒 Недавняя активность</h3>
+                        <div class="activity-list" id="modalProjectActivity">
+                            <div class="activity-item">
+                                <div class="activity-icon">📝</div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Проект создан</div>
+                                    <div class="activity-time">2 дня назад</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeProjectModal()">Закрыть</button>
+                <button class="btn-primary">Редактировать проект</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Данные проектов (заглушка - в будущем будет загрузка с бэкенда)
-        let projects = [
-            {
-                id: 1,
-                name: "Веб-разработка",
-                description: "Разработка корпоративного сайта с системой управления контентом",
-                color: "#0ea5e9",
-                tasks: 24,
-                members: 5,
-                deadline: "2024-12-25",
-                status: "active"
-            },
-            {
-                id: 2,
-                name: "Мобильное приложение",
-                description: "Разработка кроссплатформенного мобильного приложения",
-                color: "#10b981",
-                tasks: 18,
-                members: 3,
-                deadline: "2025-01-15",
-                status: "active"
-            },
-            {
-                id: 3,
-                name: "Маркетинг кампания",
-                description: "Запуск рекламной кампании для нового продукта",
-                color: "#f59e0b",
-                tasks: 12,
-                members: 4,
-                deadline: "2024-11-30",
-                status: "completed"
-            },
-            {
-                id: 4,
-                name: "Дизайн система",
-                description: "Создание единой дизайн системы для всех продуктов компании",
-                color: "#8b5cf6",
-                tasks: 32,
-                members: 6,
-                deadline: "2025-02-10",
-                status: "active"
-            },
-            {
-                id: 5,
-                name: "API интеграция",
-                description: "Интеграция с внешними API сервисами",
-                color: "#ef4444",
-                tasks: 8,
-                members: 2,
-                deadline: "2025-01-20",
-                status: "paused"
-            },
-            {
-                id: 6,
-                name: "Обновление БД",
-                description: "Миграция и оптимизация базы данных",
-                color: "#8B5CF6",
-                tasks: 15,
-                members: 3,
-                deadline: "2025-01-05",
-                status: "active"
-            }
-        ];
+        // Данные проектов из сервера
+        let projects = {{ projects|tojson }};
 
         // Текущие настройки фильтрации и сортировки
         let currentFilter = 'all';
@@ -216,7 +205,7 @@
             initializeUserMenu();
             initializeProjects();
             initializeDropdowns();
-            initializeCreateProject();
+            initializeProjectModal();
         });
 
         // Инициализация пользовательского меню
@@ -242,6 +231,25 @@
         function initializeProjects() {
             renderProjects();
             updateStats();
+        }
+
+        // Инициализация модального окна проекта
+        function initializeProjectModal() {
+            // Делегирование событий для кликабельных карточек проектов
+            document.getElementById('projectsGrid').addEventListener('click', function(e) {
+                const projectCard = e.target.closest('.project-card');
+                if (projectCard) {
+                    const projectId = parseInt(projectCard.getAttribute('data-project-id'));
+                    openProjectModal(projectId);
+                }
+            });
+
+            // Закрытие модального окна при клике вне контента
+            document.getElementById('projectModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeProjectModal();
+                }
+            });
         }
 
         // Инициализация выпадающих меню
@@ -288,29 +296,6 @@
             document.addEventListener('click', function() {
                 filterMenu.classList.remove('show');
                 sortMenu.classList.remove('show');
-            });
-        }
-
-        // Инициализация создания проекта
-        function initializeCreateProject() {
-            const createBtn = document.getElementById('createProjectBtn');
-            const modal = document.getElementById('createProjectModal');
-            const form = document.getElementById('createProjectForm');
-
-            createBtn.addEventListener('click', function() {
-                modal.style.display = 'flex';
-            });
-
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                createNewProject();
-            });
-
-            // Закрытие модального окна при клике вне
-            window.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    closeCreateProjectModal();
-                }
             });
         }
 
@@ -392,30 +377,71 @@
             document.getElementById('pausedProjects').textContent = projects.filter(p => p.status === 'paused').length;
         }
 
-        function createNewProject() {
-            const form = document.getElementById('createProjectForm');
-            const formData = new FormData(form);
-            
-            const newProject = {
-                id: projects.length + 1,
-                name: formData.get('projectName'),
-                description: formData.get('projectDescription'),
-                color: formData.get('projectColor'),
-                tasks: 0,
-                members: 1,
-                deadline: formData.get('projectDeadline'),
-                status: 'active'
-            };
+        // Функции модального окна проекта
+        function openProjectModal(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
 
-            projects.push(newProject);
-            renderProjects();
-            updateStats();
-            closeCreateProjectModal();
-            form.reset();
+            // Заполнение основной информации
+            document.getElementById('modalProjectName').textContent = project.name;
+            document.getElementById('modalProjectColor').style.backgroundColor = project.color;
+            document.getElementById('modalProjectDescription').textContent = project.description;
+
+            // Определяем статус и дату отдельно
+            if (project.status === 'completed') {
+                document.getElementById('modalProjectStatus').textContent = 'Завершен';
+                document.getElementById('modalProjectDate').textContent = '';
+            } else if (project.status === 'paused') {
+                document.getElementById('modalProjectStatus').textContent = 'На паузе';
+                document.getElementById('modalProjectDate').textContent = '';
+            } else {
+                document.getElementById('modalProjectStatus').textContent = 'Активный';
+                document.getElementById('modalProjectDate').textContent = project.deadline ? `Срок: ${formatDate(project.deadline)}` : 'Без срока';
+            }
+
+            // Создатель проекта
+            const creatorElement = document.getElementById('modalProjectCreator');
+            creatorElement.querySelector('.creator-avatar').textContent = project.creator.avatar;
+            creatorElement.querySelector('.creator-name').textContent = project.creator.name;
+            creatorElement.querySelector('.creator-email').textContent = project.creator.email;
+
+            // Участники проекта
+            const membersElement = document.getElementById('modalProjectMembers');
+            document.getElementById('modalMembersCount').textContent = project.members;
+
+            membersElement.innerHTML = project.team.map(member => `
+                <div class="member-item">
+                    <div class="member-avatar">${member.avatar}</div>
+                    <div class="member-info">
+                        <div class="member-name">${member.name}</div>
+                        <div class="member-role">${member.role}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Статистика
+            document.getElementById('modalTasksCount').textContent = project.tasks;
+            document.getElementById('modalCompletedTasks').textContent = project.completedTasks;
+            document.getElementById('modalActiveTasks').textContent = project.activeTasks;
+
+            // Активность
+            const activityElement = document.getElementById('modalProjectActivity');
+            activityElement.innerHTML = project.activity.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon">${activity.icon}</div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.title}</div>
+                        <div class="activity-time">${activity.time}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Показать модальное окно
+            document.getElementById('projectModal').style.display = 'flex';
         }
 
-        function closeCreateProjectModal() {
-            document.getElementById('createProjectModal').style.display = 'none';
+        function closeProjectModal() {
+            document.getElementById('projectModal').style.display = 'none';
         }
 
         // Функция для обновления проектов из бэкенда (заглушка для будущей реализации)

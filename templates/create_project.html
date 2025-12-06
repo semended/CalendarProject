@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать проект - CalendarName</title>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Сайдбар -->
+        {% include 'sidebar.html' %}
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <!-- Хедер -->
+            <header class="header">
+                <div class="header-left">
+                    <h1>Создать проект</h1>
+                    <div class="breadcrumb">Проекты / Создать проект</div>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu-container">
+                        <div class="user-avatar" id="userMenuButton">
+                            {% if user and user.avatar_url %}
+                                <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}" alt="Avatar" class="user-avatar-img">
+                            {% else %}
+                                👤
+                            {% endif %}
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <a href="/user/{{ user.id }}" class="dropdown-item">
+                                <span class="dropdown-icon">👤</span>
+                                <span>Мой профиль</span>
+                            </a>
+                            <a href="/user/settings" class="dropdown-item">
+                                <span class="dropdown-icon">⚙️</span>
+                                <span>Настройки</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="/logout" class="dropdown-item">
+                                <span class="dropdown-icon">🚪</span>
+                                <span>Выйти из аккаунта</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Форма создания проекта -->
+            <section class="create-project-section">
+                <div class="create-project-layout">
+                    <!-- Левая колонка - форма -->
+                    <div class="create-project-container">
+                        <div class="form-intro">
+                            <div class="form-icon">📋</div>
+                            <h2>Новый проект</h2>
+                            <p>Создайте новый проект для организации задач и командной работы</p>
+                        </div>
+
+                        {% if error %}
+        <div class="error-message">
+            <span class="error-icon">⚠️</span>
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form class="project-form" id="createProjectForm" method="POST">
+                            <!-- Основная информация -->
+                            <div class="form-section">
+                                <h3 class="section-title">Основная информация</h3>
+
+                                <div class="form-group project-name-group">
+                                    <label for="projectName" class="project-name-label">
+                                        <span class="field-icon-large">📝</span>
+                                        Название проекта *
+                                    </label>
+                                    <div class="project-name-input-wrapper">
+                                        <input type="text" id="projectName" name="projectName"
+                                               placeholder="Введите название вашего проекта..."
+                                               required maxlength="100">
+                                        <div class="input-decoration"></div>
+                                    </div>
+                                    <div class="field-hint">Максимум 100 символов. <span id="nameCharCount">0/100</span></div>
+                                </div>
+
+                                <div class="form-group project-description-group">
+                                    <label for="projectDescription" class="project-description-label">
+                                        <span class="field-icon-large">📖</span>
+                                        Описание проекта
+                                    </label>
+                                    <div class="project-description-wrapper">
+                                        <textarea id="projectDescription" name="projectDescription"
+                                                  placeholder="Расскажите подробнее о вашем проекте...
+
+Например:
+• Какова основная цель проекта?
+• Какие ключевые задачи нужно выполнить?
+• Какой результат ожидается?
+• Есть ли какие-то особенности или требования?
+
+Это поможет лучше понять проект и привлечь нужных участников."
+                                                  rows="8" maxlength="500"></textarea>
+                                        <div class="textarea-decoration">
+                                            <div class="textarea-glow"></div>
+                                        </div>
+                                    </div>
+                                    <div class="field-hint">Максимум 500 символов. <span id="descCharCount">0/500</span></div>
+                                </div>
+                            </div>
+
+                            <!-- Настройки проекта -->
+                            <div class="form-section">
+                                <h3 class="section-title">Настройки проекта</h3>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="projectDeadline">
+                                            <span class="field-icon">📅</span>
+                                            Срок выполнения
+                                        </label>
+                                        <input type="date" id="projectDeadline" name="projectDeadline">
+                                        <div class="field-hint">Оставьте пустым, если срок не определен</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="projectColor">
+                                            <span class="field-icon">🎨</span>
+                                            Цвет проекта
+                                        </label>
+                                        <div class="color-picker-container">
+                                            <div class="color-presets">
+                                                <button type="button" class="color-preset" data-color="#0ea5e9" title="Синий"></button>
+                                                <button type="button" class="color-preset" data-color="#10b981" title="Зеленый"></button>
+                                                <button type="button" class="color-preset" data-color="#f59e0b" title="Желтый"></button>
+                                                <button type="button" class="color-preset" data-color="#ef4444" title="Красный"></button>
+                                                <button type="button" class="color-preset" data-color="#8b5cf6" title="Фиолетовый"></button>
+                                                <button type="button" class="color-preset" data-color="#06b6d4" title="Бирюзовый"></button>
+                                            </div>
+                                            <input type="color" id="projectColor" name="projectColor" value="#0ea5e9">
+                                        </div>
+                                        <div class="field-hint">Выберите цвет для визуального отличия проекта</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <a href="/main" class="btn-secondary">
+                                    <span>Отмена</span>
+                                </a>
+                                <button type="submit" class="btn-primary btn-large">
+                                    <span>✨ Создать проект</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Правая колонка - превью -->
+                    <div class="project-preview">
+                        <div class="preview-card">
+                            <h3>Предварительный просмотр</h3>
+                            <div class="project-card-preview" id="projectPreview">
+                                <div class="project-header">
+                                    <div class="project-color" style="background-color: #0ea5e9"></div>
+                                    <h4 id="previewTitle">Название проекта</h4>
+                                </div>
+                                <div class="project-content">
+                                    <p id="previewDescription">Описание проекта появится здесь...</p>
+                                    <div class="project-meta">
+                                        <div class="project-stats">
+                                            <span class="stat">📋 0 задач</span>
+                                            <span class="stat">👥 1 участник</span>
+                                        </div>
+                                        <div class="project-date" id="previewDate">Срок: не указан</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tips-card">
+                            <h4>💡 Советы по созданию проекта</h4>
+                            <ul class="tips-list">
+                                <li>Выберите понятное и описательное название</li>
+                                <li>Добавьте подробное описание целей и задач</li>
+                                <li>Установите реалистичный срок выполнения</li>
+                                <li>Выберите цвет, который поможет отличить проект от других</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeUserMenu();
+            initializeProjectForm();
+        });
+
+        // Инициализация пользовательского меню
+        function initializeUserMenu() {
+            const userMenuButton = document.getElementById('userMenuButton');
+            const userDropdown = document.getElementById('userDropdown');
+
+            userMenuButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+
+            document.addEventListener('click', function() {
+                userDropdown.classList.remove('show');
+            });
+
+            userDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+
+        // Инициализация формы проекта
+        function initializeProjectForm() {
+            const projectNameInput = document.getElementById('projectName');
+            const projectDescriptionInput = document.getElementById('projectDescription');
+            const projectDeadlineInput = document.getElementById('projectDeadline');
+            const projectColorInput = document.getElementById('projectColor');
+            const colorPresets = document.querySelectorAll('.color-preset');
+
+            // Счетчики символов
+            projectNameInput.addEventListener('input', function() {
+                updateCharCount('nameCharCount', this.value.length, 100);
+                updatePreview();
+            });
+
+            projectDescriptionInput.addEventListener('input', function() {
+                updateCharCount('descCharCount', this.value.length, 500);
+                updatePreview();
+            });
+
+            // Обновление превью при вводе
+            projectDeadlineInput.addEventListener('input', updatePreview);
+            projectColorInput.addEventListener('input', updatePreview);
+
+            // Предустановленные цвета
+            colorPresets.forEach(preset => {
+                preset.addEventListener('click', function() {
+                    const color = this.getAttribute('data-color');
+                    projectColorInput.value = color;
+                    updatePreview();
+
+                    // Убрать активный класс со всех
+                    colorPresets.forEach(p => p.classList.remove('active'));
+                    // Добавить активный класс этому
+                    this.classList.add('active');
+                });
+            });
+
+            // Установить начальный активный цвет
+            const initialColor = projectColorInput.value;
+            colorPresets.forEach(preset => {
+                if (preset.getAttribute('data-color') === initialColor) {
+                    preset.classList.add('active');
+                }
+            });
+
+            // Инициализировать превью
+            updatePreview();
+        }
+
+        // Обновление счетчика символов
+        function updateCharCount(elementId, currentLength, maxLength) {
+            const element = document.getElementById(elementId);
+            element.textContent = `${currentLength}/${maxLength}`;
+
+            // Изменение цвета в зависимости от количества символов
+            if (currentLength > maxLength * 0.9) {
+                element.style.color = 'var(--error)';
+            } else if (currentLength > maxLength * 0.8) {
+                element.style.color = 'var(--warning)';
+            } else {
+                element.style.color = 'var(--text-tertiary)';
+            }
+        }
+
+        // Обновление превью проекта
+        function updatePreview() {
+            const projectName = document.getElementById('projectName').value || 'Название проекта';
+            const projectDescription = document.getElementById('projectDescription').value || 'Описание проекта появится здесь...';
+            const projectDeadline = document.getElementById('projectDeadline').value;
+            const projectColor = document.getElementById('projectColor').value;
+
+            // Обновить превью
+            document.getElementById('previewTitle').textContent = projectName;
+            document.getElementById('previewDescription').textContent = projectDescription;
+            document.querySelector('#projectPreview .project-color').style.backgroundColor = projectColor;
+
+            // Обновить дату
+            const dateElement = document.getElementById('previewDate');
+            if (projectDeadline) {
+                const date = new Date(projectDeadline);
+                const formattedDate = date.toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+                dateElement.textContent = `Срок: ${formattedDate}`;
+                dateElement.className = 'project-date';
+            } else {
+                dateElement.textContent = 'Срок: не указан';
+                dateElement.className = 'project-date';
+            }
+        }
+    </script>
+</body>
+</html>
