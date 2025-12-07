@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalendarName - Управление {{ project.name }}</title>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="project-management-page">
+    <div class="container">
+        <!-- Сайдбар -->
+        {% include 'sidebar.html' %}
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <header class="page-header">
+                <div class="page-header-content">
+                    <h2>{{ project.name }} - Управление проектом</h2>
+                    <a href="/project/{{ project.id }}" class="btn-back-link">
+                        <button class="btn-secondary btn-back">← Вернуться к задачам</button>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Статистика -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalTasks">0</div>
+                    <div class="stat-label">Всего задач</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="inProgressTasks">0</div>
+                    <div class="stat-label">Задач в работе</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="completedTasks">0</div>
+                    <div class="stat-label">Завершено задач</div>
+                </div>
+            </div>
+
+            <!-- Управление командой -->
+            <section class="management-section">
+                <h3>Команда проекта</h3>
+                <div class="team-management">
+                    <div class="team-list" id="teamList">
+                        <p class="empty-state">список людей в проекте</p>
+                    </div>
+                    <div class="team-actions">
+                        <button class="btn-primary" onclick="addUserByEmail()">➕ Добавить пользователя по email</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Настройки проекта -->
+            <section class="management-section">
+                <h3>Настройки проекта</h3>
+                <div class="project-settings">
+                    <div class="setting-group">
+                        <label for="projectName">Название проекта</label>
+                        <input type="text" id="projectName" value="{{ project.name }}">
+                    </div>
+                    <div class="setting-group">
+                        <label for="projectDescription">Описание проекта</label>
+                        <textarea id="projectDescription">{{ project.description }}</textarea>
+                    </div>
+                    <div class="setting-group">
+                        <label for="projectColor">Цвет проекта</label>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="projectColor" value="{{ project.color }}">
+                            <span class="color-label">Выберите цвет проекта</span>
+                        </div>
+                    </div>
+                    <div class="setting-actions">
+                        <button class="btn-primary" onclick="saveProjectSettings()">💾 Сохранить настройки</button>
+                    </div>
+                </div>
+            </section>
+
+
+        </main>
+
+        <!-- Правая панель -->
+        <aside class="right-sidebar">
+            <div class="project-info-card">
+                <h3>Информация о проекте</h3>
+                <div class="info-item">
+                    <span class="info-label">Создан:</span>
+                    <span class="info-value">{{ project.created_at.strftime('%d.%m.%Y') if project.created_at else 'Не указано' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Создатель:</span>
+                    <span class="info-value">{{ user.name }} {{ user.surname }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Цвет:</span>
+                    <span class="color-preview" style="background-color: {{ project.color }}"></span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Данные проекта
+        const projectId = {{ project.id }};
+        let tasks = {
+            inProgress: [],
+            completed: []
+        };
+
+        // Инициализация страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTasks();
+            updateStats();
+        });
+
+        // Загрузка задач для статистики
+        async function loadTasks() {
+            try {
+                const response = await fetch(`/api/project/${projectId}/tasks`);
+                if (response.ok) {
+                    const data = await response.json();
+                    tasks.inProgress = data.inProgress || [];
+                    tasks.completed = data.completed || [];
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки задач:', error);
+            }
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            const total = tasks.inProgress.length + tasks.completed.length;
+            document.getElementById('totalTasks').textContent = total;
+            document.getElementById('inProgressTasks').textContent = tasks.inProgress.length;
+            document.getElementById('completedTasks').textContent = tasks.completed.length;
+        }
+
+        // Добавление пользователя по email (frontend only)
+        function addUserByEmail() {
+            const email = prompt('Введите email пользователя для добавления в проект:');
+            if (email && email.trim()) {
+                // Пока только выводим в консоль, бэкенд будет добавлен позже
+                console.log(`Добавление пользователя с email: ${email.trim()}`);
+                alert(`Пользователь с email ${email.trim()} будет добавлен в проект (функция будет реализована на бэкенде)`);
+            }
+        }
+
+        // Сохранение настроек проекта (frontend placeholder)
+        function saveProjectSettings() {
+            const name = document.getElementById('projectName').value.trim();
+            const description = document.getElementById('projectDescription').value.trim();
+            const color = document.getElementById('projectColor').value;
+
+            if (!name) {
+                alert('Название проекта не может быть пустым');
+                return;
+            }
+
+            // Пока только выводим в консоль, бэкенд будет добавлен позже
+            console.log('Сохранение настроек проекта:', { name, description, color });
+            alert('Настройки проекта будут сохранены (функция будет реализована на бэкенде)');
+        }
+
+
+    </script>
+</body>
+</html>

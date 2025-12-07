@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать проект - CalendarName</title>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        .create-project-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .create-project-header {
+            margin-bottom: 30px;
+        }
+
+        .create-project-header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            color: #1f2937;
+        }
+
+        .create-project-header p {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .project-form {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .form-section {
+            margin-bottom: 35px;
+        }
+
+        .form-section h3 {
+            font-size: 1.2rem;
+            color: #374151;
+            margin: 0 0 20px 0;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .color-display {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .color-input {
+            opacity: 0;
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+        }
+
+        .color-picker-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .priority-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .priority-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .btn-cancel {
+            padding: 12px 24px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            color: #374151;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-cancel:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+            transform: translateY(-1px);
+        }
+
+        .btn-create {
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-create:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+        }
+
+        .required {
+            color: #ef4444;
+            margin-left: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .create-project-container {
+                margin: 20px 0;
+                padding: 0 16px;
+            }
+
+            .project-form {
+                padding: 24px;
+            }
+
+            .create-project-header h1 {
+                font-size: 2rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn-create, .btn-cancel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Сайдбар -->
+        {% include 'sidebar.html' %}
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <div class="create-project-container">
+                <div class="create-project-header">
+                    <h1>Создать новый проект</h1>
+                    <p>Заполните форму, чтобы создать новый проект и начать работу</p>
+                </div>
+
+                <form class="project-form" id="createProjectForm" action="/create_project" method="POST">
+                    <div class="form-section">
+                        <h3>Основная информация</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="projectName">Название проекта <span class="required">*</span></label>
+                                <input type="text" id="projectName" name="projectName" class="form-input" 
+                                       placeholder="Введите название проекта" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="projectColor">Цвет проекта</label>
+                                <div class="color-picker-wrapper">
+                                    <div class="color-display" id="colorDisplay" style="background-color: #3b82f6;"></div>
+                                    <input type="color" id="projectColor" name="projectColor" class="color-input"
+                                           value="#3b82f6" onchange="updateColorDisplay(this.value)">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="projectDescription">Описание проекта</label>
+                            <textarea id="projectDescription" name="projectDescription" class="form-input form-textarea" 
+                                      placeholder="Опишите ваш проект, его цели и задачи"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Детали проекта</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="projectDeadline">Срок выполнения</label>
+                                <input type="date" id="projectDeadline" name="projectDeadline" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="projectPriority">Приоритет</label>
+                                <select id="projectPriority" name="projectPriority" class="priority-select">
+                                    <option value="1">Высокий</option>
+                                    <option value="2" selected>Средний</option>
+                                    <option value="3">Низкий</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="/main" class="btn-cancel">Отмена</a>
+                        <button type="submit" class="btn-create">Создать проект</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Обновление цвета дисплея
+        function updateColorDisplay(color) {
+            document.getElementById('colorDisplay').style.backgroundColor = color;
+        }
+
+        // Валидация формы
+        document.getElementById('createProjectForm').addEventListener('submit', function(e) {
+            const name = document.getElementById('projectName').value.trim();
+            if (!name) {
+                e.preventDefault();
+                alert('Пожалуйста, введите название проекта');
+                return;
+            }
+        });
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            updateColorDisplay('#3b82f6');
+        });
+    </script>
+</body>
+</html>

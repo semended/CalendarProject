@@ -3,8 +3,10 @@ from flask_login import LoginManager, login_user, current_user, logout_user, log
 import os
 import base64
 from werkzeug.utils import secure_filename
+from datetime import datetime
 
 from db_requests import *
+from sqlalchemy.orm import Session
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = '(*#HF(@#*hqED*(QH@#OhlihO(#*'
@@ -370,6 +372,118 @@ def settings_page():
 
 	# GET запрос - показываем страницу настроек
 	return render_template('settings.html', user=user)
+
+
+@app.route('/project/<int:project_id>')
+@login_required
+def project_page(project_id):
+	print('Зашёл в project_page. User_id ->', current_user.get_id())
+
+	# Получаем проект
+	project = get_task_by_id(project_id)
+	if project is None or project.creator_id != int(current_user.get_id()):
+		return render_template('notFound.html')
+
+	user = get_user_by_id(int(current_user.get_id()))
+	if user is None:
+		logout_user()
+		return redirect(url_for('start_page'))
+
+	return render_template('Current_project.html', active_page='current_project', user=user, project=project)
+
+
+@app.route('/project_management/<int:project_id>')
+@login_required
+def project_management_page(project_id):
+	print('Зашёл в project_management_page. User_id ->', current_user.get_id())
+
+	# Получаем проект
+	project = get_task_by_id(project_id)
+	if project is None or project.creator_id != int(current_user.get_id()):
+		return render_template('notFound.html')
+
+	user = get_user_by_id(int(current_user.get_id()))
+	if user is None:
+		logout_user()
+		return redirect(url_for('start_page'))
+
+	return render_template('project_management.html', active_page='current_project', user=user, project=project)
+
+
+@app.route('/api/project/<int:project_id>/tasks', methods=['GET', 'POST'])
+@login_required
+def project_tasks_api(project_id):
+	# Проверяем доступ к проекту
+	project = get_task_by_id(project_id)
+	if project is None or project.creator_id != int(current_user.get_id()):
+		return jsonify({'error': 'Project not found'}), 404
+
+	if request.method == 'GET':
+		# Получаем подзадачи проекта
+		subtasks = get_subtasks(project_id)
+
+		# Разделяем на inProgress и completed
+		in_progress = []
+		completed = []
+
+		for task in subtasks:
+			task_data = {
+				'id': task.id,
+				'title': task.name,
+				'description': task.description,
+				'createdAt': task.created_at.strftime('%d.%m.%Y') if task.created_at else '',
+				'status': 'completed' if task.finished_at else 'inProgress'
+			}
+
+			if task.finished_at:
+				completed.append(task_data)
+			else:
+				in_progress.append(task_data)
+
+		return jsonify({
+			'inProgress': in_progress,
+			'completed': completed
+		})
+
+	else:  # POST
+		# Сохранение задач
+		data = request.get_json()
+		in_progress_tasks = data.get('inProgress', [])
+		completed_tasks = data.get('completed', [])
+
+		try:
+			# Для простоты удаляем все существующие подзадачи и создаем заново
+			# В реальном приложении лучше обновлять существующие
+			session = SessionLocal()
+
+			# Удаляем существующие подзадачи
+			session.query(Task).filter(Task.parent_task_id == project_id).delete()
+
+			# Создаем новые подзадачи
+			for task_data in in_progress_tasks + completed_tasks:
+				is_completed = task_data in completed_tasks
+
+				task = Task(
+					parent_task_id=project_id,
+					creator_id=int(current_user.get_id()),
+					color=project.color,  # Используем цвет проекта
+					name=task_data['title'],
+					description=task_data.get('description', ''),
+					priority=1,
+					grade=5.0,
+					story_points=1.0,
+					finished_at=datetime.now() if is_completed else None
+				)
+				session.add(task)
+
+			session.commit()
+			return jsonify({'success': True})
+
+		except Exception as e:
+			print(f'Ошибка сохранения задач: {e}')
+			return jsonify({'error': 'Failed to save tasks'}), 500
+		finally:
+			session.close()
 
 
 @app.route('/<path:invalid_path>')

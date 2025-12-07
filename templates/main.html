@@ -199,22 +199,24 @@
             const sortedProjects = sortProjects(filteredProjects);
             
             grid.innerHTML = sortedProjects.map(project => `
-                <div class="project-card" data-project-id="${project.id}">
-                    <div class="project-header">
-                        <div class="project-color" style="background-color: ${project.color}"></div>
-                        <h3>${project.name}</h3>
-                    </div>
-                    <div class="project-content">
-                        <p>${project.description}</p>
-                        <div class="project-meta">
-                            <div class="project-stats">
-                                <span class="stat">📋 ${project.tasks} задач</span>
-                                <span class="stat">👥 ${project.members} участников</span>
+                <a href="/project/${project.id}" class="project-link">
+                    <div class="project-card" data-project-id="${project.id}">
+                        <div class="project-header">
+                            <div class="project-color" style="background-color: ${project.color}"></div>
+                            <h3>${project.name}</h3>
+                        </div>
+                        <div class="project-content">
+                            <p>${project.description}</p>
+                            <div class="project-meta">
+                                <div class="project-stats">
+                                    <span class="stat">📋 ${project.tasks} задач</span>
+                                    <span class="stat">👥 ${project.members} участников</span>
+                                </div>
+                                <div class="project-date ${getStatusClass(project.status)}">${getStatusText(project)}</div>
                             </div>
-                            <div class="project-date ${getStatusClass(project.status)}">${getStatusText(project)}</div>
                         </div>
                     </div>
-                </div>
+                </a>
             `).join('');
         }
 
