@@ -15,6 +15,20 @@
                         <span>Все проекты</span>
                     </a>
                 </li>
+                {% if project %}
+                <li class="nav-item active">
+                    <a href="/project/{{ project.id }}" class="nav-link">
+                        <span class="nav-icon">📄</span>
+                        <span>{{ project.name }}</span>
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item {% if active_page == 'create_project' %}active{% endif %}">
+                    <a href="/create_project" class="nav-link">
+                        <span class="nav-icon">➕</span>
+                        <span>Создать проект</span>
+                    </a>
+                </li>
             </ul>
         </div>
         

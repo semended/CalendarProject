@@ -270,6 +270,12 @@ body {
     padding: 24px;
 }
 
+.project-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
 .project-card {
     background-color: var(--bg-secondary);
     border: 1px solid var(--bg-tertiary);
@@ -277,6 +283,11 @@ body {
     padding: 20px;
     transition: all 0.2s;
     cursor: pointer;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    height: 200px;
+    justify-content: space-between;
 }
 
 .project-card:hover {
@@ -291,16 +302,22 @@ body {
 }
 
 .project-header .project-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
+    width: 4px;
+    height: 24px;
+    border-radius: 2px;
     margin-right: 12px;
+    flex-shrink: 0;
 }
 
 .project-header h3 {
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
 }
 
 .project-content p {
@@ -308,12 +325,18 @@ body {
     color: var(--text-secondary);
     margin-bottom: 16px;
     line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
 }
 
 .project-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: auto;
 }
 
 .project-stats {
@@ -966,6 +989,8 @@ body {
     color: white;
 }
 
+
+
 /* ===== ФОРМЫ ===== */
 .auth-form {
     padding: 12px 24px 24px 24px;
@@ -1062,7 +1087,7 @@ body {
     background-color: var(--bg-primary);
     border-radius: 12px;
     width: 100%;
-    max-width: 400px;
+    max-width: 1200px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     animation: slideIn 0.3s;
     margin: 0 auto;
@@ -1708,6 +1733,12 @@ body {
     padding: 2rem 0;
 }
 
+.create-project-section {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
 .register-container {
     max-width: 500px;
     width: 100%;
@@ -1715,6 +1746,466 @@ body {
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+}
+
+.create-project-container {
+    max-width: 700px;
+    width: 100%;
+    background: var(--bg-primary);
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid var(--bg-tertiary);
+}
+
+.create-project-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 50px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.project-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* ===== СТИЛИ ФОРМЫ СОЗДАНИЯ ПРОЕКТА ===== */
+.form-intro {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.form-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+.form-intro h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.form-intro p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.project-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.form-section {
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--bg-tertiary);
+}
+
+.section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary);
+}
+
+.field-icon {
+    margin-right: 8px;
+    font-size: 1rem;
+}
+
+.field-icon-large {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.field-hint {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+    font-style: italic;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Стили для поля названия проекта */
+.project-name-group {
+    margin-bottom: 2rem;
+}
+
+.project-name-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.project-name-input-wrapper {
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.project-name-input-wrapper input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border: 2px solid var(--bg-tertiary);
+    border-radius: 12px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.project-name-input-wrapper input:focus {
+    border-color: var(--primary);
+}
+
+.project-name-input-wrapper input::placeholder {
+    color: var(--text-tertiary);
+    font-weight: 400;
+}
+
+.project-name-input-wrapper input:focus + .input-decoration {
+    width: 100%;
+}
+
+/* Стили для поля описания проекта */
+.project-description-group {
+    margin-bottom: 2rem;
+}
+
+.project-description-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.project-description-wrapper {
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.project-description-wrapper textarea {
+    width: 100%;
+    min-height: 180px;
+    padding: 1.25rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    border: 2px solid var(--bg-tertiary);
+    border-radius: 12px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    resize: vertical;
+}
+
+.project-description-wrapper textarea:focus {
+    border-color: var(--primary);
+    box-shadow: none;
+    outline: none;
+}
+
+.project-description-wrapper textarea::placeholder {
+    color: var(--text-tertiary);
+}
+
+.project-description-wrapper textarea:focus + .textarea-decoration {
+    width: 100%;
+}
+
+.textarea-glow {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, var(--primary), var(--primary-light));
+    border-radius: 14px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.project-description-wrapper textarea:focus ~ .textarea-decoration .textarea-glow {
+    opacity: 0.1;
+}
+
+/* Адаптивность для новых полей */
+@media (max-width: 768px) {
+    .project-name-input-wrapper input {
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
+    }
+
+    .project-description-wrapper textarea {
+        min-height: 140px;
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .field-hint {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
+
+/* Цветовой пикер */
+.color-picker-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.color-presets {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.color-preset {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-tertiary);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.color-preset:hover {
+    transform: scale(1.1);
+    border-color: var(--text-secondary);
+}
+
+.color-preset.active {
+    border-color: var(--text-primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.color-preset.active::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 0 0 2px rgba(0,0,0,0.5);
+}
+
+.color-preset[data-color="#0ea5e9"] { background-color: #0ea5e9; }
+.color-preset[data-color="#10b981"] { background-color: #10b981; }
+.color-preset[data-color="#f59e0b"] { background-color: #f59e0b; }
+.color-preset[data-color="#ef4444"] { background-color: #ef4444; }
+.color-preset[data-color="#8b5cf6"] { background-color: #8b5cf6; }
+.color-preset[data-color="#06b6d4"] { background-color: #06b6d4; }
+
+.color-picker-container input[type="color"] {
+    width: 60px;
+    height: 40px;
+    border: 1px solid var(--bg-tertiary);
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--bg-primary);
+}
+
+/* Превью проекта */
+.preview-card {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    border: 1px solid var(--bg-tertiary);
+    padding: 1.5rem;
+}
+
+.preview-card h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.project-card-preview {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 20px;
+    transition: all 0.2s;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+}
+
+.project-card-preview:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.project-card-preview .project-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.project-card-preview .project-header .project-color {
+    width: 4px;
+    height: 24px;
+    border-radius: 2px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.project-card-preview .project-header h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.project-card-preview .project-content p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.project-card-preview .project-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.project-card-preview .project-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.project-card-preview .stat {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+}
+
+.project-card-preview .project-date {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+/* Карточка советов */
+.tips-card {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    border: 1px solid var(--bg-tertiary);
+    padding: 1.5rem;
+}
+
+.tips-card h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tips-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tips-list li {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+    padding-left: 1rem;
+    position: relative;
+}
+
+.tips-list li::before {
+    content: '•';
+    color: var(--primary);
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+    .create-project-layout {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    .project-preview {
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .create-project-container {
+        padding: 1.5rem;
+    }
+
+    .form-intro {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .form-section {
+        padding: 1rem;
+    }
+
+    .preview-card,
+    .tips-card {
+        padding: 1rem;
+    }
+
+    .color-presets {
+        justify-content: center;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
 }
 
 .register-description {
@@ -1951,4 +2442,645 @@ body {
     justify-content: center;
     font-size: 2rem;
     color: var(--primary);
+}
+
+/* ===== СТИЛИ ДЛЯ СТРАНИЦЫ ПРОЕКТА (КАНБАН-ДОСКА) ===== */
+/* Контейнер для страницы проекта */
+.project-page .container {
+    display: grid;
+    grid-template-columns: 240px 1fr 280px;
+    height: 100vh;
+}
+
+/* ===== СТИЛИ ДЛЯ СТРАНИЦЫ УПРАВЛЕНИЯ ПРОЕКТОМ ===== */
+/* Контейнер для страницы управления проектом */
+.project-management-page .container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Стили для секций управления */
+.management-section {
+    background-color: var(--bg-primary);
+    border-radius: 8px;
+    border: 1px solid var(--bg-tertiary);
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.management-section h3 {
+    background-color: var(--bg-secondary);
+    padding: 16px 24px;
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.management-section.danger-zone {
+    border-color: var(--error);
+}
+
+.management-section.danger-zone h3 {
+    background-color: #fef2f2;
+    color: var(--error);
+    border-bottom-color: var(--error);
+}
+
+/* Управление командой */
+.team-management {
+    padding: 24px;
+}
+
+.team-list {
+    margin-bottom: 16px;
+}
+
+.team-actions {
+    display: flex;
+    justify-content: flex-start;
+}
+
+/* Настройки проекта */
+.project-settings {
+    padding: 24px;
+}
+
+.setting-group {
+    margin-bottom: 20px;
+}
+
+.setting-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.setting-group input,
+.setting-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--bg-tertiary);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.setting-group input:focus,
+.setting-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.setting-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.setting-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 16px;
+    border-top: 1px solid var(--bg-tertiary);
+}
+
+/* Опасная зона */
+.danger-actions {
+    padding: 24px;
+}
+
+.danger-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.danger-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--error);
+    margin-bottom: 8px;
+}
+
+.danger-info p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.btn-danger {
+    background-color: var(--error);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+}
+
+/* Информационная карточка проекта */
+.project-info-card {
+    background-color: var(--bg-primary);
+    border-radius: 8px;
+    border: 1px solid var(--bg-tertiary);
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.project-info-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.color-preview {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid var(--bg-tertiary);
+}
+
+/* Ссылка для кнопки управления */
+.manage-btn-link {
+    text-decoration: none;
+    display: block;
+    margin-bottom: 24px;
+}
+
+.manage-btn-link .manage-btn {
+    width: 100%;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.manage-btn-link .manage-btn:hover {
+    background-color: #0284c7;
+}
+
+/* Заголовок страницы управления */
+.page-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.page-header-content h2 {
+    margin: 0;
+}
+
+/* Кнопка возврата */
+.btn-back-link {
+    text-decoration: none;
+}
+
+.btn-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.btn-back:hover {
+    background-color: var(--bg-tertiary);
+    transform: translateX(-2px);
+}
+
+/* Стили для выбора цвета */
+.color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.color-picker-wrapper input[type="color"] {
+    width: 50px;
+    height: 40px;
+    border: 2px solid var(--bg-tertiary);
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--bg-primary);
+}
+
+.color-picker-wrapper input[type="color"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Hide color picker tooltip */
+.color-picker-wrapper input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.color-picker-wrapper input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 3px;
+}
+
+.color-picker-wrapper input[type="color"]::-moz-color-swatch {
+    border: none;
+    border-radius: 3px;
+}
+
+/* Hide Firefox color picker tooltip */
+.color-picker-wrapper input[type="color"]::-moz-focus-inner {
+    border: 0;
+}
+
+.color-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+/* Боковая панель */
+.sidebar {
+    background-color: #fff;
+    padding: 20px;
+    border-right: 1px solid #e0e0e0;
+    overflow-y: auto;
+}
+
+.logo h1 {
+    color: #00a8e8;
+    font-size: 24px;
+    margin-bottom: 30px;
+    font-weight: 600;
+}
+
+.nav-section {
+    margin-bottom: 30px;
+}
+
+.nav-section h3 {
+    color: #999;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+}
+
+.nav-section ul {
+    list-style: none;
+}
+
+.nav-section li {
+    padding: 10px 12px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s;
+}
+
+.nav-section li:hover {
+    background-color: #f0f0f0;
+}
+
+.nav-section li.active {
+    background-color: #e3f4fc;
+    color: #00a8e8;
+}
+
+.icon {
+    font-size: 16px;
+}
+
+/* Основной контент */
+.main-content {
+    background-color: #f9f9f9;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.page-header h2 {
+    font-size: 28px;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+/* Статистика */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 36px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+}
+
+/* Доски задач */
+.boards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.board {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.board-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.board-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.sort-btn {
+    background-color: #e0e0e0;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.sort-btn:hover {
+    background-color: #d0d0d0;
+}
+
+.task-list {
+    min-height: 200px;
+    margin-bottom: 15px;
+}
+
+.task-card {
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+    cursor: move;
+    transition: box-shadow 0.2s;
+}
+
+.task-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.task-card.dragging {
+    opacity: 0.5;
+}
+
+.task-title {
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.task-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #666;
+}
+
+.add-task-btn {
+    width: 100%;
+    background-color: transparent;
+    border: 2px dashed #ccc;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.add-task-btn:hover {
+    border-color: #00a8e8;
+    color: #00a8e8;
+}
+
+/* Правая панель */
+.right-sidebar {
+    background-color: #fff;
+    padding: 20px;
+    border-left: 1px solid #e0e0e0;
+    overflow-y: auto;
+}
+
+.manage-btn {
+    width: 100%;
+    background-color: #00a8e8;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 30px;
+    transition: background-color 0.2s;
+}
+
+.manage-btn:hover {
+    background-color: #0096d1;
+}
+
+.project-info h3 {
+    font-size: 16px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.team-list {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    min-height: 100px;
+}
+
+.empty-state {
+    color: #999;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Модальное окно для добавления задачи */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+}
+
+.modal-content h3 {
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #00a8e8;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0096d1;
+}
+
+.btn-secondary {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background-color: #d0d0d0;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .container {
+        grid-template-columns: 240px 1fr;
+    }
+
+    .right-sidebar {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .boards {
+        grid-template-columns: 1fr;
+    }
 }
