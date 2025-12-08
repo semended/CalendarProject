@@ -395,15 +395,15 @@ def get_tasks_by_creator(creator_id: int) -> List[Task]:
     return tasks
 
 
-def get_projects_by_creator(creator_id: int) -> List[Task]:
+def get_tasks_by_creator(creator_id: int) -> List[Task]:
     """Получение всех проектов (задач верхнего уровня) созданных пользователем"""
     session = SessionLocal()
-    projects = session.query(Task).filter(
+    tasks = session.query(Task).filter(
         Task.creator_id == creator_id,
         Task.parent_task_id.is_(None)
     ).all()
     session.close()
-    return projects
+    return tasks
 
 
 def get_subtasks(parent_task_id: int) -> List[Task]:

@@ -132,14 +132,14 @@ def main_page():
 			return redirect(url_for('start_page'))
 
 		# Загружаем проекты пользователя из БД
-		projects = get_projects_by_creator(int(current_user.get_id()))
-		print(f'Найдено проектов: {len(projects)}')
+		tasks = get_tasks_by_creator(int(current_user.get_id()))
+		print(f'Найдено проектов: {len(tasks)}')
 
 		# Преобразуем проекты в формат для JavaScript
-		projects_data = []
-		for project in projects:
+		tasks_data = []
+		for task in tasks:
 			# Получаем участников проекта
-			team_members = get_users_in_task(project.id)
+			team_members = get_users_in_task(task.id)
 			team = []
 			for member in team_members[:5]:  # Ограничиваем до 5 участников для отображения
 				team.append({
@@ -151,26 +151,26 @@ def main_page():
 
 			# Определяем статус проекта
 			status = 'active'
-			if project.finished_at:
+			if task.finished_at:
 				status = 'completed'
-			elif project.paused_at:
+			elif task.paused_at:
 				status = 'paused'
 
 			# Подсчитываем задачи (пока используем заглушки, так как подзадачи не реализованы)
-			tasks_count = len(get_subtasks(project.id))
+			tasks_count = len(get_subtasks(task.id))
 			completed_tasks = 0  # Пока не считаем завершенные
 			active_tasks = tasks_count - completed_tasks
 
-			project_data = {
-				'id': project.id,
-				'name': project.name,
-				'description': project.description,
-				'color': project.color,
+			task_data = {
+				'id': task.id,
+				'name': task.name,
+				'description': task.description,
+				'color': task.color,
 				'tasks': tasks_count,
 				'completedTasks': completed_tasks,
 				'activeTasks': active_tasks,
 				'members': len(team_members),
-				'deadline': project.ended_at.isoformat() if project.ended_at else None,
+				'deadline': task.ended_at.isoformat() if task.ended_at else None,
 				'status': status,
 				'creator': {
 					'name': f"{user.name} {user.surname}",
@@ -182,58 +182,58 @@ def main_page():
 					{
 						'type': 'create',
 						'title': 'Проект создан',
-						'time': project.created_at.strftime('%d %b'),
+						'time': task.created_at.strftime('%d %b'),
 						'icon': '📝'
 					}
 				]
 			}
-			projects_data.append(project_data)
+			tasks_data.append(task_data)
 
 		print(user.avatar_url)
-		return render_template('main.html', active_page='all_projects', user=user, projects=projects_data)
+		return render_template('main.html', active_page='all_tasks', user=user, tasks=tasks_data)
 	else:
 		# Добавить обработку создания проекта
 		return render_template('main.html')
 
 
-@app.route('/create_project', methods=['GET', 'POST'])
+@app.route('/create_task', methods=['GET', 'POST'])
 @login_required
-def create_project_page(parent_task_id: Optional[int] = None):
-	print('Зашёл в create_project_page. User_id ->', current_user.get_id())
+def create_task_page(parent_task_id: Optional[int] = None):
+	print('Зашёл в create_task_page. User_id ->', current_user.get_id())
 	user = get_user_by_id(int(current_user.get_id()))
 	if user is None:
 		logout_user()
 		return redirect(url_for('start_page'))
 
 	if request.method == 'GET':
-		return render_template('create_project.html', active_page='create_project', user=user)
+		return render_template('create_task.html', active_page='create_task', user=user)
 	else:
-		project_name = request.form.get('projectName')
-		project_description = request.form.get('projectDescription', '')
-		project_color = request.form.get('projectColor', '#0ea5e9')
-		project_deadline = request.form.get('projectDeadline')
+		task_name = request.form.get('taskName')
+		task_description = request.form.get('taskDescription', '')
+		task_color = request.form.get('taskColor', '#0ea5e9')
+		task_deadline = request.form.get('taskDeadline')
 
-		if not project_name or not project_name.strip():
-			return render_template('create_project.html', active_page='create_project', user=user,
+		if not task_name or not task_name.strip():
+			return render_template('create_task.html', active_page='create_task', user=user,
 								   error='Название проекта обязательно для заполнения')
 
 		# Создание проекта в БД
 		from datetime import datetime
-		ended_at = datetime.fromisoformat(project_deadline) if project_deadline else None
+		ended_at = datetime.fromisoformat(task_deadline) if task_deadline else None
 
-		project = create_task(
+		task = create_task(
 			creator_id=int(current_user.get_id()),
-			name=project_name.strip(),
-			description=project_description.strip(),
+			name=task_name.strip(),
+			description=task_description.strip(),
 			priority=1,  # По умолчанию средний приоритет
 			grade=5.0,  # По умолчанию средняя оценка
 			story_points=0.0,  # Проекты не имеют story points по умолчанию
-			color=project_color,
+			color=task_color,
 			parent_task_id=parent_task_id,  # Это проект верхнего уровня
 			ended_at=ended_at
 		)
 
-		print(f'Создан проект: {project}')
+		print(f'Создан проект: {task}')
 		return redirect(url_for('main_page'))
 
 
@@ -368,15 +368,15 @@ def settings_page():
 	return render_template('settings.html', user=user)
 
 
-@app.route('/project/<int:project_id>', methods=['GET', 'POST'])
+@app.route('/task/<int:task_id>', methods=['GET', 'POST'])
 @login_required
-def project_page(project_id):
-	print('Зашёл в project_page. User_id ->', current_user.get_id())
+def task_page(task_id):
+	print('Зашёл в task_page. User_id ->', current_user.get_id())
 
 	if request.method == 'GET':
 		# Получаем проект
-		project = get_task_by_id(project_id)
-		if project is None or project.creator_id != int(current_user.get_id()):
+		task = get_task_by_id(task_id)
+		if task is None or task.creator_id != int(current_user.get_id()):
 			return render_template('notFound.html')
 
 		user = get_user_by_id(int(current_user.get_id()))
@@ -384,22 +384,22 @@ def project_page(project_id):
 			logout_user()
 			return redirect(url_for('start_page'))
 
-		return render_template('Current_project.html', active_page='current_project', user=user, project=project)
+		return render_template('Current_task.html', active_page='current_task', user=user, task=task)
 	else:
 		parent_task_id = request.form.get('parent_task_it')
 		return redirect(url_for(create_task(parent_task_id)))
 
 
 
-@app.route('/project_management/<int:project_id>', methods=['GET', 'POST'])
+@app.route('/task_management/<int:task_id>', methods=['GET', 'POST'])
 @login_required
-def project_management_page(project_id):
-	print('Зашёл в project_management_page. User_id ->', current_user.get_id())
+def task_management_page(task_id):
+	print('Зашёл в task_management_page. User_id ->', current_user.get_id())
 
 	if request.method == 'GET':
 		# Получаем проект
-		project = get_task_by_id(project_id)
-		if project is None or project.creator_id != int(current_user.get_id()):
+		task = get_task_by_id(task_id)
+		if task is None or task.creator_id != int(current_user.get_id()):
 			return render_template('notFound.html')
 
 		user = get_user_by_id(int(current_user.get_id()))
@@ -407,41 +407,41 @@ def project_management_page(project_id):
 			logout_user()
 			return redirect(url_for('start_page'))
 
-		return render_template('project_management.html', active_page='current_project', user=user, project=project)
+		return render_template('task_management.html', active_page='current_task', user=user, task=task)
 	else:
 		if request.form.get('email') is not None:
 			# Если пришёл email (то бишь добавляем человека в команду):
 			email = request.form.get('email')
 			user = get_user_by_email(email)
 			role_id = request.form.get('role_id')
-			assign_user_to_task_role(user.id, project_id, int(role_id))
+			assign_user_to_task_role(user.id, task_id, int(role_id))
 		else:
 			# Если пришёл запрос на смену параметров таски
-			new_project_name = request.form.get('project_name')
-			new_project_desc = request.form.get('project_description')
-			new_project_color = request.form.get('project_color')
-			update_task_info(project_id, new_project_name, new_project_desc, new_project_color)
+			new_task_name = request.form.get('task_name')
+			new_task_desc = request.form.get('task_description')
+			new_task_color = request.form.get('task_color')
+			update_task_info(task_id, new_task_name, new_task_desc, new_task_color)
 			# Обновить данные
 
 
 
-@app.route('/api/project/<int:project_id>/tasks', methods=['GET', 'POST'])
+@app.route('/api/task/<int:task_id>/tasks', methods=['GET', 'POST'])
 @login_required
-def project_tasks_api(project_id):
+def task_tasks_api(task_id):
 	# Проверяем доступ к проекту
-	project = get_task_by_id(project_id)
-	if project is None or project.creator_id != int(current_user.get_id()):
-		return jsonify({'error': 'Project not found'}), 404
+	task = get_task_by_id(task_id)
+	if task is None or task.creator_id != int(current_user.get_id()):
+		return jsonify({'error': 'task not found'}), 404
 
 	if request.method == 'GET':
 		# Получаем подзадачи проекта
-		subtasks = get_subtasks(project_id)
+		subtasks = get_subtasks(task_id)
 
 		# Разделяем на inProgress и completed
 		in_progress = []
 		completed = []
 
-		for task in subtask
+		for task in subtasks:
 			task_data = {
 				'id': task.id,
 				'title': task.name,
@@ -472,16 +472,16 @@ def project_tasks_api(project_id):
 			session = SessionLocal()
 
 			# Удаляем существующие подзадачи
-			session.query(Task).filter(Task.parent_task_id == project_id).delete()
+			session.query(Task).filter(Task.parent_task_id == task_id).delete()
 
 			# Создаем новые подзадачи
 			for task_data in in_progress_tasks + completed_tasks:
 				is_completed = task_data in completed_tasks
 
 				task = Task(
-					parent_task_id=project_id,
+					parent_task_id=task_id,
 					creator_id=int(current_user.get_id()),
-					color=project.color,  # Используем цвет проекта
+					color=task.color,  # Используем цвет проекта
 					name=task_data['title'],
 					description=task_data.get('description', ''),
 					priority=1,
