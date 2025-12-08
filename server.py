@@ -441,7 +441,7 @@ def project_tasks_api(project_id):
 		in_progress = []
 		completed = []
 
-		for task in subtask
+		for task in subtasks:
 			task_data = {
 				'id': task.id,
 				'title': task.name,
