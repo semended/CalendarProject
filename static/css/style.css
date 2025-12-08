@@ -150,7 +150,7 @@ body {
     font-size: 1.1rem;
 }
 
-.project-color {
+.task-color {
     width: 12px;
     height: 12px;
     border-radius: 50%;
@@ -238,14 +238,14 @@ body {
 }
 
 /* ===== СТРАНИЦА ПРОЕКТОВ ===== */
-.projects-section {
+.tasks-section {
     background-color: var(--bg-primary);
     border-radius: 8px;
     border: 1px solid var(--bg-tertiary);
     overflow: hidden;
 }
 
-.projects-header {
+.tasks-header {
     padding: 20px 24px;
     border-bottom: 1px solid var(--bg-tertiary);
     display: flex;
@@ -253,30 +253,30 @@ body {
     align-items: center;
 }
 
-.projects-header h2 {
+.tasks-header h2 {
     font-size: 1.25rem;
     font-weight: 600;
 }
 
-.projects-actions {
+.tasks-actions {
     display: flex;
     gap: 8px;
 }
 
-.projects-grid {
+.tasks-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 20px;
     padding: 24px;
 }
 
-.project-link {
+.task-link {
     text-decoration: none;
     color: inherit;
     display: block;
 }
 
-.project-card {
+.task-card {
     background-color: var(--bg-secondary);
     border: 1px solid var(--bg-tertiary);
     border-radius: 8px;
@@ -290,18 +290,18 @@ body {
     justify-content: space-between;
 }
 
-.project-card:hover {
+.task-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
 }
 
-.project-header {
+.task-header {
     display: flex;
     align-items: center;
     margin-bottom: 12px;
 }
 
-.project-header .project-color {
+.task-header .task-color {
     width: 4px;
     height: 24px;
     border-radius: 2px;
@@ -309,7 +309,7 @@ body {
     flex-shrink: 0;
 }
 
-.project-header h3 {
+.task-header h3 {
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
@@ -320,7 +320,7 @@ body {
     word-break: break-word;
 }
 
-.project-content p {
+.task-content p {
     font-size: 0.875rem;
     color: var(--text-secondary);
     margin-bottom: 16px;
@@ -332,14 +332,14 @@ body {
     word-break: break-word;
 }
 
-.project-meta {
+.task-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-top: auto;
 }
 
-.project-stats {
+.task-stats {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -350,7 +350,7 @@ body {
     color: var(--text-tertiary);
 }
 
-.project-date {
+.task-date {
     font-size: 0.75rem;
     font-weight: 500;
     padding: 4px 8px;
@@ -359,12 +359,12 @@ body {
     color: var(--primary);
 }
 
-.project-date.completed {
+.task-date.completed {
     background-color: var(--tag-green);
     color: var(--success);
 }
 
-.project-date.paused {
+.task-date.paused {
     background-color: var(--tag-yellow);
     color: var(--warning);
 }
@@ -1325,7 +1325,7 @@ body {
         overflow-x: auto;
     }
     
-    .projects-grid {
+    .tasks-grid {
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 16px;
         padding: 20px;
@@ -1396,19 +1396,19 @@ body {
         padding: 16px 20px;
     }
     
-    .projects-grid {
+    .tasks-grid {
         grid-template-columns: 1fr;
         gap: 12px;
         padding: 16px;
     }
     
-    .projects-header {
+    .tasks-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
     
-    .projects-actions {
+    .tasks-actions {
         width: 100%;
         justify-content: space-between;
     }
@@ -1462,7 +1462,7 @@ body {
         gap: 8px;
     }
     
-    .projects-actions {
+    .tasks-actions {
         flex-direction: column;
         gap: 8px;
     }
@@ -1733,7 +1733,7 @@ body {
     padding: 2rem 0;
 }
 
-.create-project-section {
+.create-task-section {
     display: flex;
     justify-content: center;
     padding: 2rem 0;
@@ -1748,7 +1748,7 @@ body {
     box-shadow: 0 2px 20px rgba(0,0,0,0.1);
 }
 
-.create-project-container {
+.create-task-container {
     max-width: 700px;
     width: 100%;
     background: var(--bg-primary);
@@ -1757,7 +1757,7 @@ body {
     border: 1px solid var(--bg-tertiary);
 }
 
-.create-project-layout {
+.create-task-layout {
     display: grid;
     grid-template-columns: 1fr 400px;
     gap: 50px;
@@ -1765,7 +1765,7 @@ body {
     margin: 0 auto;
 }
 
-.project-preview {
+.task-preview {
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -1798,7 +1798,7 @@ body {
     line-height: 1.5;
 }
 
-.project-form {
+.task-form {
     display: flex;
     flex-direction: column;
     gap: 2rem;
@@ -1841,11 +1841,11 @@ body {
 }
 
 /* Стили для поля названия проекта */
-.project-name-group {
+.task-name-group {
     margin-bottom: 2rem;
 }
 
-.project-name-label {
+.task-name-label {
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
@@ -1855,12 +1855,12 @@ body {
     gap: 8px;
 }
 
-.project-name-input-wrapper {
+.task-name-input-wrapper {
     position: relative;
     margin-bottom: 0.5rem;
 }
 
-.project-name-input-wrapper input {
+.task-name-input-wrapper input {
     width: 100%;
     padding: 1rem 1.25rem;
     font-size: 1.1rem;
@@ -1871,25 +1871,25 @@ body {
     color: var(--text-primary);
 }
 
-.project-name-input-wrapper input:focus {
+.task-name-input-wrapper input:focus {
     border-color: var(--primary);
 }
 
-.project-name-input-wrapper input::placeholder {
+.task-name-input-wrapper input::placeholder {
     color: var(--text-tertiary);
     font-weight: 400;
 }
 
-.project-name-input-wrapper input:focus + .input-decoration {
+.task-name-input-wrapper input:focus + .input-decoration {
     width: 100%;
 }
 
 /* Стили для поля описания проекта */
-.project-description-group {
+.task-description-group {
     margin-bottom: 2rem;
 }
 
-.project-description-label {
+.task-description-label {
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
@@ -1899,12 +1899,12 @@ body {
     gap: 8px;
 }
 
-.project-description-wrapper {
+.task-description-wrapper {
     position: relative;
     margin-bottom: 0.5rem;
 }
 
-.project-description-wrapper textarea {
+.task-description-wrapper textarea {
     width: 100%;
     min-height: 180px;
     padding: 1.25rem;
@@ -1918,17 +1918,17 @@ body {
     resize: vertical;
 }
 
-.project-description-wrapper textarea:focus {
+.task-description-wrapper textarea:focus {
     border-color: var(--primary);
     box-shadow: none;
     outline: none;
 }
 
-.project-description-wrapper textarea::placeholder {
+.task-description-wrapper textarea::placeholder {
     color: var(--text-tertiary);
 }
 
-.project-description-wrapper textarea:focus + .textarea-decoration {
+.task-description-wrapper textarea:focus + .textarea-decoration {
     width: 100%;
 }
 
@@ -1945,18 +1945,18 @@ body {
     z-index: -1;
 }
 
-.project-description-wrapper textarea:focus ~ .textarea-decoration .textarea-glow {
+.task-description-wrapper textarea:focus ~ .textarea-decoration .textarea-glow {
     opacity: 0.1;
 }
 
 /* Адаптивность для новых полей */
 @media (max-width: 768px) {
-    .project-name-input-wrapper input {
+    .task-name-input-wrapper input {
         padding: 0.875rem 1rem;
         font-size: 1rem;
     }
 
-    .project-description-wrapper textarea {
+    .task-description-wrapper textarea {
         min-height: 140px;
         padding: 1rem;
         font-size: 0.9rem;
@@ -2045,7 +2045,7 @@ body {
     margin-bottom: 1rem;
 }
 
-.project-card-preview {
+.task-card-preview {
     background-color: var(--bg-secondary);
     border: 1px solid var(--bg-tertiary);
     border-radius: 8px;
@@ -2056,18 +2056,18 @@ body {
     flex-direction: column;
 }
 
-.project-card-preview:hover {
+.task-card-preview:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
 }
 
-.project-card-preview .project-header {
+.task-card-preview .task-header {
     display: flex;
     align-items: center;
     margin-bottom: 12px;
 }
 
-.project-card-preview .project-header .project-color {
+.task-card-preview .task-header .task-color {
     width: 4px;
     height: 24px;
     border-radius: 2px;
@@ -2075,7 +2075,7 @@ body {
     flex-shrink: 0;
 }
 
-.project-card-preview .project-header h4 {
+.task-card-preview .task-header h4 {
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
@@ -2087,7 +2087,7 @@ body {
     word-break: break-word;
 }
 
-.project-card-preview .project-content p {
+.task-card-preview .task-content p {
     font-size: 0.875rem;
     color: var(--text-secondary);
     margin-bottom: 16px;
@@ -2099,25 +2099,25 @@ body {
     word-break: break-word;
 }
 
-.project-card-preview .project-meta {
+.task-card-preview .task-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-top: auto;
 }
 
-.project-card-preview .project-stats {
+.task-card-preview .task-stats {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-.project-card-preview .stat {
+.task-card-preview .stat {
     font-size: 0.75rem;
     color: var(--text-tertiary);
 }
 
-.project-card-preview .project-date {
+.task-card-preview .task-date {
     font-size: 0.75rem;
     font-weight: 500;
     padding: 4px 8px;
@@ -2169,18 +2169,18 @@ body {
 
 /* Адаптивность */
 @media (max-width: 1024px) {
-    .create-project-layout {
+    .create-task-layout {
         grid-template-columns: 1fr;
         gap: 32px;
     }
 
-    .project-preview {
+    .task-preview {
         order: -1;
     }
 }
 
 @media (max-width: 768px) {
-    .create-project-container {
+    .create-task-container {
         padding: 1.5rem;
     }
 
@@ -2446,7 +2446,7 @@ body {
 
 /* ===== СТИЛИ ДЛЯ СТРАНИЦЫ ПРОЕКТА (КАНБАН-ДОСКА) ===== */
 /* Контейнер для страницы проекта */
-.project-page .container {
+.task-page .container {
     display: grid;
     grid-template-columns: 240px 1fr 280px;
     height: 100vh;
@@ -2454,7 +2454,7 @@ body {
 
 /* ===== СТИЛИ ДЛЯ СТРАНИЦЫ УПРАВЛЕНИЯ ПРОЕКТОМ ===== */
 /* Контейнер для страницы управления проектом */
-.project-management-page .container {
+.task-management-page .container {
     display: flex;
     min-height: 100vh;
 }
@@ -2502,7 +2502,7 @@ body {
 }
 
 /* Настройки проекта */
-.project-settings {
+.task-settings {
     padding: 24px;
 }
 
@@ -2590,7 +2590,7 @@ body {
 }
 
 /* Информационная карточка проекта */
-.project-info-card {
+.task-info-card {
     background-color: var(--bg-primary);
     border-radius: 8px;
     border: 1px solid var(--bg-tertiary);
@@ -2598,7 +2598,7 @@ body {
     margin-bottom: 24px;
 }
 
-.project-info-card h3 {
+.task-info-card h3 {
     font-size: 1rem;
     font-weight: 600;
     margin-bottom: 16px;
@@ -2953,7 +2953,7 @@ body {
     background-color: #0096d1;
 }
 
-.project-info h3 {
+.task-info h3 {
     font-size: 16px;
     margin-bottom: 15px;
     font-weight: 600;

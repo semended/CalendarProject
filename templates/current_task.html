@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalendarName - {{ project.name }}</title>
+    <title>CalendarName - {{ task.name }}</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
-<body class="project-page">
+<body class="task-page">
     <div class="container">
         <!-- Сайдбар -->
         {% include 'sidebar.html' %}
@@ -14,7 +14,7 @@
         <!-- Основной контент -->
         <main class="main-content">
             <header class="page-header">
-                <h2>{{ project.name }} - Задачи</h2>
+                <h2>{{ task.name }} - Задачи</h2>
             </header>
 
             <!-- Статистика -->
@@ -61,11 +61,11 @@
 
         <!-- Правая панель -->
         <aside class="right-sidebar">
-            <a href="/project_management/{{ project.id }}" class="manage-btn-link">
+            <a href="/task_management/{{ task.id }}" class="manage-btn-link">
                 <button class="manage-btn">управление проектом</button>
             </a>
 
-            <div class="project-info">
+            <div class="task-info">
                 <h3>Команда проекта</h3>
                 <div class="team-list" id="teamList">
                     <p class="empty-state">список людей в проекте</p>
@@ -97,7 +97,7 @@
 
     <script>
         // Данные проекта
-        const projectId = {{ project.id }};
+        const taskId = {{ task.id }};
         let tasks = {
             inProgress: [],
             completed: []
@@ -115,7 +115,7 @@
         // Загрузка задач с сервера
         async function loadTasks() {
             try {
-                const response = await fetch(`/api/project/${projectId}/tasks`);
+                const response = await fetch(`/api/task/${taskId}/tasks`);
                 if (response.ok) {
                     const data = await response.json();
                     tasks.inProgress = data.inProgress || [];
@@ -135,7 +135,7 @@
         // Сохранение задач на сервер
         async function saveTasks() {
             try {
-                const response = await fetch(`/api/project/${projectId}/tasks`, {
+                const response = await fetch(`/api/task/${taskId}/tasks`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

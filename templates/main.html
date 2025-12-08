@@ -51,29 +51,29 @@
             <section class="stats-section">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-value" id="totalProjects">8</div>
+                        <div class="stat-value" id="totaltasks">8</div>
                         <div class="stat-label">Всего проектов</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="activeProjects">3</div>
+                        <div class="stat-value" id="activetasks">3</div>
                         <div class="stat-label">Активные</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="completedProjects">4</div>
+                        <div class="stat-value" id="completedtasks">4</div>
                         <div class="stat-label">Завершены</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="pausedProjects">1</div>
+                        <div class="stat-value" id="pausedtasks">1</div>
                         <div class="stat-label">На паузе</div>
                     </div>
                 </div>
             </section>
 
             <!-- Сетка проектов -->
-            <section class="projects-section">
-                <div class="projects-header">
+            <section class="tasks-section">
+                <div class="tasks-header">
                     <h2>Мои проекты</h2>
-                    <div class="projects-actions">
+                    <div class="tasks-actions">
                         <div class="dropdown">
                             <button class="btn-secondary dropdown-toggle" id="filterDropdown">
                                 Фильтр
@@ -99,7 +99,7 @@
                     </div>
                 </div>
 
-                <div class="projects-grid" id="projectsGrid">
+                <div class="tasks-grid" id="tasksGrid">
                     <!-- Проекты будут загружаться динамически -->
                 </div>
             </section>
@@ -108,7 +108,7 @@
 
     <script>
         // Данные проектов из сервера
-        let projects = {{ projects|tojson }};
+        let tasks = {{ tasks|tojson }};
 
         // Текущие настройки фильтрации и сортировки
         let currentFilter = 'all';
@@ -116,7 +116,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             initializeUserMenu();
-            initializeProjects();
+            initializetasks();
             initializeDropdowns();
         });
 
@@ -140,8 +140,8 @@
         }
 
         // Инициализация проектов
-        function initializeProjects() {
-            renderProjects();
+        function initializetasks() {
+            rendertasks();
             updateStats();
         }
 
@@ -171,7 +171,7 @@
                     currentFilter = this.getAttribute('data-filter');
                     filterDropdown.textContent = this.textContent;
                     filterMenu.classList.remove('show');
-                    renderProjects();
+                    rendertasks();
                 });
             });
 
@@ -181,7 +181,7 @@
                     currentSort = this.getAttribute('data-sort');
                     sortDropdown.textContent = this.textContent;
                     sortMenu.classList.remove('show');
-                    renderProjects();
+                    rendertasks();
                 });
             });
 
@@ -193,26 +193,26 @@
         }
 
         // Функции для работы с проектами
-        function renderProjects() {
-            const grid = document.getElementById('projectsGrid');
-            const filteredProjects = filterProjects(projects);
-            const sortedProjects = sortProjects(filteredProjects);
+        function rendertasks() {
+            const grid = document.getElementById('tasksGrid');
+            const filteredtasks = filtertasks(tasks);
+            const sortedtasks = sorttasks(filteredtasks);
             
-            grid.innerHTML = sortedProjects.map(project => `
-                <a href="/project/${project.id}" class="project-link">
-                    <div class="project-card" data-project-id="${project.id}">
-                        <div class="project-header">
-                            <div class="project-color" style="background-color: ${project.color}"></div>
-                            <h3>${project.name}</h3>
+            grid.innerHTML = sortedtasks.map(task => `
+                <a href="/task/${task.id}" class="task-link">
+                    <div class="task-card" data-task-id="${task.id}">
+                        <div class="task-header">
+                            <div class="task-color" style="background-color: ${task.color}"></div>
+                            <h3>${task.name}</h3>
                         </div>
-                        <div class="project-content">
-                            <p>${project.description}</p>
-                            <div class="project-meta">
-                                <div class="project-stats">
-                                    <span class="stat">📋 ${project.tasks} задач</span>
-                                    <span class="stat">👥 ${project.members} участников</span>
+                        <div class="task-content">
+                            <p>${task.description}</p>
+                            <div class="task-meta">
+                                <div class="task-stats">
+                                    <span class="stat">📋 ${task.tasks} задач</span>
+                                    <span class="stat">👥 ${task.members} участников</span>
                                 </div>
-                                <div class="project-date ${getStatusClass(project.status)}">${getStatusText(project)}</div>
+                                <div class="task-date ${getStatusClass(task.status)}">${getStatusText(task)}</div>
                             </div>
                         </div>
                     </div>
@@ -220,13 +220,13 @@
             `).join('');
         }
 
-        function filterProjects(projects) {
-            if (currentFilter === 'all') return projects;
-            return projects.filter(project => project.status === currentFilter);
+        function filtertasks(tasks) {
+            if (currentFilter === 'all') return tasks;
+            return tasks.filter(task => task.status === currentFilter);
         }
 
-        function sortProjects(projects) {
-            return projects.sort((a, b) => {
+        function sorttasks(tasks) {
+            return tasks.sort((a, b) => {
                 switch (currentSort) {
                     case 'deadline-asc':
                         return new Date(a.deadline) - new Date(b.deadline);
@@ -251,10 +251,10 @@
             return classes[status] || '';
         }
 
-        function getStatusText(project) {
-            if (project.status === 'completed') return 'Завершен';
-            if (project.status === 'paused') return 'На паузе';
-            return `Срок: ${formatDate(project.deadline)}`;
+        function getStatusText(task) {
+            if (task.status === 'completed') return 'Завершен';
+            if (task.status === 'paused') return 'На паузе';
+            return `Срок: ${formatDate(task.deadline)}`;
         }
 
         function formatDate(dateString) {
@@ -266,10 +266,10 @@
         }
 
         function updateStats() {
-            document.getElementById('totalProjects').textContent = projects.length;
-            document.getElementById('activeProjects').textContent = projects.filter(p => p.status === 'active').length;
-            document.getElementById('completedProjects').textContent = projects.filter(p => p.status === 'completed').length;
-            document.getElementById('pausedProjects').textContent = projects.filter(p => p.status === 'paused').length;
+            document.getElementById('totaltasks').textContent = tasks.length;
+            document.getElementById('activetasks').textContent = tasks.filter(p => p.status === 'active').length;
+            document.getElementById('completedtasks').textContent = tasks.filter(p => p.status === 'completed').length;
+            document.getElementById('pausedtasks').textContent = tasks.filter(p => p.status === 'paused').length;
         }
     </script>
 </body>

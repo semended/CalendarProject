@@ -48,10 +48,10 @@
             </header>
 
             <!-- Форма создания проекта -->
-            <section class="create-project-section">
-                <div class="create-project-layout">
+            <section class="create-task-section">
+                <div class="create-task-layout">
                     <!-- Левая колонка - форма -->
-                    <div class="create-project-container">
+                    <div class="create-task-container">
                         <div class="form-intro">
                             <div class="form-icon">📋</div>
                             <h2>Новый проект</h2>
@@ -65,18 +65,18 @@
         </div>
         {% endif %}
 
-        <form class="project-form" id="createProjectForm" method="POST">
+        <form class="task-form" id="createtaskForm" method="POST">
                             <!-- Основная информация -->
                             <div class="form-section">
                                 <h3 class="section-title">Основная информация</h3>
 
-                                <div class="form-group project-name-group">
-                                    <label for="projectName" class="project-name-label">
+                                <div class="form-group task-name-group">
+                                    <label for="taskName" class="task-name-label">
                                         <span class="field-icon-large">📝</span>
                                         Название проекта *
                                     </label>
-                                    <div class="project-name-input-wrapper">
-                                        <input type="text" id="projectName" name="projectName"
+                                    <div class="task-name-input-wrapper">
+                                        <input type="text" id="taskName" name="taskName"
                                                placeholder="Введите название вашего проекта"
                                                required maxlength="100">
                                         <div class="input-decoration"></div>
@@ -84,13 +84,13 @@
                                     <div class="field-hint">Максимум 100 символов. <span id="nameCharCount">0/100</span></div>
                                 </div>
 
-                                <div class="form-group project-description-group">
-                                    <label for="projectDescription" class="project-description-label">
+                                <div class="form-group task-description-group">
+                                    <label for="taskDescription" class="task-description-label">
                                         <span class="field-icon-large">📖</span>
                                         Описание проекта
                                     </label>
-                                    <div class="project-description-wrapper">
-                                        <textarea id="projectDescription" name="projectDescription"
+                                    <div class="task-description-wrapper">
+                                        <textarea id="taskDescription" name="taskDescription"
                                                   placeholder="Подробно опишите ваш проект"
                                                   rows="8" maxlength="500"></textarea>
                                         <div class="textarea-decoration">
@@ -107,16 +107,16 @@
 
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="projectDeadline">
+                                        <label for="taskDeadline">
                                             <span class="field-icon">📅</span>
                                             Срок выполнения
                                         </label>
-                                        <input type="date" id="projectDeadline" name="projectDeadline">
+                                        <input type="date" id="taskDeadline" name="taskDeadline">
                                         <div class="field-hint">Оставьте пустым, если срок не определен</div>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="projectColor">
+                                        <label for="taskColor">
                                             <span class="field-icon">🎨</span>
                                             Цвет проекта
                                         </label>
@@ -129,7 +129,7 @@
                                                 <button type="button" class="color-preset" data-color="#8b5cf6" title="Фиолетовый"></button>
                                                 <button type="button" class="color-preset" data-color="#06b6d4" title="Бирюзовый"></button>
                                             </div>
-                                            <input type="color" id="projectColor" name="projectColor" value="#0ea5e9">
+                                            <input type="color" id="taskColor" name="taskColor" value="#0ea5e9">
                                         </div>
                                         <div class="field-hint">Выберите цвет для визуального отличия проекта</div>
                                     </div>
@@ -148,22 +148,22 @@
                     </div>
 
                     <!-- Правая колонка - превью -->
-                    <div class="project-preview">
+                    <div class="task-preview">
                         <div class="preview-card">
                             <h3>Предварительный просмотр</h3>
-                            <div class="project-card-preview" id="projectPreview">
-                                <div class="project-header">
-                                    <div class="project-color" style="background-color: #0ea5e9"></div>
+                            <div class="task-card-preview" id="taskPreview">
+                                <div class="task-header">
+                                    <div class="task-color" style="background-color: #0ea5e9"></div>
                                     <h4 id="previewTitle">Название проекта</h4>
                                 </div>
-                                <div class="project-content">
+                                <div class="task-content">
                                     <p id="previewDescription">Описание проекта появится здесь...</p>
-                                    <div class="project-meta">
-                                        <div class="project-stats">
+                                    <div class="task-meta">
+                                        <div class="task-stats">
                                             <span class="stat">📋 0 задач</span>
                                             <span class="stat">👥 1 участник</span>
                                         </div>
-                                        <div class="project-date" id="previewDate">Срок: не указан</div>
+                                        <div class="task-date" id="previewDate">Срок: не указан</div>
                                     </div>
                                 </div>
                             </div>
@@ -187,7 +187,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             initializeUserMenu();
-            initializeProjectForm();
+            initializetaskForm();
         });
 
         // Инициализация пользовательского меню
@@ -210,33 +210,33 @@
         }
 
         // Инициализация формы проекта
-        function initializeProjectForm() {
-            const projectNameInput = document.getElementById('projectName');
-            const projectDescriptionInput = document.getElementById('projectDescription');
-            const projectDeadlineInput = document.getElementById('projectDeadline');
-            const projectColorInput = document.getElementById('projectColor');
+        function initializetaskForm() {
+            const taskNameInput = document.getElementById('taskName');
+            const taskDescriptionInput = document.getElementById('taskDescription');
+            const taskDeadlineInput = document.getElementById('taskDeadline');
+            const taskColorInput = document.getElementById('taskColor');
             const colorPresets = document.querySelectorAll('.color-preset');
 
             // Счетчики символов
-            projectNameInput.addEventListener('input', function() {
+            taskNameInput.addEventListener('input', function() {
                 updateCharCount('nameCharCount', this.value.length, 100);
                 updatePreview();
             });
 
-            projectDescriptionInput.addEventListener('input', function() {
+            taskDescriptionInput.addEventListener('input', function() {
                 updateCharCount('descCharCount', this.value.length, 500);
                 updatePreview();
             });
 
             // Обновление превью при вводе
-            projectDeadlineInput.addEventListener('input', updatePreview);
-            projectColorInput.addEventListener('input', updatePreview);
+            taskDeadlineInput.addEventListener('input', updatePreview);
+            taskColorInput.addEventListener('input', updatePreview);
 
             // Предустановленные цвета
             colorPresets.forEach(preset => {
                 preset.addEventListener('click', function() {
                     const color = this.getAttribute('data-color');
-                    projectColorInput.value = color;
+                    taskColorInput.value = color;
                     updatePreview();
 
                     // Убрать активный класс со всех
@@ -247,7 +247,7 @@
             });
 
             // Установить начальный активный цвет
-            const initialColor = projectColorInput.value;
+            const initialColor = taskColorInput.value;
             colorPresets.forEach(preset => {
                 if (preset.getAttribute('data-color') === initialColor) {
                     preset.classList.add('active');
@@ -275,30 +275,30 @@
 
         // Обновление превью проекта
         function updatePreview() {
-            const projectName = document.getElementById('projectName').value || 'Название проекта';
-            const projectDescription = document.getElementById('projectDescription').value || 'Описание проекта появится здесь...';
-            const projectDeadline = document.getElementById('projectDeadline').value;
-            const projectColor = document.getElementById('projectColor').value;
+            const taskName = document.getElementById('taskName').value || 'Название проекта';
+            const taskDescription = document.getElementById('taskDescription').value || 'Описание проекта появится здесь...';
+            const taskDeadline = document.getElementById('taskDeadline').value;
+            const taskColor = document.getElementById('taskColor').value;
 
             // Обновить превью
-            document.getElementById('previewTitle').textContent = projectName;
-            document.getElementById('previewDescription').textContent = projectDescription;
-            document.querySelector('#projectPreview .project-color').style.backgroundColor = projectColor;
+            document.getElementById('previewTitle').textContent = taskName;
+            document.getElementById('previewDescription').textContent = taskDescription;
+            document.querySelector('#taskPreview .task-color').style.backgroundColor = taskColor;
 
             // Обновить дату
             const dateElement = document.getElementById('previewDate');
-            if (projectDeadline) {
-                const date = new Date(projectDeadline);
+            if (taskDeadline) {
+                const date = new Date(taskDeadline);
                 const formattedDate = date.toLocaleDateString('ru-RU', {
                     day: 'numeric',
                     month: 'short',
                     year: 'numeric'
                 });
                 dateElement.textContent = `Срок: ${formattedDate}`;
-                dateElement.className = 'project-date';
+                dateElement.className = 'task-date';
             } else {
                 dateElement.textContent = 'Срок: не указан';
-                dateElement.className = 'project-date';
+                dateElement.className = 'task-date';
             }
         }
     </script>

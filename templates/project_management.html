@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalendarName - Управление {{ project.name }}</title>
+    <title>CalendarName - Управление {{ task.name }}</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
-<body class="project-management-page">
+<body class="task-management-page">
     <div class="container">
         <!-- Сайдбар -->
         {% include 'sidebar.html' %}
@@ -15,8 +15,8 @@
         <main class="main-content">
             <header class="page-header">
                 <div class="page-header-content">
-                    <h2>{{ project.name }} - Управление проектом</h2>
-                    <a href="/project/{{ project.id }}" class="btn-back-link">
+                    <h2>{{ task.name }} - Управление проектом</h2>
+                    <a href="/task/{{ task.id }}" class="btn-back-link">
                         <button class="btn-secondary btn-back">← Вернуться к задачам</button>
                     </a>
                 </div>
@@ -54,24 +54,24 @@
             <!-- Настройки проекта -->
             <section class="management-section">
                 <h3>Настройки проекта</h3>
-                <div class="project-settings">
+                <div class="task-settings">
                     <div class="setting-group">
-                        <label for="projectName">Название проекта</label>
-                        <input type="text" id="projectName" value="{{ project.name }}">
+                        <label for="taskName">Название проекта</label>
+                        <input type="text" id="taskName" value="{{ task.name }}">
                     </div>
                     <div class="setting-group">
-                        <label for="projectDescription">Описание проекта</label>
-                        <textarea id="projectDescription">{{ project.description }}</textarea>
+                        <label for="taskDescription">Описание проекта</label>
+                        <textarea id="taskDescription">{{ task.description }}</textarea>
                     </div>
                     <div class="setting-group">
-                        <label for="projectColor">Цвет проекта</label>
+                        <label for="taskColor">Цвет проекта</label>
                         <div class="color-picker-wrapper">
-                            <input type="color" id="projectColor" value="{{ project.color }}">
+                            <input type="color" id="taskColor" value="{{ task.color }}">
                             <span class="color-label">Выберите цвет проекта</span>
                         </div>
                     </div>
                     <div class="setting-actions">
-                        <button class="btn-primary" onclick="saveProjectSettings()">💾 Сохранить настройки</button>
+                        <button class="btn-primary" onclick="savetaskSettings()">💾 Сохранить настройки</button>
                     </div>
                 </div>
             </section>
@@ -81,11 +81,11 @@
 
         <!-- Правая панель -->
         <aside class="right-sidebar">
-            <div class="project-info-card">
+            <div class="task-info-card">
                 <h3>Информация о проекте</h3>
                 <div class="info-item">
                     <span class="info-label">Создан:</span>
-                    <span class="info-value">{{ project.created_at.strftime('%d.%m.%Y') if project.created_at else 'Не указано' }}</span>
+                    <span class="info-value">{{ task.created_at.strftime('%d.%m.%Y') if task.created_at else 'Не указано' }}</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Создатель:</span>
@@ -93,7 +93,7 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label">Цвет:</span>
-                    <span class="color-preview" style="background-color: {{ project.color }}"></span>
+                    <span class="color-preview" style="background-color: {{ task.color }}"></span>
                 </div>
             </div>
         </aside>
@@ -101,7 +101,7 @@
 
     <script>
         // Данные проекта
-        const projectId = {{ project.id }};
+        const taskId = {{ task.id }};
         let tasks = {
             inProgress: [],
             completed: []
@@ -116,7 +116,7 @@
         // Загрузка задач для статистики
         async function loadTasks() {
             try {
-                const response = await fetch(`/api/project/${projectId}/tasks`);
+                const response = await fetch(`/api/task/${taskId}/tasks`);
                 if (response.ok) {
                     const data = await response.json();
                     tasks.inProgress = data.inProgress || [];
@@ -147,10 +147,10 @@
         }
 
         // Сохранение настроек проекта (frontend placeholder)
-        function saveProjectSettings() {
-            const name = document.getElementById('projectName').value.trim();
-            const description = document.getElementById('projectDescription').value.trim();
-            const color = document.getElementById('projectColor').value;
+        function savetaskSettings() {
+            const name = document.getElementById('taskName').value.trim();
+            const description = document.getElementById('taskDescription').value.trim();
+            const color = document.getElementById('taskColor').value;
 
             if (!name) {
                 alert('Название проекта не может быть пустым');

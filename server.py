@@ -243,7 +243,7 @@ def user_page(user_id):
 	# Получаем данные пользователя из базы
 	user = get_user_by_id(int(user_id))  # Преобразовать в int
 	if user is None:
-		return render_template('notFound.html')
+		return render_template('not_found.html')
 	return render_template('profile.html', user=user)
 
 
@@ -377,14 +377,14 @@ def task_page(task_id):
 		# Получаем проект
 		task = get_task_by_id(task_id)
 		if task is None or task.creator_id != int(current_user.get_id()):
-			return render_template('notFound.html')
+			return render_template('not_found.html')
 
 		user = get_user_by_id(int(current_user.get_id()))
 		if user is None:
 			logout_user()
 			return redirect(url_for('start_page'))
 
-		return render_template('Current_task.html', active_page='current_task', user=user, task=task)
+		return render_template('current_task.html', active_page='current_task', user=user, task=task)
 	else:
 		parent_task_id = request.form.get('parent_task_it')
 		return redirect(url_for(create_task(parent_task_id)))
@@ -400,7 +400,7 @@ def task_management_page(task_id):
 		# Получаем проект
 		task = get_task_by_id(task_id)
 		if task is None or task.creator_id != int(current_user.get_id()):
-			return render_template('notFound.html')
+			return render_template('not_found.html')
 
 		user = get_user_by_id(int(current_user.get_id()))
 		if user is None:
@@ -503,7 +503,7 @@ def task_tasks_api(task_id):
 
 @app.route('/<path:invalid_path>')
 def not_found(invalid_path):
-	return render_template('notFound.html')
+	return render_template('not_found.html')
 
 
 if __name__ == '__main__':
