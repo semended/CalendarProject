@@ -414,6 +414,14 @@ def get_subtasks(parent_task_id: int) -> List[Task]:
     return tasks
 
 
+def update_task_info(
+        task_id: int,
+        new_task_name: str,
+        new_task_desctiption: str,
+        new_task_color: str):
+    pass
+
+
 def update_task_status(
         task_id: int,
         started_at: Optional[datetime] = None,
