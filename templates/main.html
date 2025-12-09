@@ -8,12 +8,9 @@
 </head>
 <body>
     <div class="container">
-        <!-- Сайдбар -->
         {% include 'sidebar.html' %}
 
-        <!-- Основной контент -->
         <main class="main-content">
-            <!-- Хедер -->
             <header class="header">
                 <div class="header-left">
                     <h1>Все проекты</h1>
@@ -47,29 +44,33 @@
                 </div>
             </header>
 
-            <!-- Статистика проектов -->
             <section class="stats-section">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-value" id="totaltasks">8</div>
+                        <div class="stat-value" id="totaltasks">{{ tasks|length }}</div>
                         <div class="stat-label">Всего проектов</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="activetasks">3</div>
+                        <div class="stat-value" id="activetasks">
+                            {{ tasks|selectattr('status', 'equalto', 'active')|list|length }}
+                        </div>
                         <div class="stat-label">Активные</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="completedtasks">4</div>
+                        <div class="stat-value" id="completedtasks">
+                            {{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}
+                        </div>
                         <div class="stat-label">Завершены</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="pausedtasks">1</div>
+                        <div class="stat-value" id="pausedtasks">
+                            {{ tasks|selectattr('status', 'equalto', 'paused')|list|length }}
+                        </div>
                         <div class="stat-label">На паузе</div>
                     </div>
                 </div>
             </section>
 
-            <!-- Сетка проектов -->
             <section class="tasks-section">
                 <div class="tasks-header">
                     <h2>Мои проекты</h2>
@@ -100,176 +101,165 @@
                 </div>
 
                 <div class="tasks-grid" id="tasksGrid">
-                    <!-- Проекты будут загружаться динамически -->
+                    {% for task in tasks %}
+                    <a href="/task/{{ task.id }}" class="task-link">
+                        <div class="task-card"
+                             data-task-id="{{ task.id }}"
+                             data-status="{{ task.status }}"
+                             data-name="{{ task.name|lower }}"
+                             data-deadline="{{ task.deadline or '' }}">
+                            <div class="task-header">
+                                <div class="task-color" style="background-color: {{ task.color }}"></div>
+                                <h3>{{ task.name }}</h3>
+                            </div>
+                            <div class="task-content">
+                                <p>{{ task.description }}</p>
+                                <div class="task-meta">
+                                    <div class="task-stats">
+                                        <span class="stat">📋 {{ task.tasks }} задач</span>
+                                        <span class="stat">👥 {{ task.members }} участников</span>
+                                    </div>
+                                    <div class="task-date
+                                        {% if task.status == 'completed' %} completed
+                                        {% elif task.status == 'paused' %} paused
+                                        {% endif %}
+                                    ">
+                                        {% if task.status == 'completed' %}
+                                            Завершен
+                                        {% elif task.status == 'paused' %}
+                                            На паузе
+                                        {% else %}
+                                            {% if task.deadline %}
+                                                {% set dl = task.deadline | replace('T', ' ') %}
+                                                Срок: {{ dl[:10] }}
+                                            {% else %}
+                                                Без срока
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
             </section>
         </main>
     </div>
 
     <script>
-        // Данные проектов из сервера
-        let tasks = {{ tasks|tojson }};
-
-        // Текущие настройки фильтрации и сортировки
         let currentFilter = 'all';
         let currentSort = 'deadline-asc';
 
         document.addEventListener('DOMContentLoaded', function() {
             initializeUserMenu();
-            initializetasks();
             initializeDropdowns();
         });
 
-        // Инициализация пользовательского меню
         function initializeUserMenu() {
             const userMenuButton = document.getElementById('userMenuButton');
             const userDropdown = document.getElementById('userDropdown');
-            
+
             userMenuButton.addEventListener('click', function(e) {
                 e.stopPropagation();
                 userDropdown.classList.toggle('show');
             });
-            
+
             document.addEventListener('click', function() {
                 userDropdown.classList.remove('show');
             });
-            
+
             userDropdown.addEventListener('click', function(e) {
                 e.stopPropagation();
             });
         }
 
-        // Инициализация проектов
-        function initializetasks() {
-            rendertasks();
-            updateStats();
-        }
-
-        // Инициализация выпадающих меню
         function initializeDropdowns() {
-            // Фильтр
             const filterDropdown = document.getElementById('filterDropdown');
             const filterMenu = document.getElementById('filterMenu');
-            
+            const sortDropdown = document.getElementById('sortDropdown');
+            const sortMenu = document.getElementById('sortMenu');
+
             filterDropdown.addEventListener('click', function(e) {
                 e.stopPropagation();
                 filterMenu.classList.toggle('show');
+                sortMenu.classList.remove('show');
             });
 
-            // Сортировка
-            const sortDropdown = document.getElementById('sortDropdown');
-            const sortMenu = document.getElementById('sortMenu');
-            
             sortDropdown.addEventListener('click', function(e) {
                 e.stopPropagation();
                 sortMenu.classList.toggle('show');
+                filterMenu.classList.remove('show');
             });
 
-            // Обработчики для элементов фильтра
             document.querySelectorAll('#filterMenu .dropdown-item').forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     currentFilter = this.getAttribute('data-filter');
                     filterDropdown.textContent = this.textContent;
                     filterMenu.classList.remove('show');
-                    rendertasks();
+                    applyFilterAndSort();
                 });
             });
 
-            // Обработчики для элементов сортировки
             document.querySelectorAll('#sortMenu .dropdown-item').forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     currentSort = this.getAttribute('data-sort');
                     sortDropdown.textContent = this.textContent;
                     sortMenu.classList.remove('show');
-                    rendertasks();
+                    applyFilterAndSort();
                 });
             });
 
-            // Закрытие меню при клике вне
             document.addEventListener('click', function() {
                 filterMenu.classList.remove('show');
                 sortMenu.classList.remove('show');
             });
         }
 
-        // Функции для работы с проектами
-        function rendertasks() {
+        function applyFilterAndSort() {
             const grid = document.getElementById('tasksGrid');
-            const filteredtasks = filtertasks(tasks);
-            const sortedtasks = sorttasks(filteredtasks);
-            
-            grid.innerHTML = sortedtasks.map(task => `
-                <a href="/task/${task.id}" class="task-link">
-                    <div class="task-card" data-task-id="${task.id}">
-                        <div class="task-header">
-                            <div class="task-color" style="background-color: ${task.color}"></div>
-                            <h3>${task.name}</h3>
-                        </div>
-                        <div class="task-content">
-                            <p>${task.description}</p>
-                            <div class="task-meta">
-                                <div class="task-stats">
-                                    <span class="stat">📋 ${task.tasks} задач</span>
-                                    <span class="stat">👥 ${task.members} участников</span>
-                                </div>
-                                <div class="task-date ${getStatusClass(task.status)}">${getStatusText(task)}</div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            `).join('');
-        }
+            const links = Array.from(grid.querySelectorAll('.task-link'));
 
-        function filtertasks(tasks) {
-            if (currentFilter === 'all') return tasks;
-            return tasks.filter(task => task.status === currentFilter);
-        }
-
-        function sorttasks(tasks) {
-            return tasks.sort((a, b) => {
-                switch (currentSort) {
-                    case 'deadline-asc':
-                        return new Date(a.deadline) - new Date(b.deadline);
-                    case 'deadline-desc':
-                        return new Date(b.deadline) - new Date(a.deadline);
-                    case 'name-asc':
-                        return a.name.localeCompare(b.name);
-                    case 'name-desc':
-                        return b.name.localeCompare(a.name);
-                    default:
-                        return 0;
+            // фильтрация
+            links.forEach(link => {
+                const card = link.querySelector('.task-card');
+                const status = card.getAttribute('data-status');
+                if (currentFilter === 'all' || status === currentFilter) {
+                    link.style.display = '';
+                } else {
+                    link.style.display = 'none';
                 }
             });
-        }
 
-        function getStatusClass(status) {
-            const classes = {
-                'active': '',
-                'completed': 'completed',
-                'paused': 'paused'
-            };
-            return classes[status] || '';
-        }
+            // сортировка видимых
+            const visibleLinks = links.filter(l => l.style.display !== 'none');
 
-        function getStatusText(task) {
-            if (task.status === 'completed') return 'Завершен';
-            if (task.status === 'paused') return 'На паузе';
-            return `Срок: ${formatDate(task.deadline)}`;
-        }
+            visibleLinks.sort((a, b) => {
+                const ca = a.querySelector('.task-card');
+                const cb = b.querySelector('.task-card');
 
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('ru-RU', {
-                day: 'numeric',
-                month: 'short'
+                if (currentSort.startsWith('deadline')) {
+                    const da = ca.getAttribute('data-deadline') || '';
+                    const db = cb.getAttribute('data-deadline') || '';
+                    if (currentSort === 'deadline-asc') {
+                        return (da === '' ? 1 : db === '' ? -1 : da.localeCompare(db));
+                    } else {
+                        return (da === '' ? 1 : db === '' ? -1 : db.localeCompare(da));
+                    }
+                } else {
+                    const na = ca.getAttribute('data-name');
+                    const nb = cb.getAttribute('data-name');
+                    if (currentSort === 'name-asc') {
+                        return na.localeCompare(nb);
+                    } else {
+                        return nb.localeCompare(na);
+                    }
+                }
             });
-        }
 
-        function updateStats() {
-            document.getElementById('totaltasks').textContent = tasks.length;
-            document.getElementById('activetasks').textContent = tasks.filter(p => p.status === 'active').length;
-            document.getElementById('completedtasks').textContent = tasks.filter(p => p.status === 'completed').length;
-            document.getElementById('pausedtasks').textContent = tasks.filter(p => p.status === 'paused').length;
+            visibleLinks.forEach(link => grid.appendChild(link));
         }
     </script>
 </body>
