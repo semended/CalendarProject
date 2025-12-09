@@ -3,7 +3,7 @@
 # 3. Выполнить команду: createdb testdb
 # 4. Запустить скрипт
 
-from sqlalchemy import create_engine, Column, BigInteger, String, Boolean, DateTime, Float, Text, ForeignKey, Index, \
+from sqlalchemy import create_engine, Column, BigInteger, String, Boolean, DateTime, Text, ForeignKey, Index, \
     text, UniqueConstraint
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
 from sqlalchemy.sql import func
@@ -18,48 +18,30 @@ SessionLocal = sessionmaker(bind=engine)
 
 
 # Модели
-class Role(Base):
-    __tablename__ = "roles"
-
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    slug = Column(String(255), unique=True, nullable=False)
-    name = Column(String(255), nullable=False)
-
-    users = relationship("User", back_populates="role")
-
-    def __repr__(self):
-        return f"<Role(id={self.id}, slug='{self.slug}', name='{self.name}')>"
-
-
 class User(Base):
     __tablename__ = "users"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    slug = Column(String(255), unique=True, nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     name = Column(String(255), nullable=False)
     surname = Column(String(255), nullable=False)
     patronymic = Column(String(255), nullable=True)
     password = Column(String(255), nullable=False)
-    bio = Column(Text, nullable=True)  
+    bio = Column(String(500), nullable=True)  # Изменен тип на String(500)
     position = Column(String(255), nullable=True)
     company = Column(String(255), nullable=True)
     workplace = Column(String(255), nullable=True)
     pronouns = Column(String(50), nullable=True)
     url = Column(String(255), nullable=True)
-    organization = Column(Boolean, nullable=False, default=False)
-    role_id = Column(BigInteger, ForeignKey("roles.id"), nullable=False)
-    avatar_url = Column(String(255), nullable=False, default="")
     confirmed = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
-    role = relationship("Role", back_populates="users")
     created_tasks = relationship("Task", back_populates="creator")
     task_roles = relationship("TaskUserRole", back_populates="user")
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', name='{self.name} {self.surname}')>"
-    
+
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -67,17 +49,11 @@ class Task(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     parent_task_id = Column(BigInteger, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=True)
     creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
-    color = Column(String(255), nullable=False)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
-    priority = Column(BigInteger, nullable=False)
-    grade = Column(Float, nullable=False)
-    story_points = Column(Float, nullable=False)
+    duration = Column(BigInteger, nullable=False)  # Длительность в секундах
     created_at = Column(DateTime, nullable=False, server_default=func.now())
-    started_at = Column(DateTime, nullable=True)
     ended_at = Column(DateTime, nullable=True)
-    paused_at = Column(DateTime, nullable=True)
-    finished_at = Column(DateTime, nullable=True)
 
     creator = relationship("User", back_populates="created_tasks")
     parent_task = relationship("Task", remote_side=[id], back_populates="subtasks")
@@ -93,7 +69,6 @@ class TaskRole(Base):
     __tablename__ = "task_roles"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    slug = Column(String(255), nullable=False)
     task_id = Column(BigInteger, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False)
 
@@ -101,12 +76,8 @@ class TaskRole(Base):
     permissions = relationship("TaskRolePermission", back_populates="task_role", cascade="all, delete-orphan")
     user_roles = relationship("TaskUserRole", back_populates="task_role")
 
-    __table_args__ = (
-        Index("task_roles_slug_index", "slug"),
-    )
-
     def __repr__(self):
-        return f"<TaskRole(id={self.id}, slug='{self.slug}', name='{self.name}', task_id={self.task_id})>"
+        return f"<TaskRole(id={self.id}, name='{self.name}', task_id={self.task_id})>"
 
 
 class TaskRolePermission(Base):
@@ -151,30 +122,7 @@ class TaskUserRole(Base):
 def init_db():
     """Инициализация базы данных - создание всех таблиц"""
     Base.metadata.create_all(engine)
-    #print("База данных инициализирована")
-
-
-def add_initial_roles():
-    """Добавление начальных ролей в систему"""
-    session = SessionLocal()
-
-    # Проверяем, есть ли уже роли
-    existing_roles = session.query(Role).count()
-
-    if existing_roles == 0:
-        roles = [
-            Role(slug='teamlead', name='Тимлид'),
-            Role(slug='manager', name='Менеджер'),
-            Role(slug='developer', name='Разработчик'),
-        ]
-        session.add_all(roles)
-        session.commit()
-        #print("Добавлены начальные роли")
-    else:
-        pass
-        #print("Роли уже существуют")
-
-    session.close()
+    print("База данных инициализирована")
 
 
 # Функции для работы с пользователями
@@ -184,7 +132,6 @@ def add_user(user_dict) -> User:
 
     try:
         user = User(
-            slug=user_dict['slug'],
             email=user_dict['email'],
             name=user_dict['name'],
             surname=user_dict['surname'],
@@ -196,9 +143,6 @@ def add_user(user_dict) -> User:
             workplace=user_dict.get('workplace'),
             pronouns=user_dict.get('pronouns'),
             url=user_dict.get('url', 'https://example.com'),
-            organization=user_dict.get('organization', False),
-            role_id=user_dict['role_id'],
-            avatar_url=user_dict.get('avatar_url', ""),
             confirmed=user_dict.get('confirmed', False)
         )
         session.add(user)
@@ -220,13 +164,13 @@ def update_user(user_id: int, user_dict: dict) -> Optional[User]:
         user = session.get(User, user_id)
         if not user:
             return None
-        
+
         # Обновляем только те поля, которые есть в словаре и разрешены
         allowed_fields = [
-            'name', 'surname', 'patronymic', 'email', 'avatar_url',
+            'name', 'surname', 'patronymic', 'email',
             'bio', 'position', 'company', 'workplace', 'pronouns', 'url'
         ]
-        
+
         for key, value in user_dict.items():
             if key in allowed_fields and hasattr(user, key):
                 if value is not None and value != '':
@@ -234,31 +178,9 @@ def update_user(user_id: int, user_dict: dict) -> Optional[User]:
                 elif key in ['patronymic', 'bio', 'position', 'company', 'workplace', 'pronouns']:
                     # Поля, которые могут быть None
                     setattr(user, key, None)
-                elif key == 'avatar_url' and (value is None or value == ''):
-                    setattr(user, key, "")
                 elif key == 'url' and (value is None or value == ''):
                     setattr(user, key, 'https://example.com')
-        
-        session.commit()
-        session.refresh(user)
-        return user
-    except Exception as e:
-        session.rollback()
-        raise e
-    finally:
-        session.close()
 
-
-def update_user_avatar(user_id: int, avatar_url: str) -> Optional[User]:
-    """Обновление аватара пользователя"""
-    session = SessionLocal()
-
-    try:
-        user = session.get(User, user_id)
-        if not user:
-            return None
-        
-        user.avatar_url = avatar_url
         session.commit()
         session.refresh(user)
         return user
@@ -273,14 +195,6 @@ def get_user_by_id(user_id: int) -> Optional[User]:
     """Получение пользователя по ID"""
     session = SessionLocal()
     user = session.get(User, user_id)
-    session.close()
-    return user
-
-
-def get_user_by_slug(slug: str) -> Optional[User]:
-    """Получение пользователя по slug"""
-    session = SessionLocal()
-    user = session.query(User).filter(User.slug == slug).first()
     session.close()
     return user
 
@@ -301,54 +215,14 @@ def get_all_users() -> List[User]:
     return users
 
 
-# Функции для работы с ролями
-def create_role(slug: str, name: str) -> Role:
-    """Создание новой роли в системе"""
-    session = SessionLocal()
-
-    try:
-        role = Role(slug=slug, name=name)
-        session.add(role)
-        session.commit()
-        session.refresh(role)
-        return role
-    except Exception as e:
-        session.rollback()
-        raise e
-    finally:
-        session.close()
-
-
-def get_role_by_id(role_id: int) -> Optional[Role]:
-    """Получение роли по ID"""
-    session = SessionLocal()
-    role = session.get(Role, role_id)
-    session.close()
-    return role
-
-
-def get_role_by_slug(slug: str) -> Optional[Role]:
-    """Получение роли по slug"""
-    session = SessionLocal()
-    role = session.query(Role).filter(Role.slug == slug).first()
-    session.close()
-    return role
-
-
 # Функции для работы с задачами
 def create_task(
         creator_id: int,
         name: str,
         description: str,
-        priority: int,
-        grade: float,
-        story_points: float,
-        color: str = "#000000",
+        duration: int,  # Длительность в секундах
         parent_task_id: Optional[int] = None,
-        started_at: Optional[datetime] = None,
-        ended_at: Optional[datetime] = None,
-        paused_at: Optional[datetime] = None,
-        finished_at: Optional[datetime] = None
+        ended_at: Optional[datetime] = None
 ) -> Task:
     """Создание новой задачи"""
     session = SessionLocal()
@@ -357,16 +231,10 @@ def create_task(
         task = Task(
             creator_id=creator_id,
             parent_task_id=parent_task_id,
-            color=color,
             name=name,
             description=description,
-            priority=priority,
-            grade=grade,
-            story_points=story_points,
-            started_at=started_at,
-            ended_at=ended_at,
-            paused_at=paused_at,
-            finished_at=finished_at
+            duration=duration,
+            ended_at=ended_at
         )
         session.add(task)
         session.commit()
@@ -416,20 +284,11 @@ def get_subtasks(parent_task_id: int) -> List[Task]:
 
 def update_task_info(
         task_id: int,
-        new_task_name: str,
-        new_task_desctiption: str,
-        new_task_color: str):
-    pass
-
-
-def update_task_status(
-        task_id: int,
-        started_at: Optional[datetime] = None,
-        ended_at: Optional[datetime] = None,
-        paused_at: Optional[datetime] = None,
-        finished_at: Optional[datetime] = None
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        duration: Optional[int] = None
 ) -> Optional[Task]:
-    """Обновление статусов задачи"""
+    """Обновление информации о задаче"""
     session = SessionLocal()
 
     try:
@@ -437,14 +296,37 @@ def update_task_status(
         if not task:
             return None
 
-        if started_at is not None:
-            task.started_at = started_at
+        if name is not None:
+            task.name = name
+        if description is not None:
+            task.description = description
+        if duration is not None:
+            task.duration = duration
+
+        session.commit()
+        session.refresh(task)
+        return task
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+
+
+def update_task_status(
+        task_id: int,
+        ended_at: Optional[datetime] = None
+) -> Optional[Task]:
+    """Обновление статуса задачи (завершение)"""
+    session = SessionLocal()
+
+    try:
+        task = session.get(Task, task_id)
+        if not task:
+            return None
+
         if ended_at is not None:
             task.ended_at = ended_at
-        if paused_at is not None:
-            task.paused_at = paused_at
-        if finished_at is not None:
-            task.finished_at = finished_at
 
         session.commit()
         session.refresh(task)
@@ -459,21 +341,15 @@ def update_task_status(
 # Функции для работы с ролями в задачах
 def create_task_role(
         task_id: int,
-        name: str,
-        slug: Optional[str] = None
+        name: str
 ) -> TaskRole:
     """Создание новой роли для задачи"""
     session = SessionLocal()
 
     try:
-        # Если slug не указан, генерируем его из name
-        if slug is None:
-            slug = name.lower().replace(' ', '_')
-
         task_role = TaskRole(
             task_id=task_id,
-            name=name,
-            slug=slug
+            name=name
         )
         session.add(task_role)
         session.commit()
@@ -570,15 +446,14 @@ def get_tasks_for_user(user_id: int) -> List[Task]:
 def drop_all_tables():
     """Удаление всех таблиц (осторожно!)"""
     Base.metadata.drop_all(engine)
-    #print("Все таблицы удалены")
+    print("Все таблицы удалены")
 
 
 def recreate_database():
     """Пересоздание всей базы данных"""
     drop_all_tables()
     init_db()
-    add_initial_roles()
-    #print("База данных пересоздана")
+    print("База данных пересоздана")
 
 
 # Пример использования
@@ -586,22 +461,16 @@ if __name__ == '__main__':
     # Инициализация базы данных
     init_db()
 
-    # Добавление начальных ролей
-    add_initial_roles()
-
-    # Создание тестового пользователя - ИСПРАВЛЕННЫЙ ВЫЗОВ
+    # Создание тестового пользователя
     test_user = get_user_by_id(1)
     if test_user is None:
         test_user = add_user({
-            'slug': "test_user",
             'email': "test@example.com",
             'name': "Иван",
             'surname': "Иванов",
             'patronymic': None,
             'password': "hashed_password_here",
-            'role_id': 3,  # Разработчик
-            'avatar_url': "",  # Добавлено
-            'confirmed': False  # Добавлено
+            'confirmed': False
         })
 
     if test_user:
@@ -613,10 +482,7 @@ if __name__ == '__main__':
             creator_id=test_user.id,
             name="Первая задача",
             description="Описание первой задачи",
-            priority=1,
-            grade=5.0,
-            story_points=3.0,
-            color="#FF0000"
+            duration=3600  # 1 час в секундах
         )
 
         if test_task:
@@ -625,8 +491,7 @@ if __name__ == '__main__':
             # Создание роли для задачи
             task_role = create_task_role(
                 task_id=test_task.id,
-                name="Ответственный",
-                slug="responsible"
+                name="Ответственный"
             )
 
             if task_role:
@@ -659,10 +524,28 @@ if __name__ == '__main__':
     all_users = get_all_users()
     print(f"Всего пользователей: {len(all_users)}")
 
-    # Получение всех ролей
-    session = SessionLocal()
-    all_roles = session.query(Role).all()
-    print(f"Всего ролей в системе: {len(all_roles)}")
-    for role in all_roles:
-        print(f"  - {role}")
-    session.close()
+    # Тестирование обновления пользователя
+    if test_user:
+        updated_user = update_user(test_user.id, {
+            'bio': 'Тестовое био пользователя',
+            'position': 'Разработчик',
+            'company': 'Тестовая компания'
+        })
+        if updated_user:
+            print(f"Обновлен пользователь: {updated_user}")
+            print(f"Био: {updated_user.bio}")
+            print(f"Должность: {updated_user.position}")
+            print(f"Компания: {updated_user.company}")
+
+    # Тестирование обновления задачи
+    if test_task:
+        updated_task = update_task_info(
+            task_id=test_task.id,
+            name="Обновленное название задачи",
+            description="Обновленное описание задачи",
+            duration=7200  # 2 часа
+        )
+        if updated_task:
+            print(f"Обновлена задача: {updated_task}")
+            print(f"Название: {updated_task.name}")
+            print(f"Длительность: {updated_task.duration} секунд")
