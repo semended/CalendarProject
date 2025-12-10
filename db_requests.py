@@ -51,6 +51,7 @@ class Task(Base):
     creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
+    color = Column(Text, nullable=False)
     duration = Column(BigInteger, nullable=False)  # Длительность в секундах
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     ended_at = Column(DateTime, nullable=True)
@@ -126,24 +127,35 @@ def init_db():
 
 
 # Функции для работы с пользователями
-def add_user(user_dict) -> User:
+def add_user(email: str,
+             name: str,
+             surname: str,
+             password: str,
+             patronymic: Optional[str] = None,
+             bio: Optional[str] = None,
+             position: Optional[str] = None,
+             company: Optional[str] = None,
+             workplace: Optional[str] = None,
+             pronouns: Optional[str] = None,
+             url: Optional[str] = None,
+             confirmed: Optional[bool] = False) -> User:
     """Создание нового пользователя"""
     session = SessionLocal()
 
     try:
         user = User(
-            email=user_dict['email'],
-            name=user_dict['name'],
-            surname=user_dict['surname'],
-            patronymic=user_dict.get('patronymic'),
-            password=user_dict['password'],
-            bio=user_dict.get('bio'),
-            position=user_dict.get('position'),
-            company=user_dict.get('company'),
-            workplace=user_dict.get('workplace'),
-            pronouns=user_dict.get('pronouns'),
-            url=user_dict.get('url', 'https://example.com'),
-            confirmed=user_dict.get('confirmed', False)
+            email=email,
+            name=name,
+            surname=surname,
+            patronymic=patronymic,
+            password=password,
+            bio=bio,
+            position=position,
+            company=company,
+            workplace=workplace,
+            pronouns=pronouns,
+            url=url,
+            confirmed=confirmed
         )
         session.add(user)
         session.commit()
@@ -220,6 +232,7 @@ def create_task(
         creator_id: int,
         name: str,
         description: str,
+        color: str,
         duration: int,  # Длительность в секундах
         parent_task_id: Optional[int] = None,
         ended_at: Optional[datetime] = None
@@ -233,6 +246,7 @@ def create_task(
             parent_task_id=parent_task_id,
             name=name,
             description=description,
+            color=color,
             duration=duration,
             ended_at=ended_at
         )
@@ -247,6 +261,20 @@ def create_task(
         session.close()
 
 
+def create_task_bundle(creator_id: int,
+                       name: str,
+                       description: str,
+                       color: str,
+                       duration: int,  # Длительность в секундах
+                       parent_task_id: Optional[int] = None,
+                       ended_at: Optional[datetime] = None):
+    task = create_task(creator_id, name, description, color, duration, parent_task_id, ended_at)
+    teamlead = create_task_role(task.id, 'Тимлид')
+    create_task_role(task.id, 'Менеджер')
+    create_task_role(task.id, 'Разработчик')
+    assign_user_to_task_role(creator_id, task.id, teamlead.id)
+
+
 def get_task_by_id(task_id: int) -> Optional[Task]:
     """Получение задачи по ID"""
     session = SessionLocal()
@@ -259,17 +287,6 @@ def get_tasks_by_creator(creator_id: int) -> List[Task]:
     """Получение всех задач созданных пользователем"""
     session = SessionLocal()
     tasks = session.query(Task).filter(Task.creator_id == creator_id).all()
-    session.close()
-    return tasks
-
-
-def get_tasks_by_creator(creator_id: int) -> List[Task]:
-    """Получение всех проектов (задач верхнего уровня) созданных пользователем"""
-    session = SessionLocal()
-    tasks = session.query(Task).filter(
-        Task.creator_id == creator_id,
-        Task.parent_task_id.is_(None)
-    ).all()
     session.close()
     return tasks
 
@@ -460,92 +477,3 @@ def recreate_database():
 if __name__ == '__main__':
     # Инициализация базы данных
     init_db()
-
-    # Создание тестового пользователя
-    test_user = get_user_by_id(1)
-    if test_user is None:
-        test_user = add_user({
-            'email': "test@example.com",
-            'name': "Иван",
-            'surname': "Иванов",
-            'patronymic': None,
-            'password': "hashed_password_here",
-            'confirmed': False
-        })
-
-    if test_user:
-        print(f"Создан пользователь: {test_user}")
-
-    # Создание тестовой задачи
-    if test_user:
-        test_task = create_task(
-            creator_id=test_user.id,
-            name="Первая задача",
-            description="Описание первой задачи",
-            duration=3600  # 1 час в секундах
-        )
-
-        if test_task:
-            print(f"Создана задача: {test_task}")
-
-            # Создание роли для задачи
-            task_role = create_task_role(
-                task_id=test_task.id,
-                name="Ответственный"
-            )
-
-            if task_role:
-                print(f"Создана роль для задачи: {task_role}")
-
-                # Добавление разрешения к роли
-                permission = add_permission_to_task_role(
-                    task_role_id=task_role.id,
-                    name="Редактирование задачи",
-                    permission="task.edit"
-                )
-
-                print(f"Добавлено разрешение: {permission}")
-
-                # Назначение пользователя на роль в задаче
-                assignment = assign_user_to_task_role(
-                    user_id=test_user.id,
-                    task_id=test_task.id,
-                    task_role_id=task_role.id
-                )
-
-                print(f"Пользователь назначен на роль: {assignment}")
-
-    # Получение пользователя по email
-    user_by_email = get_user_by_email("test@example.com")
-    if user_by_email:
-        print(f"Найден пользователь по email: {user_by_email}")
-
-    # Получение всех пользователей
-    all_users = get_all_users()
-    print(f"Всего пользователей: {len(all_users)}")
-
-    # Тестирование обновления пользователя
-    if test_user:
-        updated_user = update_user(test_user.id, {
-            'bio': 'Тестовое био пользователя',
-            'position': 'Разработчик',
-            'company': 'Тестовая компания'
-        })
-        if updated_user:
-            print(f"Обновлен пользователь: {updated_user}")
-            print(f"Био: {updated_user.bio}")
-            print(f"Должность: {updated_user.position}")
-            print(f"Компания: {updated_user.company}")
-
-    # Тестирование обновления задачи
-    if test_task:
-        updated_task = update_task_info(
-            task_id=test_task.id,
-            name="Обновленное название задачи",
-            description="Обновленное описание задачи",
-            duration=7200  # 2 часа
-        )
-        if updated_task:
-            print(f"Обновлена задача: {updated_task}")
-            print(f"Название: {updated_task.name}")
-            print(f"Длительность: {updated_task.duration} секунд")

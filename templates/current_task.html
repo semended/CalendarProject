@@ -110,11 +110,12 @@
                         {% endif %}
                     </div>
 
-                    <button class="add-task-btn"
-                            type="button"
-                            onclick="document.getElementById('startSubtaskForm').submit()">
-                        + Добавить задачу
-                    </button>
+                    <form id="createSubtaskForm" method="POST" style="display: inline;">
+                        <input type="hidden" name="type" value="create_subtask">
+                        <button class="add-task-btn" type="submit">
+                            + Добавить задачу
+                        </button>
+                    </form>
                 </div>
 
                 <div class="board">

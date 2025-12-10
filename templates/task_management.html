@@ -45,14 +45,15 @@
                 </div>
 
                 <!-- Красивая строка добавления -->
-                <form class="team-actions" id="addUserForm" onsubmit="addUserByEmail(event)">
+                <form class="team-actions" id="addUserForm" method="POST">
+
                     <input type="email"
                            id="userEmail"
+                           name="email"
                            class="team-input"
-                           placeholder="Email пользователя"
-                           required>
+                           placeholder="Email пользователя">
 
-                    <select id="userRole" class="team-select" required>
+                    <select id="userRole" name="role_id" class="team-select" required>
                         <option value="">Роль</option>
                         <option value="1">Тимлид</option>
                         <option value="2">Менеджер</option>
@@ -62,7 +63,7 @@
                     <button type="submit" class="btn-primary team-btn">
                         ➕ Добавить
                     </button>
-                </form>
+                <form>
             </div>
         </section>
 
@@ -123,20 +124,6 @@
         loadTasks();
         updateStats();
     });
-
-    async function loadTasks() {
-        try {
-            const response = await fetch(`/api/task/${taskId}/tasks`);
-            if (response.ok) {
-                const data = await response.json();
-                tasks.inProgress = data.inProgress || [];
-                tasks.completed = data.completed || [];
-                updateStats();
-            }
-        } catch (e) {
-            console.error('Ошибка загрузки задач:', e);
-        }
-    }
 
     function updateStats() {
         const total = tasks.inProgress.length + tasks.completed.length;
