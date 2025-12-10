@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Создать проект - CalendarName</title>
+    <title>Создать задачу - CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
@@ -16,8 +16,8 @@
             <!-- Хедер -->
             <header class="header">
                 <div class="header-left">
-                    <h1>Создать проект</h1>
-                    <div class="breadcrumb">Проекты / Создать проект</div>
+                    <h1>Создать задачу</h1>
+                    <div class="breadcrumb">Задачи / Создать задачу</div>
                 </div>
                 <div class="header-right">
                     <div class="user-menu-container">
@@ -47,51 +47,63 @@
                 </div>
             </header>
 
-            <!-- Форма создания проекта -->
-            <section class="create-project-section">
-                <div class="create-project-layout">
+            <!-- Форма создания задачи -->
+            <section class="create-task-section">
+                <div class="create-task-layout">
                     <!-- Левая колонка - форма -->
-                    <div class="create-project-container">
+                    <div class="create-task-container">
                         <div class="form-intro">
                             <div class="form-icon">📋</div>
-                            <h2>Новый проект</h2>
-                            <p>Создайте новый проект для организации задач и командной работы</p>
+                            <h2>Новая задача</h2>
+                            <!-- NEW: если есть родитель, показать от кого наследуется -->
+                            {% if parent_task %}
+                                <p class="field-hint">Наследуется от: {{ parent_task.name }}</p>
+                            {% elif parent_task_name %}
+                                <p class="field-hint">Наследуется от: {{ parent_task_name }}</p>
+                            {% endif %}
                         </div>
 
                         {% if error %}
-        <div class="error-message">
-            <span class="error-icon">⚠️</span>
-            {{ error }}
-        </div>
-        {% endif %}
+                        <div class="error-message">
+                            <span class="error-icon">⚠️</span>
+                            {{ error }}
+                        </div>
+                        {% endif %}
 
-        <form class="project-form" id="createProjectForm" method="POST">
+                        <form class="task-form" id="createtaskForm" method="POST">
+                            <!-- NEW: скрытое поле с parent_task_id -->
+                            {% if parent_task_id %}
+                                <input type="hidden" name="parent_task_id" value="{{ parent_task_id }}">
+                            {% elif parent_task %}
+                                <input type="hidden" name="parent_task_id" value="{{ parent_task.id }}">
+                            {% endif %}
+
                             <!-- Основная информация -->
                             <div class="form-section">
                                 <h3 class="section-title">Основная информация</h3>
 
-                                <div class="form-group project-name-group">
-                                    <label for="projectName" class="project-name-label">
+                                <div class="form-group task-name-group">
+                                    <label for="taskName" class="task-name-label">
                                         <span class="field-icon-large">📝</span>
-                                        Название проекта *
+                                        Название *
                                     </label>
-                                    <div class="project-name-input-wrapper">
-                                        <input type="text" id="projectName" name="projectName"
-                                               placeholder="Введите название вашего проекта"
+                                    <div class="task-name-input-wrapper">
+                                        <input type="text" id="taskName" name="taskName"
+                                               placeholder="Введите название"
                                                required maxlength="100">
                                         <div class="input-decoration"></div>
                                     </div>
                                     <div class="field-hint">Максимум 100 символов. <span id="nameCharCount">0/100</span></div>
                                 </div>
 
-                                <div class="form-group project-description-group">
-                                    <label for="projectDescription" class="project-description-label">
+                                <div class="form-group task-description-group">
+                                    <label for="taskDescription" class="task-description-label">
                                         <span class="field-icon-large">📖</span>
-                                        Описание проекта
+                                        Описание
                                     </label>
-                                    <div class="project-description-wrapper">
-                                        <textarea id="projectDescription" name="projectDescription"
-                                                  placeholder="Подробно опишите ваш проект"
+                                    <div class="task-description-wrapper">
+                                        <textarea id="taskDescription" name="taskDescription"
+                                                  placeholder="Составьте подробное описание"
                                                   rows="8" maxlength="500"></textarea>
                                         <div class="textarea-decoration">
                                             <div class="textarea-glow"></div>
@@ -101,24 +113,24 @@
                                 </div>
                             </div>
 
-                            <!-- Настройки проекта -->
+                            <!-- Настройки задачи -->
                             <div class="form-section">
-                                <h3 class="section-title">Настройки проекта</h3>
+                                <h3 class="section-title">Настройки</h3>
 
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="projectDeadline">
+                                        <label for="taskDeadline">
                                             <span class="field-icon">📅</span>
                                             Срок выполнения
                                         </label>
-                                        <input type="date" id="projectDeadline" name="projectDeadline">
+                                        <input type="date" id="taskDeadline" name="taskDeadline">
                                         <div class="field-hint">Оставьте пустым, если срок не определен</div>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="projectColor">
+                                        <label for="taskColor">
                                             <span class="field-icon">🎨</span>
-                                            Цвет проекта
+                                            Цвет
                                         </label>
                                         <div class="color-picker-container">
                                             <div class="color-presets">
@@ -129,9 +141,9 @@
                                                 <button type="button" class="color-preset" data-color="#8b5cf6" title="Фиолетовый"></button>
                                                 <button type="button" class="color-preset" data-color="#06b6d4" title="Бирюзовый"></button>
                                             </div>
-                                            <input type="color" id="projectColor" name="projectColor" value="#0ea5e9">
+                                            <input type="color" id="taskColor" name="taskColor" value="#0ea5e9">
                                         </div>
-                                        <div class="field-hint">Выберите цвет для визуального отличия проекта</div>
+                                        <div class="field-hint">Выберите цвет для визуального отличия</div>
                                     </div>
                                 </div>
                             </div>
@@ -141,41 +153,40 @@
                                     <span>Отмена</span>
                                 </a>
                                 <button type="submit" class="btn-primary btn-large">
-                                    <span>Создать проект</span>
+                                    <span>Создать задачу</span>
                                 </button>
                             </div>
                         </form>
                     </div>
 
                     <!-- Правая колонка - превью -->
-                    <div class="project-preview">
+                    <div class="task-preview">
                         <div class="preview-card">
                             <h3>Предварительный просмотр</h3>
-                            <div class="project-card-preview" id="projectPreview">
-                                <div class="project-header">
-                                    <div class="project-color" style="background-color: #0ea5e9"></div>
-                                    <h4 id="previewTitle">Название проекта</h4>
+                            <div class="task-card-preview" id="taskPreview">
+                                <div class="task-header">
+                                    <div class="task-color" style="background-color: #0ea5e9"></div>
+                                    <h4 id="previewTitle">Название</h4>
                                 </div>
-                                <div class="project-content">
-                                    <p id="previewDescription">Описание проекта появится здесь...</p>
-                                    <div class="project-meta">
-                                        <div class="project-stats">
+                                <div class="task-content">
+                                    <p id="previewDescription">Описание появится здесь...</p>
+                                    <div class="task-meta">
+                                        <div class="task-stats">
                                             <span class="stat">📋 0 задач</span>
                                             <span class="stat">👥 1 участник</span>
                                         </div>
-                                        <div class="project-date" id="previewDate">Срок: не указан</div>
+                                        <div class="task-date" id="previewDate">Срок: не указан</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="tips-card">
-                            <h4>💡 Советы по созданию проекта</h4>
+                            <h4>💡 Советы</h4>
                             <ul class="tips-list">
                                 <li>Выберите понятное и описательное название</li>
                                 <li>Добавьте подробное описание целей и задач</li>
                                 <li>Установите срок выполнения</li>
-                                <li>Выберите цвет, который поможет отличить проект от других</li>
                             </ul>
                         </div>
                     </div>
@@ -187,7 +198,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             initializeUserMenu();
-            initializeProjectForm();
+            initializetaskForm();
         });
 
         // Инициализация пользовательского меню
@@ -209,45 +220,43 @@
             });
         }
 
-        // Инициализация формы проекта
-        function initializeProjectForm() {
-            const projectNameInput = document.getElementById('projectName');
-            const projectDescriptionInput = document.getElementById('projectDescription');
-            const projectDeadlineInput = document.getElementById('projectDeadline');
-            const projectColorInput = document.getElementById('projectColor');
+        // Инициализация формы задачи
+        function initializetaskForm() {
+            const taskNameInput = document.getElementById('taskName');
+            const taskDescriptionInput = document.getElementById('taskDescription');
+            const taskDeadlineInput = document.getElementById('taskDeadline');
+            const taskColorInput = document.getElementById('taskColor');
             const colorPresets = document.querySelectorAll('.color-preset');
 
             // Счетчики символов
-            projectNameInput.addEventListener('input', function() {
+            taskNameInput.addEventListener('input', function() {
                 updateCharCount('nameCharCount', this.value.length, 100);
                 updatePreview();
             });
 
-            projectDescriptionInput.addEventListener('input', function() {
+            taskDescriptionInput.addEventListener('input', function() {
                 updateCharCount('descCharCount', this.value.length, 500);
                 updatePreview();
             });
 
             // Обновление превью при вводе
-            projectDeadlineInput.addEventListener('input', updatePreview);
-            projectColorInput.addEventListener('input', updatePreview);
+            taskDeadlineInput.addEventListener('input', updatePreview);
+            taskColorInput.addEventListener('input', updatePreview);
 
             // Предустановленные цвета
             colorPresets.forEach(preset => {
                 preset.addEventListener('click', function() {
                     const color = this.getAttribute('data-color');
-                    projectColorInput.value = color;
+                    taskColorInput.value = color;
                     updatePreview();
 
-                    // Убрать активный класс со всех
                     colorPresets.forEach(p => p.classList.remove('active'));
-                    // Добавить активный класс этому
                     this.classList.add('active');
                 });
             });
 
             // Установить начальный активный цвет
-            const initialColor = projectColorInput.value;
+            const initialColor = taskColorInput.value;
             colorPresets.forEach(preset => {
                 if (preset.getAttribute('data-color') === initialColor) {
                     preset.classList.add('active');
@@ -263,7 +272,6 @@
             const element = document.getElementById(elementId);
             element.textContent = `${currentLength}/${maxLength}`;
 
-            // Изменение цвета в зависимости от количества символов
             if (currentLength > maxLength * 0.9) {
                 element.style.color = 'var(--error)';
             } else if (currentLength > maxLength * 0.8) {
@@ -273,32 +281,30 @@
             }
         }
 
-        // Обновление превью проекта
+        // Обновление превью задачи
         function updatePreview() {
-            const projectName = document.getElementById('projectName').value || 'Название проекта';
-            const projectDescription = document.getElementById('projectDescription').value || 'Описание проекта появится здесь...';
-            const projectDeadline = document.getElementById('projectDeadline').value;
-            const projectColor = document.getElementById('projectColor').value;
+            const taskName = document.getElementById('taskName').value || 'Название';
+            const taskDescription = document.getElementById('taskDescription').value || 'Описание появится здесь...';
+            const taskDeadline = document.getElementById('taskDeadline').value;
+            const taskColor = document.getElementById('taskColor').value;
 
-            // Обновить превью
-            document.getElementById('previewTitle').textContent = projectName;
-            document.getElementById('previewDescription').textContent = projectDescription;
-            document.querySelector('#projectPreview .project-color').style.backgroundColor = projectColor;
+            document.getElementById('previewTitle').textContent = taskName;
+            document.getElementById('previewDescription').textContent = taskDescription;
+            document.querySelector('#taskPreview .task-color').style.backgroundColor = taskColor;
 
-            // Обновить дату
             const dateElement = document.getElementById('previewDate');
-            if (projectDeadline) {
-                const date = new Date(projectDeadline);
+            if (taskDeadline) {
+                const date = new Date(taskDeadline);
                 const formattedDate = date.toLocaleDateString('ru-RU', {
                     day: 'numeric',
                     month: 'short',
                     year: 'numeric'
                 });
                 dateElement.textContent = `Срок: ${formattedDate}`;
-                dateElement.className = 'project-date';
+                dateElement.className = 'task-date';
             } else {
                 dateElement.textContent = 'Срок: не указан';
-                dateElement.className = 'project-date';
+                dateElement.className = 'task-date';
             }
         }
     </script>

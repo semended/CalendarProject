@@ -6,30 +6,30 @@
     <title>Создать проект - CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <style>
-        .create-project-container {
+        .create-task-container {
             max-width: 800px;
             margin: 40px auto;
             padding: 0 20px;
         }
 
-        .create-project-header {
+        .create-task-header {
             margin-bottom: 30px;
         }
 
-        .create-project-header h1 {
+        .create-task-header h1 {
             font-size: 2.5rem;
             font-weight: 600;
             margin: 0 0 10px 0;
             color: #1f2937;
         }
 
-        .create-project-header p {
+        .create-task-header p {
             color: #6b7280;
             font-size: 1.1rem;
             margin: 0;
         }
 
-        .project-form {
+        .task-form {
             background: white;
             border-radius: 16px;
             padding: 40px;
@@ -184,16 +184,16 @@
         }
 
         @media (max-width: 768px) {
-            .create-project-container {
+            .create-task-container {
                 margin: 20px 0;
                 padding: 0 16px;
             }
 
-            .project-form {
+            .task-form {
                 padding: 24px;
             }
 
-            .create-project-header h1 {
+            .create-task-header h1 {
                 font-size: 2rem;
             }
 
@@ -219,33 +219,33 @@
 
         <!-- Основной контент -->
         <main class="main-content">
-            <div class="create-project-container">
-                <div class="create-project-header">
+            <div class="create-task-container">
+                <div class="create-task-header">
                     <h1>Создать новый проект</h1>
                     <p>Заполните форму, чтобы создать новый проект и начать работу</p>
                 </div>
 
-                <form class="project-form" id="createProjectForm" action="/create_project" method="POST">
+                <form class="task-form" id="createtaskForm" action="/create_task" method="POST">
                     <div class="form-section">
                         <h3>Основная информация</h3>
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="projectName">Название проекта <span class="required">*</span></label>
-                                <input type="text" id="projectName" name="projectName" class="form-input" 
+                                <label for="taskName">Название проекта <span class="required">*</span></label>
+                                <input type="text" id="taskName" name="taskName" class="form-input"
                                        placeholder="Введите название проекта" required>
                             </div>
                             <div class="form-group">
-                                <label for="projectColor">Цвет проекта</label>
+                                <label for="taskColor">Цвет проекта</label>
                                 <div class="color-picker-wrapper">
                                     <div class="color-display" id="colorDisplay" style="background-color: #3b82f6;"></div>
-                                    <input type="color" id="projectColor" name="projectColor" class="color-input"
+                                    <input type="color" id="taskColor" name="taskColor" class="color-input"
                                            value="#3b82f6" onchange="updateColorDisplay(this.value)">
                                 </div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="projectDescription">Описание проекта</label>
-                            <textarea id="projectDescription" name="projectDescription" class="form-input form-textarea" 
+                            <label for="taskDescription">Описание проекта</label>
+                            <textarea id="taskDescription" name="taskDescription" class="form-input form-textarea"
                                       placeholder="Опишите ваш проект, его цели и задачи"></textarea>
                         </div>
                     </div>
@@ -254,12 +254,12 @@
                         <h3>Детали проекта</h3>
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="projectDeadline">Срок выполнения</label>
-                                <input type="date" id="projectDeadline" name="projectDeadline" class="form-input">
+                                <label for="taskDeadline">Срок выполнения</label>
+                                <input type="date" id="taskDeadline" name="taskDeadline" class="form-input">
                             </div>
                             <div class="form-group">
-                                <label for="projectPriority">Приоритет</label>
-                                <select id="projectPriority" name="projectPriority" class="priority-select">
+                                <label for="taskPriority">Приоритет</label>
+                                <select id="taskPriority" name="taskPriority" class="priority-select">
                                     <option value="1">Высокий</option>
                                     <option value="2" selected>Средний</option>
                                     <option value="3">Низкий</option>
@@ -284,8 +284,8 @@
         }
 
         // Валидация формы
-        document.getElementById('createProjectForm').addEventListener('submit', function(e) {
-            const name = document.getElementById('projectName').value.trim();
+        document.getElementById('createtaskForm').addEventListener('submit', function(e) {
+            const name = document.getElementById('taskName').value.trim();
             if (!name) {
                 e.preventDefault();
                 alert('Пожалуйста, введите название проекта');

@@ -8,12 +8,9 @@
 </head>
 <body>
     <div class="container">
-        <!-- Сайдбар -->
         {% include 'sidebar.html' %}
 
-        <!-- Основной контент -->
         <main class="main-content">
-            <!-- Хедер -->
             <header class="header">
                 <div class="header-left">
                     <h1>Все проекты</h1>
@@ -47,33 +44,37 @@
                 </div>
             </header>
 
-            <!-- Статистика проектов -->
             <section class="stats-section">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-value" id="totalProjects">8</div>
+                        <div class="stat-value" id="totaltasks">{{ tasks|length }}</div>
                         <div class="stat-label">Всего проектов</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="activeProjects">3</div>
+                        <div class="stat-value" id="activetasks">
+                            {{ tasks|selectattr('status', 'equalto', 'active')|list|length }}
+                        </div>
                         <div class="stat-label">Активные</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="completedProjects">4</div>
+                        <div class="stat-value" id="completedtasks">
+                            {{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}
+                        </div>
                         <div class="stat-label">Завершены</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="pausedProjects">1</div>
+                        <div class="stat-value" id="pausedtasks">
+                            {{ tasks|selectattr('status', 'equalto', 'paused')|list|length }}
+                        </div>
                         <div class="stat-label">На паузе</div>
                     </div>
                 </div>
             </section>
 
-            <!-- Сетка проектов -->
-            <section class="projects-section">
-                <div class="projects-header">
+            <section class="tasks-section">
+                <div class="tasks-header">
                     <h2>Мои проекты</h2>
-                    <div class="projects-actions">
+                    <div class="tasks-actions">
                         <div class="dropdown">
                             <button class="btn-secondary dropdown-toggle" id="filterDropdown">
                                 Фильтр
@@ -99,177 +100,166 @@
                     </div>
                 </div>
 
-                <div class="projects-grid" id="projectsGrid">
-                    <!-- Проекты будут загружаться динамически -->
+                <div class="tasks-grid" id="tasksGrid">
+                    {% for task in tasks %}
+                    <a href="/task/{{ task.id }}" class="task-link">
+                        <div class="task-card"
+                             data-task-id="{{ task.id }}"
+                             data-status="{{ task.status }}"
+                             data-name="{{ task.name|lower }}"
+                             data-deadline="{{ task.deadline or '' }}">
+                            <div class="task-header">
+                                <div class="task-color" style="background-color: {{ task.color }}"></div>
+                                <h3>{{ task.name }}</h3>
+                            </div>
+                            <div class="task-content">
+                                <p>{{ task.description }}</p>
+                                <div class="task-meta">
+                                    <div class="task-stats">
+                                        <span class="stat">📋 {{ task.tasks }} задач</span>
+                                        <span class="stat">👥 {{ task.members }} участников</span>
+                                    </div>
+                                    <div class="task-date
+                                        {% if task.status == 'completed' %} completed
+                                        {% elif task.status == 'paused' %} paused
+                                        {% endif %}
+                                    ">
+                                        {% if task.status == 'completed' %}
+                                            Завершен
+                                        {% elif task.status == 'paused' %}
+                                            На паузе
+                                        {% else %}
+                                            {% if task.deadline %}
+                                                {% set dl = task.deadline | replace('T', ' ') %}
+                                                Срок: {{ dl[:10] }}
+                                            {% else %}
+                                                Без срока
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
             </section>
         </main>
     </div>
 
     <script>
-        // Данные проектов из сервера
-        let projects = {{ projects|tojson }};
-
-        // Текущие настройки фильтрации и сортировки
         let currentFilter = 'all';
         let currentSort = 'deadline-asc';
 
         document.addEventListener('DOMContentLoaded', function() {
             initializeUserMenu();
-            initializeProjects();
             initializeDropdowns();
         });
 
-        // Инициализация пользовательского меню
         function initializeUserMenu() {
             const userMenuButton = document.getElementById('userMenuButton');
             const userDropdown = document.getElementById('userDropdown');
-            
+
             userMenuButton.addEventListener('click', function(e) {
                 e.stopPropagation();
                 userDropdown.classList.toggle('show');
             });
-            
+
             document.addEventListener('click', function() {
                 userDropdown.classList.remove('show');
             });
-            
+
             userDropdown.addEventListener('click', function(e) {
                 e.stopPropagation();
             });
         }
 
-        // Инициализация проектов
-        function initializeProjects() {
-            renderProjects();
-            updateStats();
-        }
-
-        // Инициализация выпадающих меню
         function initializeDropdowns() {
-            // Фильтр
             const filterDropdown = document.getElementById('filterDropdown');
             const filterMenu = document.getElementById('filterMenu');
-            
+            const sortDropdown = document.getElementById('sortDropdown');
+            const sortMenu = document.getElementById('sortMenu');
+
             filterDropdown.addEventListener('click', function(e) {
                 e.stopPropagation();
                 filterMenu.classList.toggle('show');
+                sortMenu.classList.remove('show');
             });
 
-            // Сортировка
-            const sortDropdown = document.getElementById('sortDropdown');
-            const sortMenu = document.getElementById('sortMenu');
-            
             sortDropdown.addEventListener('click', function(e) {
                 e.stopPropagation();
                 sortMenu.classList.toggle('show');
+                filterMenu.classList.remove('show');
             });
 
-            // Обработчики для элементов фильтра
             document.querySelectorAll('#filterMenu .dropdown-item').forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     currentFilter = this.getAttribute('data-filter');
                     filterDropdown.textContent = this.textContent;
                     filterMenu.classList.remove('show');
-                    renderProjects();
+                    applyFilterAndSort();
                 });
             });
 
-            // Обработчики для элементов сортировки
             document.querySelectorAll('#sortMenu .dropdown-item').forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     currentSort = this.getAttribute('data-sort');
                     sortDropdown.textContent = this.textContent;
                     sortMenu.classList.remove('show');
-                    renderProjects();
+                    applyFilterAndSort();
                 });
             });
 
-            // Закрытие меню при клике вне
             document.addEventListener('click', function() {
                 filterMenu.classList.remove('show');
                 sortMenu.classList.remove('show');
             });
         }
 
-        // Функции для работы с проектами
-        function renderProjects() {
-            const grid = document.getElementById('projectsGrid');
-            const filteredProjects = filterProjects(projects);
-            const sortedProjects = sortProjects(filteredProjects);
-            
-            grid.innerHTML = sortedProjects.map(project => `
-                <a href="/project/${project.id}" class="project-link">
-                    <div class="project-card" data-project-id="${project.id}">
-                        <div class="project-header">
-                            <div class="project-color" style="background-color: ${project.color}"></div>
-                            <h3>${project.name}</h3>
-                        </div>
-                        <div class="project-content">
-                            <p>${project.description}</p>
-                            <div class="project-meta">
-                                <div class="project-stats">
-                                    <span class="stat">📋 ${project.tasks} задач</span>
-                                    <span class="stat">👥 ${project.members} участников</span>
-                                </div>
-                                <div class="project-date ${getStatusClass(project.status)}">${getStatusText(project)}</div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            `).join('');
-        }
+        function applyFilterAndSort() {
+            const grid = document.getElementById('tasksGrid');
+            const links = Array.from(grid.querySelectorAll('.task-link'));
 
-        function filterProjects(projects) {
-            if (currentFilter === 'all') return projects;
-            return projects.filter(project => project.status === currentFilter);
-        }
-
-        function sortProjects(projects) {
-            return projects.sort((a, b) => {
-                switch (currentSort) {
-                    case 'deadline-asc':
-                        return new Date(a.deadline) - new Date(b.deadline);
-                    case 'deadline-desc':
-                        return new Date(b.deadline) - new Date(a.deadline);
-                    case 'name-asc':
-                        return a.name.localeCompare(b.name);
-                    case 'name-desc':
-                        return b.name.localeCompare(a.name);
-                    default:
-                        return 0;
+            // фильтрация
+            links.forEach(link => {
+                const card = link.querySelector('.task-card');
+                const status = card.getAttribute('data-status');
+                if (currentFilter === 'all' || status === currentFilter) {
+                    link.style.display = '';
+                } else {
+                    link.style.display = 'none';
                 }
             });
-        }
 
-        function getStatusClass(status) {
-            const classes = {
-                'active': '',
-                'completed': 'completed',
-                'paused': 'paused'
-            };
-            return classes[status] || '';
-        }
+            // сортировка видимых
+            const visibleLinks = links.filter(l => l.style.display !== 'none');
 
-        function getStatusText(project) {
-            if (project.status === 'completed') return 'Завершен';
-            if (project.status === 'paused') return 'На паузе';
-            return `Срок: ${formatDate(project.deadline)}`;
-        }
+            visibleLinks.sort((a, b) => {
+                const ca = a.querySelector('.task-card');
+                const cb = b.querySelector('.task-card');
 
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('ru-RU', {
-                day: 'numeric',
-                month: 'short'
+                if (currentSort.startsWith('deadline')) {
+                    const da = ca.getAttribute('data-deadline') || '';
+                    const db = cb.getAttribute('data-deadline') || '';
+                    if (currentSort === 'deadline-asc') {
+                        return (da === '' ? 1 : db === '' ? -1 : da.localeCompare(db));
+                    } else {
+                        return (da === '' ? 1 : db === '' ? -1 : db.localeCompare(da));
+                    }
+                } else {
+                    const na = ca.getAttribute('data-name');
+                    const nb = cb.getAttribute('data-name');
+                    if (currentSort === 'name-asc') {
+                        return na.localeCompare(nb);
+                    } else {
+                        return nb.localeCompare(na);
+                    }
+                }
             });
-        }
 
-        function updateStats() {
-            document.getElementById('totalProjects').textContent = projects.length;
-            document.getElementById('activeProjects').textContent = projects.filter(p => p.status === 'active').length;
-            document.getElementById('completedProjects').textContent = projects.filter(p => p.status === 'completed').length;
-            document.getElementById('pausedProjects').textContent = projects.filter(p => p.status === 'paused').length;
+            visibleLinks.forEach(link => grid.appendChild(link));
         }
     </script>
 </body>

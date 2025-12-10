@@ -4,50 +4,50 @@
             <h2>CalendarName</h2>
         </a>
     </div>
-    
-    <nav class="main-nav">
-        <div class="nav-section">
-            <h3 class="nav-title">ПРОЕКТЫ</h3>
-            <ul class="nav-list">
-                <li class="nav-item {% if active_page == 'all_projects' %}active{% endif %}">
-                    <a href="/main" class="nav-link">
-                        <span class="nav-icon">📁</span>
-                        <span>Все проекты</span>
-                    </a>
-                </li>
-                {% if project %}
-                <li class="nav-item active">
-                    <a href="/project/{{ project.id }}" class="nav-link">
-                        <span class="nav-icon">📄</span>
-                        <span>{{ project.name }}</span>
-                    </a>
-                </li>
-                {% endif %}
-                <li class="nav-item {% if active_page == 'create_project' %}active{% endif %}">
-                    <a href="/create_project" class="nav-link">
-                        <span class="nav-icon">➕</span>
-                        <span>Создать проект</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-        
-        <div class="nav-section">
-            <h3 class="nav-title">ЗАДАЧИ</h3>
-            <ul class="nav-list">
-                <li class="nav-item">
-                    <span class="nav-icon">📋</span>
-                    <span>Все задачи</span>
-                </li>
-                <li class="nav-item">
-                    <span class="nav-icon">👤</span>
-                    <span>Назначенные мне</span>
-                </li>
-                <li class="nav-item">
-                    <span class="nav-icon">📅</span>
-                    <span>Предстоящие</span>
-                </li>
-            </ul>
-        </div>
-    </nav>
+
+    <div class="nav-section">
+        <h3 class="nav-title">ПРОЕКТЫ</h3>
+        <ul class="nav-list">
+            <li class="nav-item nav-item--create {% if active_page == 'create_task' %}active{% endif %}">
+                <a href="/create_task" class="create-project-btn">
+                    Создать проект
+                </a>
+            </li>
+
+
+            <li class="nav-item {% if active_page == 'all_tasks' %}active{% endif %}">
+                <a href="/main" class="nav-link">
+                    <span class="nav-icon">📁</span>
+                    <span>Все проекты</span>
+                </a>
+            </li>
+
+            {% for project in tasks %}
+            <li class="nav-item {% if task and task.id == project.id %}active{% endif %}">
+                <a href="/task/{{ project.id }}" class="nav-link">
+                    <span class="nav-icon">📄</span>
+                    <span>{{ project.name }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="nav-section">
+        <h3 class="nav-title">ЗАДАЧИ</h3>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span>Все задачи</span>
+            </li>
+            <li class="nav-item">
+                <span class="nav-icon">👤</span>
+                <span>Назначенные мне</span>
+            </li>
+            <li class="nav-item">
+                <span class="nav-icon">📅</span>
+                <span>Предстоящие</span>
+            </li>
+        </ul>
+    </div>
 </aside>

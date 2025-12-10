@@ -82,3 +82,6 @@ instance/
 *~
 *.swp
 *.swo
+
+temp_local.py
+.gitignore
