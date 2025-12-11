@@ -98,10 +98,6 @@
                                 <div class="task-title">{{ t.name }}</div>
                                 <div class="task-meta">
                                     <span>{{ t.created_at }}</span>
-                                    <span style="cursor:pointer;"
-                                          onclick="event.preventDefault(); event.stopPropagation(); deleteTask({{ t.id }}, 'inProgress');">
-                                        🗑️
-                                    </span>
                                 </div>
                             </a>
                             {% endfor %}
@@ -110,8 +106,10 @@
                         {% endif %}
                     </div>
 
-                    <form id="createSubtaskForm" method="POST" style="display: inline;">
-                        <input type="hidden" name="type" value="create_subtask">
+                    <form id="createSubtaskForm"
+                        method="GET"
+                        action="{{ url_for('create_task_page', parent_task_id=task.id) }}"
+                        style="display:inline;">
                         <button class="add-task-btn" type="submit">
                             + Добавить задачу
                         </button>
@@ -223,7 +221,15 @@
             <div class="task-info">
                 <h3>Команда</h3>
                 <div class="team-list" id="teamList">
-                    <p class="empty-state">список людей</p>
+                    {% if team and team|length > 0 %}
+                        {% for user in team %}
+                            <div class="team-member">
+                                {{ user.email }}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="empty-state">Данные отсутствуют</p>
+                    {% endif %}
                 </div>
             </div>
         </aside>

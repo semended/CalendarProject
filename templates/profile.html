@@ -39,7 +39,6 @@
                             </div>
                             <div class="profile-info">
                                 <h2>{{ user['name'] }} {{ user['surname'] }}</h2>
-                                <p class="profile-username">@{{ user['slug'] }}</p>
                                 <p class="profile-bio">{{ user['bio'] }}</p>
                                 
                                 <div class="profile-details">
@@ -63,14 +62,6 @@
                                         <span class="detail-icon">📍</span>
                                         {% if user['workplace'] %}
                                             <span>{{ user['workplace'] }}</span>
-                                        {% else %}
-                                            <span>Отсутствует</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-icon">🕒</span>
-                                        {% if user['last_login'] %}
-                                            <span>{{ user['last_login'] }}</span>
                                         {% else %}
                                             <span>Отсутствует</span>
                                         {% endif %}

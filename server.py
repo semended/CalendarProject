@@ -190,9 +190,11 @@ def user_page(user_id):
 	print('Зашёл в user_page. User_id ->', current_user.get_id())
 	# Получаем данные пользователя из базы
 	user = get_user_by_id(int(user_id))  # Преобразовать в int
+	tasks = get_tasks_by_creator(int(current_user.get_id()))
+
 	if user is None:
 		return render_template('not_found.html')
-	return render_template('profile.html', user=user)
+	return render_template('profile.html', user=user, tasks=tasks)
 
 
 @app.route('/user/settings', methods=['GET', 'POST'])
@@ -203,6 +205,7 @@ def settings_page():
 	# Получаем пользователя
 	user_id = int(current_user.get_id())
 	user = get_user_by_id(user_id)
+	tasks = get_tasks_by_creator(int(current_user.get_id()))
 
 	if user is None:
 		logout_user()
@@ -313,7 +316,7 @@ def settings_page():
 		return redirect(url_for('settings_page'))
 
 	# GET запрос - показываем страницу настроек
-	return render_template('settings.html', user=user)
+	return render_template('settings.html', user=user, tasks=tasks)
 
 
 @app.route('/task/<int:task_id>', methods=['GET', 'POST'])
@@ -359,9 +362,10 @@ def task_management_page(task_id):
 			logout_user()
 			return redirect(url_for('start_page'))
 
+		team = get_users_in_task(task_id)
 		tasks = get_tasks_by_creator(int(current_user.get_id()))
 		return render_template('task_management.html', active_page='current_task', user=user,
-													 tasks=tasks, task=task)
+													 tasks=tasks, task=task, team=team)
 	else:
 		if request.form.get('email') is not None:
 			# Если пришёл email (то бишь добавляем человека в команду):

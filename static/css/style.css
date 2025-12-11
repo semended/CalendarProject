@@ -2544,8 +2544,6 @@ body {
     margin-top: 12px;
     padding: 16px 18px;
     border-radius: 12px;
-    background-color: #f5f7fb;
-    border: 1px solid #e0e4f0;
 }
 
 .team-list {
@@ -2968,7 +2966,7 @@ body {
     border-radius: 6px;
     padding: 15px;
     margin-bottom: 10px;
-    cursor: move;
+    cursor: pointer;
     transition: box-shadow 0.2s;
 }
 
@@ -3046,6 +3044,9 @@ body {
     background-color: #f9f9f9;
     border-radius: 6px;
     min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .empty-state {

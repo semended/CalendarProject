@@ -36,22 +36,32 @@
             </div>
         </div>
 
-        <!-- Команда -->
         <section class="management-section">
             <h3>Команда</h3>
             <div class="team-management">
                 <div class="team-list" id="teamList">
-                    <p class="empty-state">список людей</p>
+                    {% if team %}
+                        {% for user in team %}
+                            <div class="team-member">
+                                {{ user.email }}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="empty-state">список людей</p>
+                    {% endif %}
                 </div>
 
-                <!-- Красивая строка добавления -->
-                <form class="team-actions" id="addUserForm" method="POST">
-
+                <!-- ОТДЕЛЬНАЯ ФОРМА ДЛЯ ДОБАВЛЕНИЯ УЧАСТНИКА -->
+                <form class="team-actions"
+                      id="addUserForm"
+                      method="POST"
+                      action="{{ url_for('task_management_page', task_id=task.id) }}">
                     <input type="email"
                            id="userEmail"
                            name="email"
                            class="team-input"
-                           placeholder="Email пользователя">
+                           placeholder="Email пользователя"
+                           required>
 
                     <select id="userRole" name="role_id" class="team-select" required>
                         <option value="">Роль</option>
@@ -61,37 +71,50 @@
                     </select>
 
                     <button type="submit" class="btn-primary team-btn">
-                        ➕ Добавить
+                        Добавить
                     </button>
-                <form>
+                </form>
             </div>
         </section>
 
         <!-- Настройки проекта -->
         <section class="management-section">
             <h3>Настройки</h3>
-            <div class="task-settings">
+
+            <!-- ОТДЕЛЬНАЯ ФОРМА ДЛЯ НАСТРОЕК ТАСКИ -->
+            <form class="task-settings"
+                  id="taskSettingsForm"
+                  method="POST"
+                  action="{{ url_for('task_management_page', task_id=task.id) }}">
                 <div class="setting-group">
                     <label for="taskName">Название</label>
-                    <input type="text" id="taskName" value="{{ task.name }}">
+                    <input type="text"
+                           id="taskName"
+                           name="task_name"
+                           value="{{ task.name }}"
+                           required>
                 </div>
                 <div class="setting-group">
                     <label for="taskDescription">Описание</label>
-                    <textarea id="taskDescription">{{ task.description }}</textarea>
+                    <textarea id="taskDescription"
+                              name="task_description">{{ task.description }}</textarea>
                 </div>
                 <div class="setting-group">
                     <label for="taskColor">Цвет</label>
                     <div class="color-picker-wrapper">
-                        <input type="color" id="taskColor" value="{{ task.color }}">
+                        <input type="color"
+                               id="taskColor"
+                               name="task_color"
+                               value="{{ task.color }}">
                         <span class="color-label">Выберите цвет</span>
                     </div>
                 </div>
                 <div class="setting-actions">
-                    <button class="btn-primary" onclick="saveTaskSettings()">
-                        💾 Сохранить настройки
+                    <button type="submit" class="btn-primary">
+                        Сохранить настройки
                     </button>
                 </div>
-            </div>
+            </form>
         </section>
     </main>
 
@@ -121,7 +144,9 @@
     let tasks = { inProgress: [], completed: [] };
 
     document.addEventListener('DOMContentLoaded', function() {
-        loadTasks();
+        if (typeof loadTasks === 'function') {
+            loadTasks();
+        }
         updateStats();
     });
 
@@ -130,93 +155,6 @@
         document.getElementById('totalTasks').textContent = total;
         document.getElementById('inProgressTasks').textContent = tasks.inProgress.length;
         document.getElementById('completedTasks').textContent = tasks.completed.length;
-    }
-
-    // POST { email, role_id }
-    async function addUserByEmail(event) {
-        event.preventDefault();
-
-        const email = document.getElementById('userEmail').value.trim();
-        const roleId = document.getElementById('userRole').value;
-
-        if (!email || !roleId) {
-            alert('Укажите email и роль');
-            return;
-        }
-
-        const payload = {
-            email: email,
-            role_id: Number(roleId)
-        };
-
-        try {
-            const response = await fetch(`/api/task/${taskId}/members`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                alert('Не удалось добавить пользователя');
-                return;
-            }
-
-            const data = await response.json();
-            console.log('Пользователь добавлен:', data);
-
-            const list = document.getElementById('teamList');
-            const roleText = document.getElementById('userRole').selectedOptions[0].text;
-            const item = document.createElement('div');
-            item.className = 'team-member';
-            item.textContent = `${email} — ${roleText}`;
-            if (list.querySelector('.empty-state')) {
-                list.innerHTML = '';
-            }
-            list.appendChild(item);
-
-            document.getElementById('addUserForm').reset();
-        } catch (e) {
-            console.error(e);
-            alert('Ошибка при добавлении пользователя');
-        }
-    }
-
-    // POST { project_name, project_description, project_color }
-    async function saveTaskSettings() {
-        const name = document.getElementById('taskName').value.trim();
-        const description = document.getElementById('taskDescription').value.trim();
-        const color = document.getElementById('taskColor').value;
-
-        if (!name) {
-            alert('Название не может быть пустым');
-            return;
-        }
-
-        const payload = {
-            project_name: name,
-            project_description: description,
-            project_color: color
-        };
-
-        try {
-            const response = await fetch(`/api/task/${taskId}/settings`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                alert('Ошибка при сохранении настроек');
-                return;
-            }
-
-            const data = await response.json();
-            console.log('Настройки сохранены:', data);
-            alert('Настройки сохранены');
-        } catch (e) {
-            console.error(e);
-            alert('Ошибка при сохранении настроек');
-        }
     }
 </script>
 </body>
