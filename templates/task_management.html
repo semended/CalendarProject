@@ -42,12 +42,13 @@
                 <div class="team-list" id="teamList">
                     {% if team %}
                         {% for user in team %}
-                            <div class="team-member">
-                                {{ user.email }}
+                            <div class="team-card">
+                                <div class="team-email">{{ user.email }}</div>
+                                <div class="team-role">{{ user.role_name }}</div>
                             </div>
                         {% endfor %}
                     {% else %}
-                        <p class="empty-state">список людей</p>
+                        <p class="empty-state">Данные отсутствуют</p>
                     {% endif %}
                 </div>
 

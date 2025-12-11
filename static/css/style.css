@@ -2546,8 +2546,37 @@ body {
     border-radius: 12px;
 }
 
+/* Колонка со списком участников */
 .team-list {
+    flex: 1;
     margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Одна карточка участника */
+.team-card {
+    width: 100%;
+    box-sizing: border-box;
+    background: #f5f5f7;
+    border-radius: 10px;
+    padding: 8px 12px;
+    border: 1px solid #e0e0e5;
+}
+
+/* Почта сверху */
+.team-email {
+    font-size: 14px;
+    font-weight: 500;
+    color: #222;
+}
+
+/* Роль снизу */
+.team-role {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #777;
 }
 
 .team-actions {
@@ -3208,4 +3237,31 @@ body {
 
 .form-actions .btn-secondary {
     text-decoration: none;
+}
+
+.right-sidebar .team-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.team-card {
+    width: 100%;
+    box-sizing: border-box;
+    background: #f5f5f7;
+    border-radius: 10px;
+    padding: 8px 12px;
+    border: 1px solid #e0e0e5;
+}
+
+.team-email {
+    font-size: 14px;
+    font-weight: 500;
+    color: #222;
+}
+
+.team-role {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #777;
 }

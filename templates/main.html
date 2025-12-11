@@ -107,7 +107,7 @@
                              data-task-id="{{ task.id }}"
                              data-status="{{ task.status }}"
                              data-name="{{ task.name|lower }}"
-                             data-deadline="{{ task.deadline or '' }}">
+                             data-deadline="{{ task.ended_at or '' }}">
                             <div class="task-header">
                                 <div class="task-color" style="background-color: {{ task.color }}"></div>
                                 <h3>{{ task.name }}</h3>
@@ -129,8 +129,8 @@
                                         {% elif task.status == 'paused' %}
                                             На паузе
                                         {% else %}
-                                            {% if task.deadline %}
-                                                {% set dl = task.deadline | replace('T', ' ') %}
+                                            {% if task.ended_at %}
+                                                {% set dl = task.ended_at | replace('T', ' ') %}
                                                 Срок: {{ dl[:10] }}
                                             {% else %}
                                                 Без срока

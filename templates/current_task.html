@@ -90,14 +90,47 @@
                     <div class="task-list" id="inProgressList">
                         {% if in_progress_tasks and in_progress_tasks|length > 0 %}
                             {% for t in in_progress_tasks %}
-                            <a class="task-card"
-                               href="{{ url_for('task_page', task_id=t.id) }}"
-                               draggable="true"
-                               data-id="{{ t.id }}"
-                               data-status="inProgress">
-                                <div class="task-title">{{ t.name }}</div>
-                                <div class="task-meta">
-                                    <span>{{ t.created_at }}</span>
+                            <a class="task-link"
+                            href="{{ url_for('task_page', task_id=t.id) }}"
+                            draggable="true"
+                            data-id="{{ t.id }}"
+                            data-status="inProgress">
+                                <div class="task-card"
+                                    data-task-id="{{ t.id }}"
+                                    data-status="{{ t.status }}"
+                                    data-name="{{ t.name|lower }}"
+                                    data-deadline="{{ t.ended_at or '' }}">
+                                    <div class="task-header">
+                                        <div class="task-color" style="background-color: {{ t.color }}"></div>
+                                        <h3>{{ t.name }}</h3>
+                                    </div>
+                                    <div class="task-content">
+                                        <p>{{ t.description }}</p>
+                                        <div class="task-meta">
+                                            <div class="task-stats">
+                                                <span class="stat">📋 {{ t.tasks }} задач</span>
+                                                <span class="stat">👥 {{ t.members }} участников</span>
+                                            </div>
+                                            <div class="task-date
+                                                {% if t.status == 'completed' %} completed
+                                                {% elif t.status == 'paused' %} paused
+                                                {% endif %}
+                                            ">
+                                                {% if t.status == 'completed' %}
+                                                    Завершен
+                                                {% elif t.status == 'paused' %}
+                                                    На паузе
+                                                {% else %}
+                                                    {% if t.ended_at %}
+                                                        {% set dl = t.ended_at | replace('T', ' ') %}
+                                                        Срок: {{ dl[:10] }}
+                                                    {% else %}
+                                                        Без срока
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </a>
                             {% endfor %}
@@ -223,8 +256,9 @@
                 <div class="team-list" id="teamList">
                     {% if team and team|length > 0 %}
                         {% for user in team %}
-                            <div class="team-member">
-                                {{ user.email }}
+                            <div class="team-card">
+                                <div class="team-email">{{ user.email }}</div>
+                                <div class="team-role">{{ user.role_name }}</div>
                             </div>
                         {% endfor %}
                     {% else %}
