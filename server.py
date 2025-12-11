@@ -332,6 +332,9 @@ def task_page(task_id):
 		in_progress_tasks = get_subtasks(task_id)
 		tasks = get_tasks_by_user_id(int(current_user.get_id()))
 		team = get_users_in_task(task_id)
+		for user in team:
+			role = get_user_role_in_task(user.id, task_id)
+			user.role_name = role
 		return render_template('current_task.html', active_page='current_task', user=user, task=task,
 													 tasks=tasks, in_progress_tasks=in_progress_tasks, team=team)
 	else:
@@ -352,6 +355,9 @@ def task_management_page(task_id):
 
 		team = get_users_in_task(task_id)
 		tasks = get_tasks_by_user_id(int(current_user.get_id()))
+		for user in team:
+			role = get_user_role_in_task(user.id, task_id)
+			user.role_name = role
 		return render_template('task_management.html', active_page='current_task', user=user,
 													 tasks=tasks, task=task, team=team)
 	else:

@@ -203,6 +203,24 @@ def update_user(user_id: int, user_dict: dict) -> Optional[User]:
         session.close()
 
 
+def get_user_role_in_task(user_id: int, task_id: int) -> Optional[str]:
+    """Получение названия роли пользователя в задаче"""
+    session = SessionLocal()
+
+    # Находим связь пользователя с задачей
+    task_user_role = session.query(TaskUserRole).filter(
+        TaskUserRole.user_id == user_id,
+        TaskUserRole.task_id == task_id
+    ).first()
+
+    role_name = None
+    if task_user_role and task_user_role.task_role:
+        role_name = task_user_role.task_role.name
+
+    session.close()
+    return role_name
+
+
 def get_user_by_id(user_id: int) -> Optional[User]:
     """Получение пользователя по ID"""
     session = SessionLocal()
