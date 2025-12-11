@@ -291,6 +291,21 @@ def get_tasks_by_creator(creator_id: int) -> List[Task]:
     return tasks
 
 
+def get_tasks_by_user_id(user_id: int) -> List[Task]:
+    """Получение всех задач, где пользователь имеет роль в TaskUserRole"""
+    session = SessionLocal()
+
+    task_user_roles = session.query(TaskUserRole).filter(
+        TaskUserRole.user_id == user_id
+    ).all()
+
+    task_ids = {tur.task_id for tur in task_user_roles}
+    tasks = session.query(Task).filter(Task.id.in_(task_ids)).all()
+
+    session.close()
+    return tasks
+
+
 def get_subtasks(parent_task_id: int) -> List[Task]:
     """Получение всех подзадач родительской задачи"""
     session = SessionLocal()
@@ -300,34 +315,31 @@ def get_subtasks(parent_task_id: int) -> List[Task]:
 
 
 def update_task_info(
-        task_id: int,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        duration: Optional[int] = None
+  task_id: int,
+  name: Optional[str] = None,
+  description: Optional[str] = None,
+  color: Optional[str] = None
 ) -> Optional[Task]:
-    """Обновление информации о задаче"""
+    """Обновление информации о задаче по ID"""
     session = SessionLocal()
 
-    try:
-        task = session.get(Task, task_id)
-        if not task:
-            return None
+    # Находим задачу по ID
+    task = session.query(Task).filter(Task.id == task_id).first()
 
+    if task:
+        # Обновляем только переданные поля
         if name is not None:
             task.name = name
         if description is not None:
             task.description = description
-        if duration is not None:
-            task.duration = duration
+        if color is not None:
+            task.color = color
 
         session.commit()
         session.refresh(task)
-        return task
-    except Exception as e:
-        session.rollback()
-        raise e
-    finally:
-        session.close()
+
+    session.close()
+    return task
 
 
 def update_task_status(

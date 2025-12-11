@@ -128,7 +128,7 @@ def main_page():
 			return redirect(url_for('start_page'))
 
 		# Загружаем проекты пользователя из БД
-		tasks = get_tasks_by_creator(int(current_user.get_id()))
+		tasks = get_tasks_by_user_id(int(current_user.get_id()))
 		for task in tasks:
 			task.tasks = len(get_subtasks(task.id))
 			task.members = len(get_users_in_task(task.id))
@@ -150,7 +150,7 @@ def create_task_page(parent_task_id: Optional[int] = None):
 		return redirect(url_for('start_page'))
 
 	if request.method == 'GET':
-		tasks = get_tasks_by_creator(int(current_user.get_id()))
+		tasks = get_tasks_by_user_id(int(current_user.get_id()))
 		return render_template('create_task.html', active_page='create_task', user=user, tasks=tasks)
 	else:
 		task_name = request.form.get('taskName')
@@ -190,7 +190,7 @@ def user_page(user_id):
 	print('Зашёл в user_page. User_id ->', current_user.get_id())
 	# Получаем данные пользователя из базы
 	user = get_user_by_id(int(user_id))  # Преобразовать в int
-	tasks = get_tasks_by_creator(int(current_user.get_id()))
+	tasks = get_tasks_by_user_id(int(current_user.get_id()))
 
 	if user is None:
 		return render_template('not_found.html')
@@ -205,7 +205,7 @@ def settings_page():
 	# Получаем пользователя
 	user_id = int(current_user.get_id())
 	user = get_user_by_id(user_id)
-	tasks = get_tasks_by_creator(int(current_user.get_id()))
+	tasks = get_tasks_by_user_id(int(current_user.get_id()))
 
 	if user is None:
 		logout_user()
@@ -327,16 +327,10 @@ def task_page(task_id):
 	if request.method == 'GET':
 		# Получаем проект
 		task = get_task_by_id(task_id)
-		if task is None or task.creator_id != int(current_user.get_id()):
-			return render_template('not_found.html')
-
 		user = get_user_by_id(int(current_user.get_id()))
-		if user is None:
-			logout_user()
-			return redirect(url_for('start_page'))
 
 		in_progress_tasks = get_subtasks(task_id)
-		tasks = get_tasks_by_creator(int(current_user.get_id()))
+		tasks = get_tasks_by_user_id(int(current_user.get_id()))
 		team = get_users_in_task(task_id)
 		return render_template('current_task.html', active_page='current_task', user=user, task=task,
 													 tasks=tasks, in_progress_tasks=in_progress_tasks, team=team)
@@ -354,16 +348,10 @@ def task_management_page(task_id):
 	if request.method == 'GET':
 		# Получаем проект
 		task = get_task_by_id(task_id)
-		if task is None or task.creator_id != int(current_user.get_id()):
-			return render_template('not_found.html')
-
 		user = get_user_by_id(int(current_user.get_id()))
-		if user is None:
-			logout_user()
-			return redirect(url_for('start_page'))
 
 		team = get_users_in_task(task_id)
-		tasks = get_tasks_by_creator(int(current_user.get_id()))
+		tasks = get_tasks_by_user_id(int(current_user.get_id()))
 		return render_template('task_management.html', active_page='current_task', user=user,
 													 tasks=tasks, task=task, team=team)
 	else:
