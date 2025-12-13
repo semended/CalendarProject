@@ -30,6 +30,7 @@ CREATE TABLE "users"(
     "workplace" VARCHAR(255) NULL,
     "pronouns" VARCHAR(50) NULL,
     "url" VARCHAR(255) NULL,
+    "avatar_url" VARCHAR(255) NULL,
     "confirmed" BOOLEAN NOT NULL DEFAULT '0',
     "created_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
 );

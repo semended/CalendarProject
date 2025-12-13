@@ -33,6 +33,7 @@ class User(Base):
     workplace = Column(String(255), nullable=True)
     pronouns = Column(String(50), nullable=True)
     url = Column(String(255), nullable=True)
+    avatar_url = Column(String(255), nullable=True)
     confirmed = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
@@ -180,19 +181,39 @@ def update_user(user_id: int, user_dict: dict) -> Optional[User]:
         # Обновляем только те поля, которые есть в словаре и разрешены
         allowed_fields = [
             'name', 'surname', 'patronymic', 'email',
-            'bio', 'position', 'company', 'workplace', 'pronouns', 'url'
+            'bio', 'position', 'company', 'workplace', 'pronouns', 'url', 'avatar_url'
         ]
 
         for key, value in user_dict.items():
             if key in allowed_fields and hasattr(user, key):
                 if value is not None and value != '':
                     setattr(user, key, value)
-                elif key in ['patronymic', 'bio', 'position', 'company', 'workplace', 'pronouns']:
+                elif key in ['patronymic', 'bio', 'position', 'company', 'workplace', 'pronouns', 'avatar_url']:
                     # Поля, которые могут быть None
                     setattr(user, key, None)
                 elif key == 'url' and (value is None or value == ''):
                     setattr(user, key, 'https://example.com')
 
+        session.commit()
+        session.refresh(user)
+        return user
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+
+
+def update_user_avatar(user_id: int, avatar_url: str) -> Optional[User]:
+    """Обновление аватара пользователя"""
+    session = SessionLocal()
+
+    try:
+        user = session.get(User, user_id)
+        if not user:
+            return None
+
+        user.avatar_url = avatar_url
         session.commit()
         session.refresh(user)
         return user

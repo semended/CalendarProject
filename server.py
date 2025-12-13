@@ -220,7 +220,7 @@ def settings_page():
 			# Удаляем файл аватара если он существует
 			if user.avatar_url and user.avatar_url != "":
 				# Создаем полный путь к файлу
-				avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], user.avatar_url + 'jpg')
+				avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], user.avatar_url + '.jpg')
 				print(f"Пытаемся удалить аватар: {avatar_path}")
 				if os.path.exists(avatar_path):
 					try:
@@ -256,7 +256,7 @@ def settings_page():
 
 				# Удаляем старый файл если он есть
 				if user.avatar_url and user.avatar_url != "":
-					old_avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], user.avatar_url + 'jpg')
+					old_avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], user.avatar_url + '.jpg')
 					print(f"Проверяем старый файл: {old_avatar_path}")
 					if os.path.exists(old_avatar_path) and old_avatar_path != filepath:
 						try:
@@ -266,7 +266,7 @@ def settings_page():
 							print(f"Ошибка удаления старого файла: {e}")
 
 				# Обновляем поле avatar_url в БД (только имя файла без расширения)
-				user_dict['avatar_url'] = f"user_{user_id}_avatar."
+				user_dict['avatar_url'] = f"user_{user_id}_avatar"
 				print(f"Обновляем avatar_url в БД: {user_dict['avatar_url']}")
 
 			except Exception as e:
@@ -291,7 +291,7 @@ def settings_page():
 
 					# Удаляем старый файл если он есть
 					if user.avatar_url and user.avatar_url != "":
-						old_avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], user.avatar_url + 'jpg')
+						old_avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], user.avatar_url + '.jpg')
 						print(f"Проверяем старый файл: {old_avatar_path}")
 						if os.path.exists(old_avatar_path) and old_avatar_path != filepath:
 							try:
@@ -301,7 +301,7 @@ def settings_page():
 								print(f"Ошибка удаления старого файла: {e}")
 
 					# Обновляем поле avatar_url в БД (только имя файла без расширения)
-					user_dict['avatar_url'] = f"user_{user_id}_avatar."
+					user_dict['avatar_url'] = f"user_{user_id}_avatar"
 					print(f"Обновляем avatar_url в БД: {user_dict['avatar_url']}")
 
 				except Exception as e:
