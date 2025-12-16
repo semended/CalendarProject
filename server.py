@@ -330,9 +330,9 @@ def task_page(task_id):
 		user = get_user_by_id(int(current_user.get_id()))
 
 		in_progress_tasks = get_subtasks(task_id)
-		for task in in_progress_tasks:
-			task.tasks = len(get_subtasks(task.id))
-			task.members = len(get_users_in_task(task.id))
+		for task1 in in_progress_tasks:
+			task1.tasks = len(get_subtasks(task.id))
+			task1.members = len(get_users_in_task(task.id))
 		tasks = get_tasks_by_user_id(int(current_user.get_id()))
 		team = get_users_in_task(task_id)
 		for user in team:
