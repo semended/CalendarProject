@@ -25,6 +25,11 @@ class User(Base):
     url = Column(String(255), nullable=True)
     avatar_url = Column(String(255), nullable=True)
     confirmed = Column(Boolean, nullable=False, default=False)
+    privacy_email     = Column(String(16), nullable=False, server_default="self")
+    privacy_bio       = Column(String(16), nullable=False, server_default="authed")
+    privacy_position  = Column(String(16), nullable=False, server_default="authed")
+    privacy_company   = Column(String(16), nullable=False, server_default="authed")
+    privacy_workplace = Column(String(16), nullable=False, server_default="authed")
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     created_tasks = relationship("Task", back_populates="creator")

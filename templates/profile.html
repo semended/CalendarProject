@@ -39,40 +39,44 @@
                             </div>
                             <div class="profile-info">
                                 <h2>{{ user['name'] }} {{ user['surname'] }}</h2>
+                                {% if visible and visible.bio %}
                                 <p class="profile-bio">{{ user['bio'] }}</p>
-                                
+                                {% endif %}
+
                                 <div class="profile-details">
+                                    {% if visible and visible.position %}
                                     <div class="detail-item">
                                         <span class="detail-icon">💼</span>
-                                        {% if user['position'] %}
-                                            <span>{{ user['position'] }}</span>
-                                        {% else %}
-                                            <span>Отсутствует</span>
-                                        {% endif %}
+                                        {% if user['position'] %}<span>{{ user['position'] }}</span>{% else %}<span>Отсутствует</span>{% endif %}
                                     </div>
+                                    {% endif %}
+                                    {% if visible and visible.company %}
                                     <div class="detail-item">
                                         <span class="detail-icon">🏢</span>
-                                        {% if user['company'] %}
-                                            <span>{{ user['company'] }}</span>
-                                        {% else %}
-                                            <span>Отсутствует</span>
-                                        {% endif %}
+                                        {% if user['company'] %}<span>{{ user['company'] }}</span>{% else %}<span>Отсутствует</span>{% endif %}
                                     </div>
+                                    {% endif %}
+                                    {% if visible and visible.workplace %}
                                     <div class="detail-item">
                                         <span class="detail-icon">📍</span>
-                                        {% if user['workplace'] %}
-                                            <span>{{ user['workplace'] }}</span>
-                                        {% else %}
-                                            <span>Отсутствует</span>
-                                        {% endif %}
+                                        {% if user['workplace'] %}<span>{{ user['workplace'] }}</span>{% else %}<span>Отсутствует</span>{% endif %}
                                     </div>
+                                    {% endif %}
+                                    {% if visible and visible.email %}
+                                    <div class="detail-item">
+                                        <span class="detail-icon">✉️</span>
+                                        <span>{{ user['email'] }}</span>
+                                    </div>
+                                    {% endif %}
                                 </div>
 
+                                {% if is_self %}
                                 <a href="/user/settings" style="text-decoration: none;">
                                     <button class="btn-primary full-width" style="margin-top: 20px;">
                                         Редактировать профиль
                                     </button>
                                 </a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

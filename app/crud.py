@@ -42,6 +42,7 @@ def update_user(db: Session, user_id: int, user_dict: dict) -> Optional[User]:
     allowed_fields = [
         "name", "surname", "patronymic", "email",
         "bio", "position", "company", "workplace", "pronouns", "url", "avatar_url",
+        "privacy_email", "privacy_bio", "privacy_position", "privacy_company", "privacy_workplace",
     ]
     nullable = {"patronymic", "bio", "position", "company", "workplace", "pronouns", "avatar_url"}
 
@@ -243,5 +244,19 @@ def get_user_role_in_task(db: Session, user_id: int, task_id: int) -> Optional[s
 
 
 def init_db() -> None:
+    from sqlalchemy import text
+
     from app.database import Base, engine
     Base.metadata.create_all(engine)
+    privacy_cols = [
+        ("privacy_email",     "'self'"),
+        ("privacy_bio",       "'authed'"),
+        ("privacy_position",  "'authed'"),
+        ("privacy_company",   "'authed'"),
+        ("privacy_workplace", "'authed'"),
+    ]
+    with engine.begin() as conn:
+        for col, default in privacy_cols:
+            conn.execute(text(
+                f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} VARCHAR(16) NOT NULL DEFAULT {default}"
+            ))

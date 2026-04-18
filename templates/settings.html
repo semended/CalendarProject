@@ -161,6 +161,31 @@
                                     <input type="url" id="url" name="url" placeholder="https://example.com" value="{{ user.url or 'https://example.com' }}">
                                 </div>
 
+                                <!-- Приватность -->
+                                <div class="form-section">
+                                    <h3>Приватность</h3>
+                                    <p class="settings-description">Кто видит эти поля у тебя в профиле.</p>
+
+                                    {% set pfields = [
+                                        ('email',     'Email',       'self'),
+                                        ('bio',       'О себе',      'authed'),
+                                        ('position',  'Должность',   'authed'),
+                                        ('company',   'Компания',    'authed'),
+                                        ('workplace', 'Место работы','authed'),
+                                    ] %}
+                                    {% for fname, label, dflt in pfields %}
+                                    {% set cur = user['privacy_' ~ fname] or dflt %}
+                                    <div class="form-group">
+                                        <label for="privacy_{{ fname }}">{{ label }}</label>
+                                        <select id="privacy_{{ fname }}" name="privacy_{{ fname }}" class="form-select">
+                                            <option value="public" {% if cur == 'public' %}selected{% endif %}>Всем (даже без входа)</option>
+                                            <option value="authed" {% if cur == 'authed' %}selected{% endif %}>Только залогиненным</option>
+                                            <option value="self"   {% if cur == 'self' %}selected{% endif %}>Только мне</option>
+                                        </select>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
                                 <!-- Кнопки -->
                                 <div class="form-actions">
                                     <button type="button" class="btn-secondary">Отмена</button>

@@ -124,7 +124,17 @@ def user_page(
             "not_found.html", {"request": request}, status_code=404
         )
     tasks = crud.get_tasks_by_user_id(db, viewer.id) if viewer else []
+    from app.visibility import PRIVACY_FIELDS, is_visible
+    visible = {f: is_visible(target, viewer, f) for f in PRIVACY_FIELDS}
+    is_self = viewer is not None and viewer.id == target.id
     return templates.TemplateResponse(
         "profile.html",
-        {"request": request, "user": target, "tasks": tasks},
+        {
+            "request": request,
+            "user": target,
+            "viewer": viewer,
+            "tasks": tasks,
+            "visible": visible,
+            "is_self": is_self,
+        },
     )
