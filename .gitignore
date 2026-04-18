@@ -79,6 +79,10 @@ Desktop.ini
 .env.*
 !.env.example
 
+# User-uploaded content
+static/user_avatars/*
+!static/user_avatars/.gitkeep
+
 # Flask / instance folder
 instance/
 

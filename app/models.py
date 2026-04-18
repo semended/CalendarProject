@@ -53,6 +53,13 @@ class Task(Base):
     task_roles = relationship("TaskRole", back_populates="task")
     user_roles = relationship("TaskUserRole", back_populates="task")
 
+    @property
+    def status(self) -> str:
+        from datetime import datetime
+        if self.ended_at is not None and self.ended_at < datetime.now():
+            return "completed"
+        return "active"
+
     def __repr__(self):
         return f"<Task(id={self.id}, name='{self.name}', creator_id={self.creator_id})>"
 

@@ -78,6 +78,14 @@ def update_user_password(db: Session, user_id: int, hashed_password: str) -> Non
     db.commit()
 
 
+def mark_user_confirmed(db: Session, user_id: int) -> None:
+    user = db.get(User, user_id)
+    if user is None:
+        return
+    user.confirmed = True
+    db.commit()
+
+
 def get_user_by_id(db: Session, user_id: int) -> Optional[User]:
     return db.get(User, user_id)
 

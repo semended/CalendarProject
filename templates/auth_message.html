@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} — CalendarName</title>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container start-page">
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <h1><a href="{{ url_for('start_page') }}" style="text-decoration:none; color:inherit;">CalendarName</a></h1>
+                    <div class="breadcrumb">{{ title }}</div>
+                </div>
+            </header>
+
+            <section class="hero-section">
+                <div class="hero-content">
+                    <h2>{{ title }}</h2>
+                    <p class="hero-description">{{ message }}</p>
+                    <div class="form-actions">
+                        {% if login_link %}
+                        <a href="{{ url_for('start_page') }}" class="btn-primary full-width">Войти</a>
+                        {% else %}
+                        <a href="{{ url_for('start_page') }}" class="btn-secondary full-width">На главную</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
