@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -9,6 +9,14 @@ from app import crud
 from app.database import get_db
 from app.deps import get_current_user
 from app.models import Task, User
+from app.permissions import (
+    P_CREATE_SUBTASK,
+    P_EDIT_SETTINGS,
+    P_MANAGE_MEMBERS,
+    P_VIEW,
+    has_permission,
+    user_perms,
+)
 from app.templating import templates
 
 router = APIRouter()
@@ -68,6 +76,10 @@ def create_task_post(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    if parent_task_id is not None:
+        if not has_permission(db, user.id, parent_task_id, P_CREATE_SUBTASK):
+            raise HTTPException(status_code=403, detail="Нет прав на создание подзадачи")
+
     if not taskName or not taskName.strip():
         tasks = crud.get_tasks_by_user_id(db, user.id)
         return templates.TemplateResponse(
@@ -128,6 +140,7 @@ def task_get(
             "tasks": tasks,
             "in_progress_tasks": in_progress_tasks,
             "team": team,
+            "perms": user_perms(db, user.id, task_id),
         },
     )
 
@@ -236,6 +249,9 @@ def task_management_get(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    if not has_permission(db, user.id, task_id, P_VIEW):
+        raise HTTPException(status_code=403, detail="Нет доступа к этой задаче")
+
     task = crud.get_task_by_id(db, task_id)
     team = crud.get_users_in_task(db, task_id)
     tasks = crud.get_tasks_by_user_id(db, user.id)
@@ -251,6 +267,7 @@ def task_management_get(
             "tasks": tasks,
             "task": task,
             "team": team,
+            "perms": user_perms(db, user.id, task_id),
         },
     )
 
@@ -268,12 +285,17 @@ def task_management_post(
     db: Session = Depends(get_db),
 ):
     if email is not None:
+        if not has_permission(db, user.id, task_id, P_MANAGE_MEMBERS):
+            raise HTTPException(status_code=403, detail="Нет прав на управление участниками")
         target = crud.get_user_by_email(db, email)
         if target is None:
             return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
         # TODO: валидация что role_id принадлежит этой таске
         crud.assign_user_to_task_role(db, target.id, task_id, int(role_id))
         return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
+
+    if not has_permission(db, user.id, task_id, P_EDIT_SETTINGS):
+        raise HTTPException(status_code=403, detail="Нет прав на редактирование задачи")
 
     crud.update_task_info(db, task_id, task_name, task_description, task_color)
     return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)

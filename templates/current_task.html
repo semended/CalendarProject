@@ -139,6 +139,7 @@
                         {% endif %}
                     </div>
 
+                    {% if perms and perms['task.create_subtask'] %}
                     <form id="createSubtaskForm"
                         method="GET"
                         action="{{ url_for('create_task_page', parent_task_id=task.id) }}"
@@ -147,6 +148,7 @@
                             + Добавить задачу
                         </button>
                     </form>
+                    {% endif %}
                 </div>
 
                 <div class="board">
@@ -250,9 +252,11 @@
             <a href="/task/{{ task.id }}/overview" class="btn-secondary full-width" style="margin-bottom: 12px;">
                 Обзор (Гант / дерево)
             </a>
+            {% if perms and (perms['task.edit_settings'] or perms['task.manage_members']) %}
             <a href="/task_management/{{ task.id }}" class="manage-btn-link">
                 Управление
             </a>
+            {% endif %}
 
             <div class="task-info">
                 <h3>Команда</h3>

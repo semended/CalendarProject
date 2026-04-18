@@ -130,10 +130,14 @@ def create_task_bundle(
     parent_task_id: Optional[int] = None,
     ended_at: Optional[datetime] = None,
 ) -> Task:
+    from app.permissions import ensure_role_permissions
+
     task = create_task(db, creator_id, name, description, color, duration, parent_task_id, ended_at)
     teamlead = create_task_role(db, task.id, "Тимлид")
-    create_task_role(db, task.id, "Менеджер")
-    create_task_role(db, task.id, "Разработчик")
+    manager = create_task_role(db, task.id, "Менеджер")
+    dev = create_task_role(db, task.id, "Разработчик")
+    for role in (teamlead, manager, dev):
+        ensure_role_permissions(db, role)
     assign_user_to_task_role(db, creator_id, task.id, teamlead.id)
     return task
 

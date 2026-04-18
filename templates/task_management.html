@@ -52,7 +52,7 @@
                     {% endif %}
                 </div>
 
-                <!-- ОТДЕЛЬНАЯ ФОРМА ДЛЯ ДОБАВЛЕНИЯ УЧАСТНИКА -->
+                {% if perms and perms['task.manage_members'] %}
                 <form class="team-actions"
                       id="addUserForm"
                       method="POST"
@@ -75,14 +75,16 @@
                         Добавить
                     </button>
                 </form>
+                {% else %}
+                <p class="empty-state">У тебя нет прав добавлять участников.</p>
+                {% endif %}
             </div>
         </section>
 
-        <!-- Настройки проекта -->
+        {% if perms and perms['task.edit_settings'] %}
         <section class="management-section">
             <h3>Настройки</h3>
 
-            <!-- ОТДЕЛЬНАЯ ФОРМА ДЛЯ НАСТРОЕК ТАСКИ -->
             <form class="task-settings"
                   id="taskSettingsForm"
                   method="POST"
@@ -117,6 +119,7 @@
                 </div>
             </form>
         </section>
+        {% endif %}
     </main>
 
     <aside class="right-sidebar">
