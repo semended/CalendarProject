@@ -125,6 +125,93 @@ def render_week(db: Session, user_id: int, anchor: date, viewer_is_self: bool) -
     }
 
 
+@dataclass
+class CalendarEvent:
+    kind: str  # "deadline" | "slot"
+    name: str
+    color: Optional[str]
+    task_id: Optional[int]
+    start_at: datetime
+    end_at: Optional[datetime]
+
+
+def month_bounds(anchor: date) -> tuple[date, date]:
+    first = anchor.replace(day=1)
+    if first.month == 12:
+        nxt = first.replace(year=first.year + 1, month=1)
+    else:
+        nxt = first.replace(month=first.month + 1)
+    return first, nxt
+
+
+def month_grid(anchor: date) -> List[List[date]]:
+    first, nxt = month_bounds(anchor)
+    grid_start = first - timedelta(days=first.weekday())
+    weeks: List[List[date]] = []
+    cur = grid_start
+    while cur < nxt or len(weeks) < 6:
+        week = [cur + timedelta(days=i) for i in range(7)]
+        weeks.append(week)
+        cur += timedelta(days=7)
+        if len(weeks) >= 6 and cur >= nxt:
+            break
+    return weeks
+
+
+def render_month(db: Session, user_id: int, anchor: date) -> dict:
+    first, nxt = month_bounds(anchor)
+    grid = month_grid(anchor)
+    grid_start = grid[0][0]
+    grid_end = grid[-1][-1] + timedelta(days=1)
+
+    start_dt = datetime.combine(grid_start, time.min)
+    end_dt = datetime.combine(grid_end, time.min)
+
+    by_day: dict[date, list[CalendarEvent]] = {}
+
+    tasks = (
+        db.query(Task)
+        .filter(
+            Task.assignee_id == user_id,
+            Task.ended_at.isnot(None),
+            Task.ended_at >= start_dt,
+            Task.ended_at < end_dt,
+        )
+        .all()
+    )
+    for t in tasks:
+        d = t.ended_at.date()
+        by_day.setdefault(d, []).append(CalendarEvent(
+            kind="deadline",
+            name=t.name,
+            color=t.color,
+            task_id=t.id,
+            start_at=t.ended_at,
+            end_at=None,
+        ))
+
+    slots = get_manual_slots(db, user_id, start_dt, end_dt)
+    for s in slots:
+        d = s.start_at.date()
+        by_day.setdefault(d, []).append(CalendarEvent(
+            kind="slot",
+            name=s.note or s.kind,
+            color=None,
+            task_id=None,
+            start_at=s.start_at,
+            end_at=s.end_at,
+        ))
+
+    for d in by_day:
+        by_day[d].sort(key=lambda e: e.start_at)
+
+    return {
+        "weeks": grid,
+        "events_by_day": by_day,
+        "month_first": first,
+    }
+
+
 def add_slot(db: Session, user_id: int, start_at: datetime, end_at: datetime, kind: str, note: Optional[str]) -> AvailabilitySlot:
     if kind not in KINDS:
         kind = "busy"

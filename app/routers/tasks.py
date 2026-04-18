@@ -1,11 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from app import crud
+from app import availability, crud
 from app.database import get_db
 from app.deps import get_current_user
 from app.models import Task, User
@@ -40,6 +40,53 @@ def main_page(
     return templates.TemplateResponse(
         "main.html",
         {"request": request, "active_page": "all_tasks", "user": user, "tasks": tasks},
+    )
+
+
+@router.get("/calendar", name="calendar_page")
+def calendar_page(
+    request: Request,
+    month: Optional[str] = None,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    anchor = date.today()
+    if month:
+        try:
+            anchor = date.fromisoformat(month + "-01")
+        except ValueError:
+            pass
+    rendered = availability.render_month(db, user.id, anchor)
+    tasks = crud.get_tasks_by_user_id(db, user.id)
+
+    first = rendered["month_first"]
+    prev_first = (first - timedelta(days=1)).replace(day=1)
+    if first.month == 12:
+        next_first = first.replace(year=first.year + 1, month=1)
+    else:
+        next_first = first.replace(month=first.month + 1)
+
+    month_names = [
+        "январь", "февраль", "март", "апрель", "май", "июнь",
+        "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь",
+    ]
+
+    return templates.TemplateResponse(
+        "calendar.html",
+        {
+            "request": request,
+            "active_page": "calendar",
+            "user": user,
+            "tasks": tasks,
+            "weeks": rendered["weeks"],
+            "events_by_day": rendered["events_by_day"],
+            "month_first": first,
+            "month_label": f"{month_names[first.month - 1]} {first.year}",
+            "prev_month": prev_first.strftime("%Y-%m"),
+            "next_month": next_first.strftime("%Y-%m"),
+            "this_month": date.today().strftime("%Y-%m"),
+            "today": date.today(),
+        },
     )
 
 
