@@ -110,6 +110,9 @@
                                             <div class="task-stats">
                                                 <span class="stat">📋 {{ t.tasks }} задач</span>
                                                 <span class="stat">👥 {{ t.members }} участников</span>
+                                                {% if t.assignee %}
+                                                <span class="stat">@{{ t.assignee.name }}</span>
+                                                {% endif %}
                                             </div>
                                             <div class="task-date
                                                 {% if t.status == 'completed' %} completed

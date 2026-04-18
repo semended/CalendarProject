@@ -32,7 +32,7 @@ class User(Base):
     privacy_workplace = Column(String(16), nullable=False, server_default="authed")
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
-    created_tasks = relationship("Task", back_populates="creator")
+    created_tasks = relationship("Task", back_populates="creator", foreign_keys="Task.creator_id")
     task_roles = relationship("TaskUserRole", back_populates="user")
 
     def __repr__(self):
@@ -45,14 +45,17 @@ class Task(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     parent_task_id = Column(BigInteger, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=True)
     creator_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    assignee_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     color = Column(Text, nullable=False)
     duration = Column(BigInteger, nullable=False)
+    state = Column(String(20), nullable=False, server_default="todo")
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     ended_at = Column(DateTime, nullable=True)
 
-    creator = relationship("User", back_populates="created_tasks")
+    creator = relationship("User", back_populates="created_tasks", foreign_keys=[creator_id])
+    assignee = relationship("User", foreign_keys=[assignee_id])
     parent_task = relationship("Task", remote_side=[id], back_populates="subtasks")
     subtasks = relationship("Task", back_populates="parent_task")
     task_roles = relationship("TaskRole", back_populates="task")
@@ -61,8 +64,12 @@ class Task(Base):
     @property
     def status(self) -> str:
         from datetime import datetime
-        if self.ended_at is not None and self.ended_at < datetime.now():
+        if self.state == "done":
             return "completed"
+        if self.state == "paused":
+            return "paused"
+        if self.ended_at is not None and self.ended_at < datetime.now() and self.state != "done":
+            return "active"
         return "active"
 
     def __repr__(self):

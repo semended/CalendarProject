@@ -112,6 +112,28 @@
                         <span class="color-label">Выберите цвет</span>
                     </div>
                 </div>
+                <div class="setting-group">
+                    <label for="taskAssignee">Ответственный</label>
+                    <select id="taskAssignee" name="assignee_id" class="form-select">
+                        <option value="">Не назначен</option>
+                        {% for c in assignee_candidates %}
+                        <option value="{{ c.id }}" {% if task.assignee_id == c.id %}selected{% endif %}>
+                            {{ c.name }} {{ c.surname }} ({{ c.email }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="taskState">Состояние</label>
+                    <select id="taskState" name="task_state" class="form-select">
+                        {% set cur = task.state or 'todo' %}
+                        <option value="todo"        {% if cur == 'todo' %}selected{% endif %}>К выполнению</option>
+                        <option value="in_progress" {% if cur == 'in_progress' %}selected{% endif %}>В работе</option>
+                        <option value="review"      {% if cur == 'review' %}selected{% endif %}>На ревью</option>
+                        <option value="done"        {% if cur == 'done' %}selected{% endif %}>Завершено</option>
+                        <option value="paused"      {% if cur == 'paused' %}selected{% endif %}>На паузе</option>
+                    </select>
+                </div>
                 <div class="setting-actions">
                     <button type="submit" class="btn-primary">
                         Сохранить настройки

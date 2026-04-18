@@ -110,10 +110,12 @@ def create_task(
     duration: int,
     parent_task_id: Optional[int] = None,
     ended_at: Optional[datetime] = None,
+    assignee_id: Optional[int] = None,
 ) -> Task:
     task = Task(
         creator_id=creator_id, parent_task_id=parent_task_id, name=name,
         description=description, color=color, duration=duration, ended_at=ended_at,
+        assignee_id=assignee_id,
     )
     db.add(task)
     db.commit()
@@ -130,10 +132,11 @@ def create_task_bundle(
     duration: int,
     parent_task_id: Optional[int] = None,
     ended_at: Optional[datetime] = None,
+    assignee_id: Optional[int] = None,
 ) -> Task:
     from app.permissions import ensure_role_permissions
 
-    task = create_task(db, creator_id, name, description, color, duration, parent_task_id, ended_at)
+    task = create_task(db, creator_id, name, description, color, duration, parent_task_id, ended_at, assignee_id)
     teamlead = create_task_role(db, task.id, "Тимлид")
     manager = create_task_role(db, task.id, "Менеджер")
     dev = create_task_role(db, task.id, "Разработчик")
@@ -141,6 +144,49 @@ def create_task_bundle(
         ensure_role_permissions(db, role)
     assign_user_to_task_role(db, creator_id, task.id, teamlead.id)
     return task
+
+
+def get_root_task(db: Session, task_id: int) -> Optional[Task]:
+    task = db.get(Task, task_id)
+    while task is not None and task.parent_task_id is not None:
+        task = db.get(Task, task.parent_task_id)
+    return task
+
+
+def get_assignee_candidates(db: Session, task_id: Optional[int], creator_id: int) -> List[User]:
+    """Кандидаты на assignee: участники корневого проекта + сам creator."""
+    if task_id is None:
+        u = db.get(User, creator_id)
+        return [u] if u else []
+    root = get_root_task(db, task_id)
+    if root is None:
+        u = db.get(User, creator_id)
+        return [u] if u else []
+    return get_users_in_task(db, root.id)
+
+
+def update_task_assignee(db: Session, task_id: int, assignee_id: Optional[int]) -> Optional[Task]:
+    task = db.get(Task, task_id)
+    if task is None:
+        return None
+    task.assignee_id = assignee_id
+    db.commit()
+    db.refresh(task)
+    return task
+
+
+def update_task_state(db: Session, task_id: int, state: str) -> Optional[Task]:
+    task = db.get(Task, task_id)
+    if task is None:
+        return None
+    task.state = state
+    db.commit()
+    db.refresh(task)
+    return task
+
+
+def get_tasks_by_assignee(db: Session, user_id: int) -> List[Task]:
+    return db.query(Task).filter(Task.assignee_id == user_id).all()
 
 
 def get_task_by_id(db: Session, task_id: int) -> Optional[Task]:
@@ -248,15 +294,20 @@ def init_db() -> None:
 
     from app.database import Base, engine
     Base.metadata.create_all(engine)
-    privacy_cols = [
-        ("privacy_email",     "'self'"),
-        ("privacy_bio",       "'authed'"),
-        ("privacy_position",  "'authed'"),
-        ("privacy_company",   "'authed'"),
-        ("privacy_workplace", "'authed'"),
-    ]
     with engine.begin() as conn:
-        for col, default in privacy_cols:
+        for col, default in [
+            ("privacy_email",     "'self'"),
+            ("privacy_bio",       "'authed'"),
+            ("privacy_position",  "'authed'"),
+            ("privacy_company",   "'authed'"),
+            ("privacy_workplace", "'authed'"),
+        ]:
             conn.execute(text(
                 f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} VARCHAR(16) NOT NULL DEFAULT {default}"
             ))
+        conn.execute(text(
+            "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assignee_id BIGINT REFERENCES users(id)"
+        ))
+        conn.execute(text(
+            "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS state VARCHAR(20) NOT NULL DEFAULT 'todo'"
+        ))

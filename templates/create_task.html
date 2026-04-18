@@ -117,6 +117,21 @@
                             <div class="form-section">
                                 <h3 class="section-title">Настройки</h3>
 
+                                {% if assignee_candidates and assignee_candidates|length > 0 %}
+                                <div class="form-group">
+                                    <label for="assigneeSelect">Ответственный</label>
+                                    <select id="assigneeSelect" name="assignee_id" class="form-select">
+                                        <option value="">Не назначен</option>
+                                        {% for c in assignee_candidates %}
+                                        <option value="{{ c.id }}" {% if c.id == user.id %}selected{% endif %}>
+                                            {{ c.name }} {{ c.surname }} ({{ c.email }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="field-hint">Кто возьмёт задачу в работу</div>
+                                </div>
+                                {% endif %}
+
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="taskDeadline">

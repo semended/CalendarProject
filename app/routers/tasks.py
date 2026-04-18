@@ -52,6 +52,8 @@ def create_task_get(
     db: Session = Depends(get_db),
 ):
     tasks = crud.get_tasks_by_user_id(db, user.id)
+    candidates = crud.get_assignee_candidates(db, parent_task_id, user.id)
+    parent_task = crud.get_task_by_id(db, parent_task_id) if parent_task_id else None
     return templates.TemplateResponse(
         "create_task.html",
         {
@@ -60,6 +62,8 @@ def create_task_get(
             "user": user,
             "tasks": tasks,
             "parent_task_id": parent_task_id,
+            "parent_task": parent_task,
+            "assignee_candidates": candidates,
         },
     )
 
@@ -73,6 +77,7 @@ def create_task_post(
     taskDescription: str = Form(""),
     taskColor: str = Form("#0ea5e9"),
     taskDeadline: Optional[str] = Form(None),
+    assignee_id: Optional[int] = Form(None),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -82,6 +87,7 @@ def create_task_post(
 
     if not taskName or not taskName.strip():
         tasks = crud.get_tasks_by_user_id(db, user.id)
+        candidates = crud.get_assignee_candidates(db, parent_task_id, user.id)
         return templates.TemplateResponse(
             "create_task.html",
             {
@@ -89,6 +95,8 @@ def create_task_post(
                 "active_page": "create_task",
                 "user": user,
                 "tasks": tasks,
+                "parent_task_id": parent_task_id,
+                "assignee_candidates": candidates,
                 "error": "Название проекта обязательно для заполнения",
             },
         )
@@ -100,6 +108,11 @@ def create_task_post(
         ended_at = None
         duration = 2_147_000_000
 
+    if assignee_id is not None:
+        candidates = crud.get_assignee_candidates(db, parent_task_id, user.id)
+        if not any(c.id == assignee_id for c in candidates):
+            assignee_id = None
+
     crud.create_task_bundle(
         db,
         creator_id=user.id,
@@ -109,6 +122,7 @@ def create_task_post(
         duration=duration,
         parent_task_id=parent_task_id,
         ended_at=ended_at,
+        assignee_id=assignee_id,
     )
     return RedirectResponse(url="/main", status_code=303)
 
@@ -257,6 +271,7 @@ def task_management_get(
     tasks = crud.get_tasks_by_user_id(db, user.id)
     for member in team:
         member.role_name = crud.get_user_role_in_task(db, member.id, task_id)
+    candidates = crud.get_assignee_candidates(db, task_id, user.id)
 
     return templates.TemplateResponse(
         "task_management.html",
@@ -267,6 +282,7 @@ def task_management_get(
             "tasks": tasks,
             "task": task,
             "team": team,
+            "assignee_candidates": candidates,
             "perms": user_perms(db, user.id, task_id),
         },
     )
@@ -281,6 +297,8 @@ def task_management_post(
     task_name: Optional[str] = Form(None),
     task_description: Optional[str] = Form(None),
     task_color: Optional[str] = Form(None),
+    assignee_id: Optional[str] = Form(None),
+    task_state: Optional[str] = Form(None),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -298,4 +316,16 @@ def task_management_post(
         raise HTTPException(status_code=403, detail="Нет прав на редактирование задачи")
 
     crud.update_task_info(db, task_id, task_name, task_description, task_color)
+
+    if assignee_id is not None:
+        new_assignee = int(assignee_id) if assignee_id.strip() else None
+        if new_assignee is not None:
+            candidates = crud.get_assignee_candidates(db, task_id, user.id)
+            if not any(c.id == new_assignee for c in candidates):
+                new_assignee = None
+        crud.update_task_assignee(db, task_id, new_assignee)
+
+    if task_state and task_state in ("todo", "in_progress", "review", "done", "paused"):
+        crud.update_task_state(db, task_id, task_state)
+
     return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
