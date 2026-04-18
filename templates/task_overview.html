@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Обзор — {{ task.name }}</title>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        {% include 'sidebar.html' %}
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <h1>Обзор — {{ task.name }}</h1>
+                    <div class="breadcrumb">Задачи / {{ task.name }} / Обзор</div>
+                </div>
+                <div class="header-right">
+                    <a href="/task/{{ task.id }}" class="btn-secondary">К доскам</a>
+                    <div class="user-menu-container">
+                        <div class="user-avatar" id="userMenuButton">
+                            {% if user and user.avatar_url %}
+                                <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}" alt="Avatar" class="user-avatar-img">
+                            {% else %}
+                                👤
+                            {% endif %}
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <a href="/user/{{ user.id }}" class="dropdown-item">
+                                <span class="dropdown-icon">👤</span>
+                                <span>Мой профиль</span>
+                            </a>
+                            <a href="/user/settings" class="dropdown-item">
+                                <span class="dropdown-icon">⚙️</span>
+                                <span>Настройки</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="/logout" class="dropdown-item">
+                                <span class="dropdown-icon">🚪</span>
+                                <span>Выйти из аккаунта</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="overview-tabs">
+                <div class="overview-tab active" data-tab="gantt">Таймлайн</div>
+                <div class="overview-tab" data-tab="tree">Дерево</div>
+            </div>
+
+            <section class="overview-panel active" data-panel="gantt">
+                <div class="gantt-wrap">
+                    <div class="gantt-legend">
+                        <h3>Диаграмма Ганта</h3>
+                        <div class="gantt-range">{{ range_label }}</div>
+                    </div>
+
+                    {% if rows %}
+                    <div class="gantt-grid" style="--cols: {{ axis_ticks|length }};">
+                        <div></div>
+                        <div class="gantt-axis">
+                            {% for tick in axis_ticks %}
+                            <div class="tick">{{ tick }}</div>
+                            {% endfor %}
+                        </div>
+
+                        {% for r in rows %}
+                        <div class="gantt-label" title="{{ r.task.name }}">
+                            <span class="dot" style="background: {{ r.task.color }}"></span>
+                            <span class="name" style="padding-left: {{ r.depth * 12 }}px;">{{ r.task.name }}</span>
+                        </div>
+                        <div class="gantt-track">
+                            <div class="bar {{ r.cls }}"
+                                 style="--left: {{ r.left }}%; --width: {{ r.width }}%; --bar-color: {{ r.task.color }};"
+                                 title="{{ r.task.name }}">
+                                {{ r.task.name }}
+                            </div>
+                            {% if loop.first and today_pct is not none %}
+                            <div class="gantt-today" style="left: {{ today_pct }}%;"></div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="empty-state">Подзадач нет — добавь задачи, чтобы увидеть таймлайн.</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="overview-panel" data-panel="tree">
+                <div class="tree-wrap">
+                    <h3>Иерархия задач</h3>
+                    {% if tree %}
+                    <ul class="tree">
+                        <li>
+                            <a href="/task/{{ task.id }}" class="tree-node">
+                                <span class="dot" style="background: {{ task.color }}"></span>
+                                <span>{{ task.name }}</span>
+                                <span class="meta">корень</span>
+                            </a>
+                            {% macro render_nodes(nodes) %}
+                            <ul>
+                                {% for n in nodes %}
+                                <li>
+                                    <a href="/task/{{ n.task.id }}" class="tree-node">
+                                        <span class="dot" style="background: {{ n.task.color }}"></span>
+                                        <span>{{ n.task.name }}</span>
+                                        {% if n.task.ended_at %}
+                                        <span class="meta">до {{ n.task.ended_at.strftime('%d.%m') }}</span>
+                                        {% endif %}
+                                    </a>
+                                    {% if n.children %}
+                                        {{ render_nodes(n.children) }}
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endmacro %}
+                            {{ render_nodes(tree) }}
+                        </li>
+                    </ul>
+                    {% else %}
+                    <p class="empty-state">Пока подзадач нет.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('userMenuButton');
+            const dd  = document.getElementById('userDropdown');
+            btn.addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('show'); });
+            document.addEventListener('click', () => dd.classList.remove('show'));
+            dd.addEventListener('click', e => e.stopPropagation());
+
+            const tabs = document.querySelectorAll('.overview-tab');
+            const panels = document.querySelectorAll('.overview-panel');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    panels.forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    const target = tab.getAttribute('data-tab');
+                    document.querySelector(`.overview-panel[data-panel="${target}"]`).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

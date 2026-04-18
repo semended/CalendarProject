@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.database import get_db
 from app.deps import get_current_user
-from app.models import User
+from app.models import Task, User
 from app.templating import templates
 
 router = APIRouter()
@@ -136,6 +136,97 @@ def task_get(
 def task_post(task_id: int, user: User = Depends(get_current_user)):
     # Original Flask behaviour: POST on /task/<id> redirects to create subtask.
     return RedirectResponse(url=f"/create_task/{task_id}", status_code=303)
+
+
+@router.get("/task/{task_id}/overview", name="task_overview_page")
+def task_overview_get(
+    request: Request,
+    task_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    root = crud.get_task_by_id(db, task_id)
+    tasks = crud.get_tasks_by_user_id(db, user.id)
+
+    def collect_descendants(node: Task):
+        children = crud.get_subtasks(db, node.id)
+        out = []
+        for c in children:
+            out.append({"task": c, "children": collect_descendants(c)})
+        return out
+
+    tree = collect_descendants(root) if root else []
+
+    flat = []
+
+    def flatten(nodes, depth=0):
+        for n in nodes:
+            flat.append((n["task"], depth))
+            flatten(n["children"], depth + 1)
+
+    flatten(tree)
+
+    now = datetime.now()
+    starts = [root.created_at] if root and root.created_at else []
+    ends = []
+    for t, _ in flat:
+        if t.created_at:
+            starts.append(t.created_at)
+        if t.ended_at:
+            ends.append(t.ended_at)
+
+    start = min(starts) if starts else now
+    fallback_end = start + timedelta(days=30)
+    end = max(ends) if ends else fallback_end
+    if end <= start:
+        end = start + timedelta(days=30)
+    total_seconds = max((end - start).total_seconds(), 1.0)
+
+    def pct(dt: datetime) -> float:
+        return max(0.0, min(100.0, (dt - start).total_seconds() / total_seconds * 100.0))
+
+    rows = []
+    for t, depth in flat:
+        t_start = t.created_at or start
+        t_end = t.ended_at or end
+        left = pct(t_start)
+        width = max(1.5, pct(t_end) - left)
+        if t.ended_at and t.ended_at < now:
+            cls = "done"
+        elif t.ended_at and t.ended_at < now + timedelta(days=1):
+            cls = "overdue"
+        else:
+            cls = "open"
+        rows.append({
+            "task": t,
+            "depth": depth,
+            "left": round(left, 2),
+            "width": round(width, 2),
+            "cls": cls,
+        })
+
+    today_pct = round(pct(now), 2) if start <= now <= end else None
+
+    axis_ticks = []
+    for i in range(6):
+        tick_dt = start + timedelta(seconds=total_seconds * i / 6)
+        axis_ticks.append(tick_dt.strftime("%d.%m"))
+
+    return templates.TemplateResponse(
+        "task_overview.html",
+        {
+            "request": request,
+            "active_page": "current_task",
+            "user": user,
+            "task": root,
+            "tasks": tasks,
+            "tree": tree,
+            "rows": rows,
+            "axis_ticks": axis_ticks,
+            "today_pct": today_pct,
+            "range_label": f"{start.strftime('%d.%m.%Y')} — {end.strftime('%d.%m.%Y')}",
+        },
+    )
 
 
 @router.get("/task_management/{task_id}", name="task_management_page")
