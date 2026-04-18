@@ -76,6 +76,27 @@ class Task(Base):
         return f"<Task(id={self.id}, name='{self.name}', creator_id={self.creator_id})>"
 
 
+class AvailabilitySlot(Base):
+    __tablename__ = "availability_slots"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    start_at = Column(DateTime, nullable=False)
+    end_at = Column(DateTime, nullable=False)
+    kind = Column(String(20), nullable=False, server_default="busy")
+    note = Column(String(255), nullable=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+    user = relationship("User")
+
+    __table_args__ = (
+        Index("availability_slots_user_start_idx", "user_id", "start_at"),
+    )
+
+    def __repr__(self):
+        return f"<AvailabilitySlot(id={self.id}, user_id={self.user_id}, {self.start_at}→{self.end_at}, {self.kind})>"
+
+
 class TaskRole(Base):
     __tablename__ = "task_roles"
 

@@ -1,12 +1,13 @@
 import base64
 import os
+from datetime import date, datetime, time, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Request, UploadFile
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from app import crud
+from app import availability, crud
 from app.config import ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from app.database import get_db
 from app.deps import get_current_user, get_current_user_optional
@@ -109,6 +110,85 @@ async def settings_post(
 
     crud.update_user(db, user_id, user_dict)
     return RedirectResponse(url="/user/settings", status_code=303)
+
+
+@router.get("/user/{user_id}/schedule", name="user_schedule_page")
+def schedule_get(
+    request: Request,
+    user_id: int,
+    week: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    target = crud.get_user_by_id(db, user_id)
+    viewer = get_current_user_optional(request, db)
+    if target is None:
+        return templates.TemplateResponse("not_found.html", {"request": request}, status_code=404)
+    if viewer is None:
+        return RedirectResponse(url="/", status_code=303)
+
+    if week:
+        try:
+            anchor = date.fromisoformat(week)
+        except ValueError:
+            anchor = date.today()
+    else:
+        anchor = date.today()
+
+    is_self = viewer.id == target.id
+    rendered = availability.render_week(db, target.id, anchor, is_self)
+    tasks = crud.get_tasks_by_user_id(db, viewer.id)
+    prev_week = (availability.week_start(anchor) - timedelta(days=7)).isoformat()
+    next_week = (availability.week_start(anchor) + timedelta(days=7)).isoformat()
+    today_iso = date.today().isoformat()
+
+    return templates.TemplateResponse(
+        "schedule.html",
+        {
+            "request": request,
+            "user": viewer,
+            "target": target,
+            "tasks": tasks,
+            "days": rendered["days"],
+            "hours": rendered["hours"],
+            "grid": rendered["grid"],
+            "slots": rendered["slots"],
+            "prev_week": prev_week,
+            "next_week": next_week,
+            "today_iso": today_iso,
+            "is_self": is_self,
+        },
+    )
+
+
+@router.post("/user/{user_id}/schedule")
+def schedule_post(
+    user_id: int,
+    action: str = Form(...),
+    slot_id: Optional[int] = Form(None),
+    slot_date: Optional[str] = Form(None),
+    start_time: Optional[str] = Form(None),
+    end_time: Optional[str] = Form(None),
+    kind: Optional[str] = Form("busy"),
+    note: Optional[str] = Form(None),
+    viewer: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if viewer.id != user_id:
+        raise HTTPException(status_code=403, detail="Редактировать можно только свой график")
+
+    if action == "delete" and slot_id is not None:
+        availability.delete_slot(db, slot_id, viewer.id)
+    elif action == "add" and slot_date and start_time and end_time:
+        try:
+            d = date.fromisoformat(slot_date)
+            st = datetime.combine(d, time.fromisoformat(start_time))
+            et = datetime.combine(d, time.fromisoformat(end_time))
+            if et > st:
+                availability.add_slot(db, viewer.id, st, et, kind or "busy", note)
+        except ValueError:
+            pass
+
+    return RedirectResponse(url=f"/user/{user_id}/schedule?week={slot_date or ''}", status_code=303)
 
 
 @router.get("/user/{user_id}", name="user_page")

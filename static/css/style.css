@@ -1200,6 +1200,175 @@ body.task-page .container { grid-template-columns: 260px 1fr 320px; }
 }
 
 /* ========================================================
+   Schedule — weekly availability grid
+   ======================================================== */
+.schedule-section {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+.schedule-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.schedule-range {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    margin-right: auto;
+}
+.sched-legend {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+.sched-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border: 1px solid var(--line);
+    background: var(--bg-sunk);
+    color: var(--text-muted);
+}
+.sched-chip.busy    { background: rgba(224, 115, 99, .18); color: var(--err); border-color: rgba(224, 115, 99, .35); }
+.sched-chip.meeting { background: rgba(229, 116, 90, .18); color: var(--accent); border-color: rgba(229, 116, 90, .35); }
+.sched-chip.focus   { background: rgba(143, 166, 127, .18); color: var(--sage); border-color: rgba(143, 166, 127, .35); }
+.sched-chip.off     { background: rgba(216, 178, 100, .14); color: var(--amber); border-color: rgba(216, 178, 100, .3); }
+
+.sched-grid {
+    display: grid;
+    grid-template-columns: 72px repeat(7, 1fr);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    background: var(--bg-sunk);
+}
+.sched-corner {
+    background: var(--bg-raised);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+.sched-day-head {
+    padding: 10px 8px;
+    text-align: center;
+    background: var(--bg-raised);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+.sched-day-head:last-child { border-right: none; }
+.sched-day-head.today { background: var(--surface-hi); }
+.sched-day-head .dow {
+    font-family: var(--font-mono);
+    font-size: .72rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.sched-day-head .date {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    color: var(--text);
+    margin-top: 2px;
+}
+.sched-hour {
+    padding: 8px;
+    font-family: var(--font-mono);
+    font-size: .72rem;
+    color: var(--text-faint);
+    text-align: right;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-raised);
+}
+.sched-cell {
+    min-height: 36px;
+    padding: 2px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    cursor: pointer;
+    transition: background .15s var(--ease);
+}
+.sched-cell:nth-child(8n) { border-right: none; }
+.sched-cell:hover { background: var(--bg-raised); }
+.sched-cell.today { background: rgba(229, 116, 90, .04); }
+.sched-cell.today:hover { background: rgba(229, 116, 90, .08); }
+
+.sched-slot {
+    border-radius: var(--r-sm);
+    padding: 3px 6px;
+    font-size: .7rem;
+    line-height: 1.2;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    border-left: 2px solid;
+}
+.sched-slot.busy    { background: rgba(224, 115, 99, .2);  color: var(--err);    border-left-color: var(--err); }
+.sched-slot.meeting { background: rgba(229, 116, 90, .22); color: var(--accent); border-left-color: var(--accent); }
+.sched-slot.focus   { background: rgba(143, 166, 127, .2); color: var(--sage);   border-left-color: var(--sage); }
+.sched-slot.off     { background: rgba(216, 178, 100, .15); color: var(--amber); border-left-color: var(--amber); }
+.sched-slot.readonly { opacity: .75; font-style: italic; }
+.sched-slot-label { font-family: var(--font-mono); letter-spacing: .02em; }
+
+.sched-h2 {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.3rem;
+    margin: 24px 0 12px;
+    color: var(--text);
+}
+.sched-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    align-items: end;
+}
+.sched-form .form-group { margin: 0; }
+.sched-form .sched-note { grid-column: 1 / -1; }
+.sched-form .form-actions { grid-column: 1 / -1; margin-top: 4px; }
+
+.sched-slot-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.sched-slot-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg-sunk);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+}
+.sched-slot-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: .88rem;
+    color: var(--text-muted);
+}
+.sched-slot-note { color: var(--text); font-style: italic; }
+
+/* ========================================================
    Responsive
    ======================================================== */
 @media (max-width: 1024px) {
@@ -1221,6 +1390,9 @@ body.task-page .container { grid-template-columns: 260px 1fr 320px; }
     .stats-grid, .profile-stats { grid-template-columns: 1fr 1fr; }
     .tasks-grid { grid-template-columns: 1fr; }
     .form-actions { flex-direction: column; }
+    .sched-grid { grid-template-columns: 52px repeat(7, minmax(48px, 1fr)); font-size: .8em; }
+    .sched-day-head .date { font-size: .9rem; }
+    .sched-hour { padding: 6px 4px; }
 }
 
 /* ========================================================

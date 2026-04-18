@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расписание — {{ target.name }} {{ target.surname }}</title>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    {% include 'sidebar.html' %}
+
+    <main class="main-content">
+        <header class="header">
+            <div class="header-left">
+                <h1>Расписание {% if is_self %}(моё){% else %}— {{ target.name }} {{ target.surname }}{% endif %}</h1>
+                <div class="breadcrumb">Профиль / Расписание</div>
+            </div>
+            <div class="header-right">
+                <a href="/user/{{ target.id }}" class="btn-secondary">Профиль</a>
+            </div>
+        </header>
+
+        <section class="schedule-section">
+            <div class="schedule-nav">
+                <a href="?week={{ prev_week }}" class="btn-secondary">← Пред.</a>
+                <div class="schedule-range">
+                    {{ days[0].strftime('%d.%m') }} — {{ days[-1].strftime('%d.%m.%Y') }}
+                </div>
+                <a href="?week={{ next_week }}" class="btn-secondary">След. →</a>
+                <a href="?week={{ today_iso }}" class="btn-secondary">Сегодня</a>
+            </div>
+
+            <div class="sched-legend">
+                <span class="sched-chip busy">занят</span>
+                <span class="sched-chip meeting">созвон / дедлайн</span>
+                <span class="sched-chip focus">фокус</span>
+                <span class="sched-chip off">выходной</span>
+            </div>
+
+            <div class="sched-grid">
+                <div class="sched-corner"></div>
+                {% for d in days %}
+                <div class="sched-day-head {% if d.isoformat() == today_iso %}today{% endif %}">
+                    <div class="dow">{{ ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][d.weekday()] }}</div>
+                    <div class="date">{{ d.strftime('%d.%m') }}</div>
+                </div>
+                {% endfor %}
+
+                {% for h in hours %}
+                {% set hi = loop.index0 %}
+                <div class="sched-hour">{{ '%02d:00' % h }}</div>
+                {% for di in range(days|length) %}
+                <div class="sched-cell {% if days[di].isoformat() == today_iso %}today{% endif %}">
+                    {% for rs in grid[di][hi] %}
+                    <div class="sched-slot {{ rs.kind }} {% if not rs.editable %}readonly{% endif %}"
+                         title="{{ rs.start_at.strftime('%H:%M') }}–{{ rs.end_at.strftime('%H:%M') }} · {{ rs.note or rs.kind }}">
+                        <span class="sched-slot-label">{{ rs.note or rs.kind }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </section>
+
+        {% if is_self %}
+        <section class="schedule-section">
+            <h2 class="sched-h2">Добавить слот</h2>
+            <form method="POST" action="/user/{{ target.id }}/schedule" class="sched-form">
+                <input type="hidden" name="action" value="add">
+                <div class="form-group">
+                    <label for="slot_date">Дата</label>
+                    <input type="date" id="slot_date" name="slot_date" value="{{ today_iso }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="start_time">Начало</label>
+                    <input type="time" id="start_time" name="start_time" value="10:00" required>
+                </div>
+                <div class="form-group">
+                    <label for="end_time">Конец</label>
+                    <input type="time" id="end_time" name="end_time" value="11:00" required>
+                </div>
+                <div class="form-group">
+                    <label for="kind">Тип</label>
+                    <select id="kind" name="kind" class="form-select">
+                        <option value="busy">Занят</option>
+                        <option value="meeting">Созвон</option>
+                        <option value="focus">Фокус</option>
+                        <option value="off">Выходной</option>
+                    </select>
+                </div>
+                <div class="form-group sched-note">
+                    <label for="note">Заметка</label>
+                    <input type="text" id="note" name="note" placeholder="Например: созвон с клиентом">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Добавить</button>
+                </div>
+            </form>
+
+            {% set manual_slots = slots | selectattr('source', 'equalto', 'manual') | list %}
+            {% if manual_slots %}
+            <h2 class="sched-h2">Мои слоты на неделе</h2>
+            <div class="sched-slot-list">
+                {% for rs in manual_slots %}
+                <div class="sched-slot-row">
+                    <div class="sched-slot-meta">
+                        <span class="sched-chip {{ rs.kind }}">{{ rs.kind }}</span>
+                        <span>{{ rs.start_at.strftime('%d.%m %H:%M') }} — {{ rs.end_at.strftime('%H:%M') }}</span>
+                        {% if rs.note %}<span class="sched-slot-note">{{ rs.note }}</span>{% endif %}
+                    </div>
+                    <form method="POST" action="/user/{{ target.id }}/schedule" style="margin:0;">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="slot_id" value="{{ rs.slot_id }}">
+                        <input type="hidden" name="slot_date" value="{{ rs.start_at.date().isoformat() }}">
+                        <button type="submit" class="btn-secondary">Удалить</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </section>
+        {% endif %}
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.sched-cell').forEach(function(cell) {
+            cell.addEventListener('click', function(e) {
+                if (e.target.closest('.sched-slot')) return;
+                const dateInput = document.getElementById('slot_date');
+                const startInput = document.getElementById('start_time');
+                const endInput = document.getElementById('end_time');
+                if (!dateInput || !startInput || !endInput) return;
+                const colIdx = Array.prototype.indexOf.call(cell.parentNode.children, cell);
+            });
+        });
+    });
+</script>
+</body>
+</html>
