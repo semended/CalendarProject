@@ -45,7 +45,7 @@ async def start_page_get(request: Request, db: AsyncSession = Depends(get_db)):
     user = await get_current_user_optional(request, db)
     if user is not None:
         return RedirectResponse(url="/main", status_code=303)
-    return templates.TemplateResponse("start.html", {"request": request})
+    return templates.TemplateResponse(request, "start.html")
 
 
 @router.post("/", name="start_page")
@@ -58,11 +58,11 @@ async def start_page_post(
     user = await crud.get_user_by_email(db, email)
     if user is None:
         return templates.TemplateResponse(
-            "start.html", {"request": request, "error": "Неправильный логин"}
+            request, "start.html", {"error": "Неправильный логин"}
         )
     if not verify_password(password, user.password):
         return templates.TemplateResponse(
-            "start.html", {"request": request, "error": "Неправильный пароль"}
+            request, "start.html", {"error": "Неправильный пароль"}
         )
 
     if not is_hashed(user.password):
@@ -82,7 +82,7 @@ async def logout(request: Request):
 
 @router.get("/registration", name="register_page")
 async def register_page_get(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse(request, "register.html")
 
 
 @router.post("/registration", name="register_page")
@@ -97,8 +97,9 @@ async def register_page_post(
 ):
     if await crud.get_user_by_email(db, email) is not None:
         return templates.TemplateResponse(
+            request,
             "register.html",
-            {"request": request, "error": "Пользователь с такой почтой уже существует!"},
+            {"error": "Пользователь с такой почтой уже существует!"},
         )
 
     user = await crud.add_user(
@@ -120,9 +121,9 @@ async def verify_email(request: Request, token: str, db: AsyncSession = Depends(
         email = read_verify_token(token)
     except TokenError:
         return templates.TemplateResponse(
+            request,
             "auth_message.html",
             {
-                "request": request,
                 "title": "Ссылка невалидна",
                 "message": "Ссылка для подтверждения почты устарела или повреждена. "
                            "Запроси новую из настроек.",
@@ -133,9 +134,9 @@ async def verify_email(request: Request, token: str, db: AsyncSession = Depends(
     user = await crud.get_user_by_email(db, email)
     if user is None:
         return templates.TemplateResponse(
+            request,
             "auth_message.html",
             {
-                "request": request,
                 "title": "Пользователь не найден",
                 "message": "Аккаунт, привязанный к этой ссылке, больше не существует.",
             },
@@ -146,9 +147,9 @@ async def verify_email(request: Request, token: str, db: AsyncSession = Depends(
         await crud.mark_user_confirmed(db, user.id)
 
     return templates.TemplateResponse(
+        request,
         "auth_message.html",
         {
-            "request": request,
             "title": "Почта подтверждена",
             "message": "Готово. Можешь пользоваться аккаунтом.",
         },
@@ -167,7 +168,7 @@ async def resend_verification(user: User = Depends(get_current_user)):
 @router.get("/password-reset", name="password_reset_request")
 async def password_reset_request_get(request: Request):
     return templates.TemplateResponse(
-        "password_reset_request.html", {"request": request}
+        request, "password_reset_request.html"
     )
 
 
@@ -182,9 +183,9 @@ async def password_reset_request_post(
         _send_password_reset_email(user)
     # intentionally no leak whether user exists
     return templates.TemplateResponse(
+        request,
         "password_reset_request.html",
         {
-            "request": request,
             "sent": True,
             "email": email,
         },
@@ -199,9 +200,9 @@ async def password_reset_confirm_get(
         email = read_reset_token(token)
     except TokenError:
         return templates.TemplateResponse(
+            request,
             "auth_message.html",
             {
-                "request": request,
                 "title": "Ссылка невалидна",
                 "message": "Ссылка для сброса пароля устарела (живёт 1 час) или повреждена. "
                            "Запроси новую.",
@@ -212,9 +213,9 @@ async def password_reset_confirm_get(
     user = await crud.get_user_by_email(db, email)
     if user is None:
         return templates.TemplateResponse(
+            request,
             "auth_message.html",
             {
-                "request": request,
                 "title": "Пользователь не найден",
                 "message": "Аккаунт не найден.",
             },
@@ -222,8 +223,9 @@ async def password_reset_confirm_get(
         )
 
     return templates.TemplateResponse(
+        request,
         "password_reset_confirm.html",
-        {"request": request, "token": token},
+        {"token": token},
     )
 
 
@@ -239,9 +241,9 @@ async def password_reset_confirm_post(
         email = read_reset_token(token)
     except TokenError:
         return templates.TemplateResponse(
+            request,
             "auth_message.html",
             {
-                "request": request,
                 "title": "Ссылка невалидна",
                 "message": "Ссылка устарела. Запроси сброс заново.",
             },
@@ -250,21 +252,23 @@ async def password_reset_confirm_post(
 
     if password != password2:
         return templates.TemplateResponse(
+            request,
             "password_reset_confirm.html",
-            {"request": request, "token": token, "error": "Пароли не совпадают"},
+            {"token": token, "error": "Пароли не совпадают"},
         )
     if len(password) < 6:
         return templates.TemplateResponse(
+            request,
             "password_reset_confirm.html",
-            {"request": request, "token": token, "error": "Пароль должен быть не короче 6 символов"},
+            {"token": token, "error": "Пароль должен быть не короче 6 символов"},
         )
 
     user = await crud.get_user_by_email(db, email)
     if user is None:
         return templates.TemplateResponse(
+            request,
             "auth_message.html",
             {
-                "request": request,
                 "title": "Пользователь не найден",
                 "message": "Аккаунт не найден.",
             },
@@ -274,9 +278,9 @@ async def password_reset_confirm_post(
     await crud.update_user_password(db, user.id, hash_password(password))
     logout_session(request)
     return templates.TemplateResponse(
+        request,
         "auth_message.html",
         {
-            "request": request,
             "title": "Пароль обновлён",
             "message": "Теперь залогинься с новым паролем.",
             "login_link": True,

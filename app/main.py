@@ -34,7 +34,7 @@ async def redirect_to_login(request: Request, exc: RedirectToLogin):
 
 @app.exception_handler(404)
 async def not_found(request: Request, exc):
-    return templates.TemplateResponse("not_found.html", {"request": request}, status_code=404)
+    return templates.TemplateResponse(request, "not_found.html", status_code=404)
 
 
 if __name__ == "__main__":

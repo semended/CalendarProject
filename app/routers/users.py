@@ -46,8 +46,9 @@ async def settings_get(
 ):
     tasks = await crud.get_tasks_by_user_id(db, user.id)
     return templates.TemplateResponse(
+        request,
         "settings.html",
-        {"request": request, "user": user, "tasks": tasks},
+        {"user": user, "tasks": tasks},
     )
 
 
@@ -122,7 +123,7 @@ async def schedule_get(
     target = await crud.get_user_by_id(db, user_id)
     viewer = await get_current_user_optional(request, db)
     if target is None:
-        return templates.TemplateResponse("not_found.html", {"request": request}, status_code=404)
+        return templates.TemplateResponse(request, "not_found.html", status_code=404)
     if viewer is None:
         return RedirectResponse(url="/", status_code=303)
 
@@ -142,9 +143,9 @@ async def schedule_get(
     today_iso = date.today().isoformat()
 
     return templates.TemplateResponse(
+        request,
         "schedule.html",
         {
-            "request": request,
             "user": viewer,
             "target": target,
             "tasks": tasks,
@@ -201,16 +202,16 @@ async def user_page(
     viewer = await get_current_user_optional(request, db)
     if target is None:
         return templates.TemplateResponse(
-            "not_found.html", {"request": request}, status_code=404
+            request, "not_found.html", status_code=404
         )
     tasks = await crud.get_tasks_by_user_id(db, viewer.id) if viewer else []
     from app.visibility import PRIVACY_FIELDS, is_visible
     visible = {f: is_visible(target, viewer, f) for f in PRIVACY_FIELDS}
     is_self = viewer is not None and viewer.id == target.id
     return templates.TemplateResponse(
+        request,
         "profile.html",
         {
-            "request": request,
             "user": target,
             "viewer": viewer,
             "tasks": tasks,

@@ -38,8 +38,9 @@ async def main_page(
     tasks = await crud.get_tasks_by_user_id(db, user.id)
     await _decorate_tasks_with_counts(db, tasks)
     return templates.TemplateResponse(
+        request,
         "main.html",
-        {"request": request, "active_page": "all_tasks", "user": user, "tasks": tasks},
+        {"active_page": "all_tasks", "user": user, "tasks": tasks},
     )
 
 
@@ -72,9 +73,9 @@ async def calendar_page(
     ]
 
     return templates.TemplateResponse(
+        request,
         "calendar.html",
         {
-            "request": request,
             "active_page": "calendar",
             "user": user,
             "tasks": tasks,
@@ -102,9 +103,9 @@ async def create_task_get(
     candidates = await crud.get_assignee_candidates(db, parent_task_id, user.id)
     parent_task = await crud.get_task_by_id(db, parent_task_id) if parent_task_id else None
     return templates.TemplateResponse(
+        request,
         "create_task.html",
         {
-            "request": request,
             "active_page": "create_task",
             "user": user,
             "tasks": tasks,
@@ -136,9 +137,9 @@ async def create_task_post(
         tasks = await crud.get_tasks_by_user_id(db, user.id)
         candidates = await crud.get_assignee_candidates(db, parent_task_id, user.id)
         return templates.TemplateResponse(
+            request,
             "create_task.html",
             {
-                "request": request,
                 "active_page": "create_task",
                 "user": user,
                 "tasks": tasks,
@@ -192,9 +193,9 @@ async def task_get(
         member.role_name = await crud.get_user_role_in_task(db, member.id, task_id)
 
     return templates.TemplateResponse(
+        request,
         "current_task.html",
         {
-            "request": request,
             "active_page": "current_task",
             "user": user,
             "task": task,
@@ -287,9 +288,9 @@ async def task_overview_get(
         axis_ticks.append(tick_dt.strftime("%d.%m"))
 
     return templates.TemplateResponse(
+        request,
         "task_overview.html",
         {
-            "request": request,
             "active_page": "current_task",
             "user": user,
             "task": root,
@@ -321,9 +322,9 @@ async def task_management_get(
     candidates = await crud.get_assignee_candidates(db, task_id, user.id)
 
     return templates.TemplateResponse(
+        request,
         "task_management.html",
         {
-            "request": request,
             "active_page": "current_task",
             "user": user,
             "tasks": tasks,
