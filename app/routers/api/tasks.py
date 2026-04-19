@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
@@ -27,10 +27,12 @@ def _naive(dt: datetime) -> datetime:
 
 @router.get("", response_model=List[TaskResponse])
 async def api_list_my_tasks(
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
     user: User = Depends(get_current_user_api),
     db: AsyncSession = Depends(get_db),
 ):
-    return await crud.get_tasks_by_user_id(db, user.id)
+    return await crud.get_tasks_by_user_id(db, user.id, limit=limit, offset=offset)
 
 
 @router.post("", response_model=TaskResponse, status_code=201)
@@ -88,12 +90,14 @@ async def api_get_task(
 @router.get("/{task_id}/subtasks", response_model=List[TaskResponse])
 async def api_list_subtasks(
     task_id: int,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
     user: User = Depends(get_current_user_api),
     db: AsyncSession = Depends(get_db),
 ):
     if not await has_permission(db, user.id, task_id, P_VIEW):
         raise HTTPException(status_code=403, detail="Нет доступа к этой задаче")
-    return await crud.get_subtasks(db, task_id)
+    return await crud.get_subtasks(db, task_id, limit=limit, offset=offset)
 
 
 @router.patch("/{task_id}", response_model=TaskResponse)

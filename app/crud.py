@@ -208,19 +208,39 @@ async def get_tasks_by_creator(db: AsyncSession, creator_id: int) -> List[Task]:
     return list(result.scalars().all())
 
 
-async def get_tasks_by_user_id(db: AsyncSession, user_id: int) -> List[Task]:
+async def get_tasks_by_user_id(
+    db: AsyncSession,
+    user_id: int,
+    limit: Optional[int] = None,
+    offset: int = 0,
+) -> List[Task]:
     tur_result = await db.execute(
         select(TaskUserRole.task_id).where(TaskUserRole.user_id == user_id)
     )
     task_ids = {row for row in tur_result.scalars().all()}
     if not task_ids:
         return []
-    result = await db.execute(select(Task).where(Task.id.in_(task_ids)))
+    stmt = select(Task).where(Task.id.in_(task_ids)).order_by(Task.id)
+    if limit is not None:
+        stmt = stmt.limit(limit).offset(offset)
+    result = await db.execute(stmt)
     return list(result.scalars().all())
 
 
-async def get_subtasks(db: AsyncSession, parent_task_id: int) -> List[Task]:
-    result = await db.execute(select(Task).where(Task.parent_task_id == parent_task_id))
+async def get_subtasks(
+    db: AsyncSession,
+    parent_task_id: int,
+    limit: Optional[int] = None,
+    offset: int = 0,
+) -> List[Task]:
+    stmt = (
+        select(Task)
+        .where(Task.parent_task_id == parent_task_id)
+        .order_by(Task.id)
+    )
+    if limit is not None:
+        stmt = stmt.limit(limit).offset(offset)
+    result = await db.execute(stmt)
     return list(result.scalars().all())
 
 

@@ -68,8 +68,8 @@ class Task(Base):
             return "completed"
         if self.state == "paused":
             return "paused"
-        if self.ended_at is not None and self.ended_at < datetime.now() and self.state != "done":
-            return "active"
+        if self.ended_at is not None and self.ended_at < datetime.now():
+            return "overdue"
         return "active"
 
     def __repr__(self):

@@ -6,14 +6,13 @@ from app import crud
 from app.config import APP_BASE_URL
 from app.database import get_db
 from app.deps import get_current_user, get_current_user_optional, login_session, logout_session
-from app.email import send_email
+from app.email import send_email, send_verification_email
 from app.models import User
 from app.security import hash_password, is_hashed, verify_password
 from app.templating import templates
 from app.tokens import (
     TokenError,
     make_reset_token,
-    make_verify_token,
     read_reset_token,
     read_verify_token,
 )
@@ -22,21 +21,6 @@ router = APIRouter()
 
 
 # ---------- helpers ----------
-
-def _send_verification_email(user: User) -> None:
-    token = make_verify_token(user.email)
-    link = f"{APP_BASE_URL}/verify-email/{token}"
-    send_email(
-        to=user.email,
-        subject="Подтверждение почты — CalendarProject",
-        body=(
-            f"Привет, {user.name}!\n\n"
-            "Чтобы подтвердить почту, перейди по ссылке ниже (действует 3 дня):\n"
-            f"{link}\n\n"
-            "Если ты не регистрировался на CalendarProject — просто проигнорируй это письмо."
-        ),
-    )
-
 
 def _send_password_reset_email(user: User) -> None:
     token = make_reset_token(user.email)
@@ -125,7 +109,7 @@ async def register_page_post(
         password=hash_password(password),
         patronymic=patronymic,
     )
-    _send_verification_email(user)
+    send_verification_email(user.email, user.name)
     login_session(request, user)
     return RedirectResponse(url="/main", status_code=303)
 
@@ -174,7 +158,7 @@ async def verify_email(request: Request, token: str, db: AsyncSession = Depends(
 @router.post("/resend-verification", name="resend_verification")
 async def resend_verification(user: User = Depends(get_current_user)):
     if not user.confirmed:
-        _send_verification_email(user)
+        send_verification_email(user.email, user.name)
     return RedirectResponse(url="/main", status_code=303)
 
 

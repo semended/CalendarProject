@@ -3,12 +3,14 @@ import sys
 from email.message import EmailMessage
 
 from app.config import (
+    APP_BASE_URL,
     EMAIL_FROM,
     EMAIL_SMTP_HOST,
     EMAIL_SMTP_PASSWORD,
     EMAIL_SMTP_PORT,
     EMAIL_SMTP_USER,
 )
+from app.tokens import make_verify_token
 
 
 def send_email(to: str, subject: str, body: str) -> None:
@@ -38,3 +40,18 @@ def send_email(to: str, subject: str, body: str) -> None:
         if EMAIL_SMTP_USER:
             s.login(EMAIL_SMTP_USER, EMAIL_SMTP_PASSWORD)
         s.send_message(msg)
+
+
+def send_verification_email(email: str, name: str) -> None:
+    token = make_verify_token(email)
+    link = f"{APP_BASE_URL}/verify-email/{token}"
+    send_email(
+        to=email,
+        subject="Подтверждение почты — CalendarProject",
+        body=(
+            f"Привет, {name}!\n\n"
+            "Чтобы подтвердить почту, перейди по ссылке ниже (действует 3 дня):\n"
+            f"{link}\n\n"
+            "Если ты не регистрировался на CalendarProject — просто проигнорируй это письмо."
+        ),
+    )
