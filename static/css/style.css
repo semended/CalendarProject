@@ -736,6 +736,7 @@ body.task-page .container { grid-template-columns: 260px minmax(0, 1fr) 320px; }
     color: var(--text-faint);
     margin-top: 6px;
 }
+.field-hint--lead { margin-top: 0; margin-bottom: 16px; }
 
 /* ========================================================
    Profile

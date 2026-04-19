@@ -16,7 +16,8 @@
                 <div class="header-left">
                     <h1>{% if is_self %}Мой профиль{% else %}{{ user.name }} {{ user.surname }}{% endif %}</h1>
                     <div class="breadcrumb">
-                        {% if is_self %}Профиль{% else %}Участники / {{ user.name }} {{ user.surname }}{% endif %}
+                        <a href="/main">Главная</a>
+                         / {% if is_self %}Профиль{% else %}{{ user.name }} {{ user.surname }}{% endif %}
                     </div>
                 </div>
                 <div class="header-right">

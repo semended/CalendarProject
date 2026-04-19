@@ -127,7 +127,8 @@
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="slot_id" value="{{ rs.slot_id }}">
                             <input type="hidden" name="slot_date" value="{{ rs.start_at.date().isoformat() }}">
-                            <button type="submit" class="btn-secondary btn-small">Удалить</button>
+                            <button type="submit" class="btn-secondary btn-small"
+                                    aria-label="Удалить слот {{ rs.kind }} {{ rs.start_at.strftime('%d.%m %H:%M') }}">Удалить</button>
                         </form>
                     </li>
                     {% endfor %}
