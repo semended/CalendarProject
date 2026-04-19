@@ -1,0 +1,30 @@
+{% import "_icons.html" as icons %}
+<div class="user-menu-container">
+    <button type="button" class="user-avatar" id="userMenuButton" aria-haspopup="true" aria-expanded="false" aria-label="Меню пользователя">
+        {% if user and user.avatar_url %}
+            <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}" alt="" class="user-avatar-img">
+        {% else %}
+            <span class="user-avatar-initials">{{ (user.name[:1] if user and user.name else '?') | upper }}{{ (user.surname[:1] if user and user.surname else '') | upper }}</span>
+        {% endif %}
+    </button>
+    <div class="user-dropdown" id="userDropdown" role="menu">
+        <div class="user-dropdown-head">
+            <div class="user-dropdown-name">{{ user.name }} {{ user.surname }}</div>
+            <div class="user-dropdown-email">{{ user.email }}</div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <a href="/user/{{ user.id }}" class="dropdown-item" role="menuitem">
+            {{ icons.user() }}
+            <span>Мой профиль</span>
+        </a>
+        <a href="/user/settings" class="dropdown-item" role="menuitem">
+            {{ icons.settings() }}
+            <span>Настройки</span>
+        </a>
+        <div class="dropdown-divider"></div>
+        <a href="/logout" class="dropdown-item" role="menuitem">
+            {{ icons.logout() }}
+            <span>Выйти</span>
+        </a>
+    </div>
+</div>

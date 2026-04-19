@@ -1,3 +1,4 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,39 +10,35 @@
 <body>
     <div class="container start-page">
         <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1>CalendarName</h1>
-                    <div class="breadcrumb">Умная цитата</div>
-                </div>
-            </header>
+            <nav class="start-topbar">
+                <a href="/" class="start-logo">CalendarName</a>
+                <a href="/registration" class="btn-secondary btn-small">Создать аккаунт</a>
+            </nav>
 
             <section class="hero-section">
                 <div class="hero-content">
-                    <h2>Умная цитата 2</h2>
+                    <p class="hero-eyebrow">Планирование команды · проекты · дедлайны</p>
+                    <h1 class="hero-h1">Не держи&nbsp;сроки в&nbsp;голове.<br><em>Держи&nbsp;их&nbsp;здесь.</em></h1>
                     <p class="hero-description">
-                        CalendarName - это (красивое описание)
+                        CalendarName — инструмент для ведения проектов с деревом задач, диаграммой Ганта и расписанием занятости. Без лишнего.
                     </p>
 
-                    <!--контейнер ошибок - аналогично регистрации-->
                     {% if error %}
-                    <div class="error-container">
-                        <div class="error-message">
-                            <span class="error-icon">⚠️</span>
-                            {{ error }}
-                        </div>
+                    <div class="notice notice--error">
+                        <span class="notice-icon">{{ icons.alert() }}</span>
+                        <div class="notice-body">{{ error }}</div>
                     </div>
                     {% endif %}
 
                     <div class="auth-section">
                         <form class="auth-form" method="POST" action="{{ url_for('start_page') }}">
                             <div class="form-group">
-                                <label for="auth_slug">Почта пользователя</label>
-                                <input type="text" id="auth_slug" name="email" placeholder="Введите ваш email" required>
+                                <label for="auth_slug">Почта</label>
+                                <input type="email" id="auth_slug" name="email" placeholder="you@example.com" required autocomplete="email">
                             </div>
                             <div class="form-group">
                                 <label for="auth_password">Пароль</label>
-                                <input type="password" id="auth_password" name="password" placeholder="Введите пароль" required>
+                                <input type="password" id="auth_password" name="password" placeholder="•••••••" required autocomplete="current-password">
                             </div>
                             <div class="form-actions">
                                 <button type="submit" class="btn-primary full-width">Войти</button>
@@ -53,29 +50,34 @@
                         </form>
                     </div>
                 </div>
-                
-                <div class="benefits-section">
-                    <div class="benefits-grid">
-                        <div class="benefit-card">
-                            <div class="benefit-icon">📋</div>
-                            <h3>Канбан доски</h3>
-                            <p>Визуальное управление задачами с помощью интуитивных досок</p>
-                        </div>
-                        <div class="benefit-card">
-                            <div class="benefit-icon">📅</div>
-                            <h3>Календарь</h3>
-                            <p>Планирование и отслеживание сроков выполнения задач</p>
-                        </div>
-                        <div class="benefit-card">
-                            <div class="benefit-icon">👥</div>
-                            <h3>Команды</h3>
-                            <p>Эффективное взаимодействие с участниками проекта</p>
-                        </div>
-                    </div>
-                </div>
+
+                <aside class="benefits-section">
+                    <ul class="benefits-list">
+                        <li>
+                            <span class="benefit-num">01</span>
+                            <div>
+                                <h3>Дерево задач</h3>
+                                <p>Проект разбивается на блоки и подзадачи любой глубины. Каждому — свой ответственный и срок.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="benefit-num">02</span>
+                            <div>
+                                <h3>Гант и&nbsp;календарь</h3>
+                                <p>Один взгляд — и&nbsp;видно что параллельно, что зависит от&nbsp;чего и&nbsp;где дыры.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="benefit-num">03</span>
+                            <div>
+                                <h3>Расписание занятости</h3>
+                                <p>Сетка на&nbsp;неделю: встречи, фокус-блоки, выходные. Дедлайны попадают туда автоматически.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </aside>
             </section>
         </main>
     </div>
-
 </body>
 </html>

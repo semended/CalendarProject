@@ -1,402 +1,186 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalendarName - {{ task.name }}</title>
+    <title>{{ task.name }} — CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body class="task-page">
     <div class="container">
-        <!-- Сайдбар -->
         {% include 'sidebar.html' %}
 
-        <!-- Основной контент -->
         <main class="main-content">
-            <!-- Хедер -->
             <header class="header">
                 <div class="header-left">
-                    <h1>
-                        {% if is_subtask_mode %}
-                            Создать задачу
-                        {% else %}
-                            {{ task.name }}
-                        {% endif %}
-                    </h1>
+                    <h1>{{ task.name }}</h1>
                     <div class="breadcrumb">
-                        {% if is_subtask_mode %}
-                            Задачи / {{ task.name }} / Новая задача
-                        {% else %}
-                            Задачи / {{ task.name }}
-                        {% endif %}
+                        <a href="/main">Проекты</a>
+                         / {{ task.name }}
                     </div>
                 </div>
                 <div class="header-right">
-                    <div class="user-menu-container">
-                        <div class="user-avatar" id="userMenuButton">
-                            {% if user and user.avatar_url %}
-                                <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}"
-                                     alt="Avatar" class="user-avatar-img">
-                            {% else %}
-                                👤
-                            {% endif %}
-                        </div>
-                        <div class="user-dropdown" id="userDropdown">
-                            <a href="/user/{{ user.id }}" class="dropdown-item">
-                                <span class="dropdown-icon">👤</span>
-                                <span>Мой профиль</span>
-                            </a>
-                            <a href="/user/settings" class="dropdown-item">
-                                <span class="dropdown-icon">⚙️</span>
-                                <span>Настройки</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="/logout" class="dropdown-item">
-                                <span class="dropdown-icon">🚪</span>
-                                <span>Выйти из аккаунта</span>
-                            </a>
-                        </div>
-                    </div>
+                    {% if perms and perms['task.create_subtask'] %}
+                    <a href="{{ url_for('create_task_page', parent_task_id=task.id) }}" class="btn-primary">
+                        {{ icons.plus(14) }}
+                        <span>Новая подзадача</span>
+                    </a>
+                    {% endif %}
+                    {% include '_user_menu.html' %}
                 </div>
             </header>
 
-            {% if is_subtask_mode %}
-            <div class="project-info-card">
-                <h3>Новая задача</h3>
-                <p class="project-description-text">Наследуется от: {{ task.name }}</p>
-            </div>
-            {% else %}
-            <div class="project-info-card">
-                <h3>Описание</h3>
-                <p class="project-description-text">{{ task.description if task.description else 'Описание не указано.' }}</p>
-            </div>
-            {% endif %}
-
-            <form id="startSubtaskForm"
-                  action="/task/{{ task.id }}"
-                  method="POST"
-                  style="display:none;">
-                <input type="hidden" name="parent_task_id" value="{{ task.id }}">
-                <input type="hidden" name="mode" value="create_subtask">
-            </form>
-
-            <!-- Доски задач -->
-            <div class="boards">
-                <!-- В работе -->
-                <div class="board">
-                    <div class="board-header">
-                        <h3>Задачи в работе</h3>
-                    </div>
-                    <div class="task-list" id="inProgressList">
-                        {% if in_progress_tasks and in_progress_tasks|length > 0 %}
-                            {% for t in in_progress_tasks %}
-                            <a class="task-link"
-                            href="{{ url_for('task_page', task_id=t.id) }}"
-                            draggable="true"
-                            data-id="{{ t.id }}"
-                            data-status="inProgress">
-                                <div class="task-card"
-                                    data-task-id="{{ t.id }}"
-                                    data-status="{{ t.status }}"
-                                    data-name="{{ t.name|lower }}"
-                                    data-deadline="{{ t.ended_at or '' }}">
-                                    <div class="task-header">
-                                        <div class="task-color" style="background-color: {{ t.color }}"></div>
-                                        <h3>{{ t.name }}</h3>
-                                    </div>
-                                    <div class="task-content">
-                                        <p>{{ t.description }}</p>
-                                        <div class="task-meta">
-                                            <div class="task-stats">
-                                                <span class="stat">📋 {{ t.tasks }} задач</span>
-                                                <span class="stat">👥 {{ t.members }} участников</span>
-                                                {% if t.assignee %}
-                                                <span class="stat">@{{ t.assignee.name }}</span>
-                                                {% endif %}
-                                            </div>
-                                            <div class="task-date
-                                                {% if t.status == 'completed' %} completed
-                                                {% elif t.status == 'paused' %} paused
-                                                {% endif %}
-                                            ">
-                                                {% if t.status == 'completed' %}
-                                                    Завершен
-                                                {% elif t.status == 'paused' %}
-                                                    На паузе
-                                                {% else %}
-                                                    {% if t.ended_at %}
-                                                        {% set dl = t.ended_at | replace('T', ' ') %}
-                                                        Срок: {{ dl[:10] }}
-                                                    {% else %}
-                                                        Без срока
-                                                    {% endif %}
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                            {% endfor %}
-                        {% else %}
-                            <p class="empty-state">Пока нет задач</p>
+            <section class="task-summary">
+                <div class="task-summary-head">
+                    <span class="status-chip status-{{ task.status }}">
+                        {% if task.status == 'completed' %}Завершён
+                        {% elif task.status == 'paused' %}На паузе
+                        {% elif task.status == 'overdue' %}Просрочен
+                        {% else %}В работе
                         {% endif %}
-                    </div>
-
-                    {% if perms and perms['task.create_subtask'] %}
-                    <form id="createSubtaskForm"
-                        method="GET"
-                        action="{{ url_for('create_task_page', parent_task_id=task.id) }}"
-                        style="display:inline;">
-                        <button class="add-task-btn" type="submit">
-                            + Добавить задачу
-                        </button>
-                    </form>
+                    </span>
+                    {% if task.ended_at %}
+                    <span class="task-deadline tabular">
+                        срок · {{ task.ended_at.strftime('%d.%m.%Y') if task.ended_at.__class__.__name__ != 'str' else task.ended_at[:10] }}
+                    </span>
+                    {% else %}
+                    <span class="task-deadline task-deadline--none">без срока</span>
                     {% endif %}
                 </div>
+                <p class="task-summary-desc">
+                    {{ task.description if task.description else 'Описание не указано.' }}
+                </p>
+            </section>
 
-                <div class="board">
+            {% set open_tasks = in_progress_tasks | rejectattr('status', 'equalto', 'completed') | list %}
+            {% set done_tasks = in_progress_tasks | selectattr('status', 'equalto', 'completed') | list %}
+
+            <div class="boards">
+                <section class="board">
                     <div class="board-header">
-                        <h3>Завершенные задачи</h3>
+                        <h3>В работе</h3>
+                        <span class="board-count tabular">{{ open_tasks|length }}</span>
                     </div>
-                    <div class="task-list" id="completedList">
-                        {% if completed_tasks and completed_tasks|length > 0 %}
-                            {% for t in completed_tasks %}
-                            <a class="task-card"
-                               href="{{ url_for('task_page', task_id=t.id) }}"
-                               draggable="true"
-                               data-id="{{ t.id }}"
-                               data-status="completed">
-                                <div class="task-title">{{ t.name }}</div>
-                                <div class="task-meta">
-                                    <span>{{ t.created_at }}</span>
-                                    <span style="cursor:pointer;"
-                                          onclick="event.preventDefault(); event.stopPropagation(); deleteTask({{ t.id }}, 'completed');">
-                                        🗑️
-                                    </span>
-                                </div>
+                    <div class="task-list">
+                        {% if open_tasks|length > 0 %}
+                            {% for t in open_tasks %}
+                            <a href="{{ url_for('task_page', task_id=t.id) }}" class="task-link">
+                                <article class="task-card" style="--card-accent: {{ t.color }};"
+                                         data-task-id="{{ t.id }}"
+                                         data-status="{{ t.status }}">
+                                    <div class="task-card-head">
+                                        <span class="status-chip status-{{ t.status }}">
+                                            {% if t.status == 'paused' %}На паузе
+                                            {% elif t.status == 'overdue' %}Просрочен
+                                            {% else %}В работе
+                                            {% endif %}
+                                        </span>
+                                        {% if t.ended_at %}
+                                        <span class="task-deadline tabular">до {{ t.ended_at.strftime('%d.%m') if t.ended_at.__class__.__name__ != 'str' else t.ended_at[:10] }}</span>
+                                        {% else %}
+                                        <span class="task-deadline task-deadline--none">без срока</span>
+                                        {% endif %}
+                                    </div>
+                                    <h3 class="task-card-title">{{ t.name }}</h3>
+                                    {% if t.description %}
+                                    <p class="task-card-desc">{{ t.description }}</p>
+                                    {% endif %}
+                                    <div class="task-card-foot">
+                                        <span class="tabular">{{ t.tasks }} {% if t.tasks == 1 %}задача{% elif t.tasks < 5 %}задачи{% else %}задач{% endif %}</span>
+                                        <span class="dot-sep">·</span>
+                                        <span class="tabular">{{ t.members }} {% if t.members == 1 %}участник{% elif t.members < 5 %}участника{% else %}участников{% endif %}</span>
+                                        {% if t.assignee %}
+                                        <span class="dot-sep">·</span>
+                                        <span>@{{ t.assignee.name }}</span>
+                                        {% endif %}
+                                    </div>
+                                </article>
                             </a>
                             {% endfor %}
                         {% else %}
-                            <p class="empty-state">Пока нет задач</p>
+                            <p class="empty-state">Пока нет задач — добавь подзадачу выше.</p>
                         {% endif %}
                     </div>
-                </div>
+                </section>
+
+                <section class="board">
+                    <div class="board-header">
+                        <h3>Завершённые</h3>
+                        <span class="board-count tabular">{{ done_tasks|length }}</span>
+                    </div>
+                    <div class="task-list">
+                        {% if done_tasks|length > 0 %}
+                            {% for t in done_tasks %}
+                            <a href="{{ url_for('task_page', task_id=t.id) }}" class="task-link">
+                                <article class="task-card task-card--done" style="--card-accent: {{ t.color }};"
+                                         data-task-id="{{ t.id }}">
+                                    <div class="task-card-head">
+                                        <span class="status-chip status-completed">Завершён</span>
+                                    </div>
+                                    <h3 class="task-card-title">{{ t.name }}</h3>
+                                </article>
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <p class="empty-state">Пока ничего не завершено.</p>
+                        {% endif %}
+                    </div>
+                </section>
             </div>
-
-            {% if is_subtask_mode %}
-            <section class="create-task-section">
-                <div class="create-task-layout">
-                    <div class="create-task-container">
-                        <div class="form-intro">
-                            <div class="form-icon">📋</div>
-                            <h2>Новая задача</h2>
-                            <p class="field-hint">Наследуется от: {{ task.name }}</p>
-                        </div>
-
-                        {% if error %}
-                        <div class="error-message">
-                            <span class="error-icon">⚠️</span>
-                            {{ error }}
-                        </div>
-                        {% endif %}
-
-                        <form class="task-form" id="createSubtaskRealForm" method="POST" action="/create_task">
-                            <input type="hidden" name="parent_task_id" value="{{ task.id }}">
-
-                            <!-- Основная информация -->
-                            <div class="form-section">
-                                <h3 class="section-title">Основная информация</h3>
-
-                                <div class="form-group task-name-group">
-                                    <label for="taskName" class="task-name-label">
-                                        <span class="field-icon-large">📝</span>
-                                        Название *
-                                    </label>
-                                    <div class="task-name-input-wrapper">
-                                        <input type="text" id="taskName" name="taskName"
-                                               placeholder="Введите название"
-                                               required maxlength="100">
-                                        <div class="input-decoration"></div>
-                                    </div>
-                                    <div class="field-hint">Максимум 100 символов. <span id="nameCharCount">0/100</span></div>
-                                </div>
-
-                                <div class="form-group task-description-group">
-                                    <label for="taskDescription" class="task-description-label">
-                                        <span class="field-icon-large">📖</span>
-                                        Описание
-                                    </label>
-                                    <div class="task-description-wrapper">
-                                        <textarea id="taskDescription" name="taskDescription"
-                                                  placeholder="Составьте подробное описание"
-                                                  rows="8" maxlength="500"></textarea>
-                                        <div class="textarea-decoration">
-                                            <div class="textarea-glow"></div>
-                                        </div>
-                                    </div>
-                                    <div class="field-hint">Максимум 500 символов. <span id="descCharCount">0/500</span></div>
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn-primary btn-large">
-                                    <span>Создать задачу</span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </section>
-            {% endif %}
         </main>
 
-        <!-- Правая панель -->
         <aside class="right-sidebar">
-            <a href="/task/{{ task.id }}/overview" class="btn-secondary full-width" style="margin-bottom: 12px;">
-                Обзор (Гант / дерево)
-            </a>
-            {% if perms and (perms['task.edit_settings'] or perms['task.manage_members']) %}
-            <a href="/task_management/{{ task.id }}" class="manage-btn-link">
-                Управление
-            </a>
-            {% endif %}
+            <div class="aside-section">
+                <h3 class="aside-title">Действия</h3>
+                <a href="/task/{{ task.id }}/overview" class="btn-secondary full-width">
+                    Обзор · Гант и дерево
+                </a>
+                {% if perms and (perms['task.edit_settings'] or perms['task.manage_members']) %}
+                <a href="/task_management/{{ task.id }}" class="btn-secondary full-width">
+                    Управление
+                </a>
+                {% endif %}
+            </div>
 
-            <div class="task-info">
-                <h3>Команда</h3>
-                <div class="team-list" id="teamList">
-                    {% if team and team|length > 0 %}
-                        {% for user in team %}
-                            <div class="team-card">
-                                <div class="team-email">{{ user.email }}</div>
-                                <div class="team-role">{{ user.role_name }}</div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="empty-state">Данные отсутствуют</p>
-                    {% endif %}
-                </div>
+            <div class="aside-section">
+                <h3 class="aside-title">Команда</h3>
+                {% if team and team|length > 0 %}
+                <ul class="team-list">
+                    {% for member in team %}
+                    <li class="team-card">
+                        <div class="team-card-avatar">
+                            <span class="user-avatar-initials">{{ (member.name[:1] if member.name else '?') | upper }}{{ (member.surname[:1] if member.surname else '') | upper }}</span>
+                        </div>
+                        <div class="team-card-body">
+                            <div class="team-card-name">{{ member.name }} {{ member.surname }}</div>
+                            <div class="team-card-role">{{ member.role_name }}</div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="empty-state">В команде пока никого.</p>
+                {% endif %}
             </div>
         </aside>
     </div>
+
     <script>
-        // === Меню пользователя ===
         document.addEventListener('DOMContentLoaded', function() {
-            initializeUserMenu();
-            initDragAndDrop();
-        });
-
-        function initializeUserMenu() {
-            const userMenuButton = document.getElementById('userMenuButton');
-            const userDropdown = document.getElementById('userDropdown');
-
-            userMenuButton.addEventListener('click', function(e) {
+            const btn = document.getElementById('userMenuButton');
+            const dd  = document.getElementById('userDropdown');
+            if (!btn || !dd) return;
+            btn.addEventListener('click', e => {
                 e.stopPropagation();
-                userDropdown.classList.toggle('show');
+                const open = dd.classList.toggle('show');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
             });
-
-            document.addEventListener('click', function() {
-                userDropdown.classList.remove('show');
+            document.addEventListener('click', () => {
+                dd.classList.remove('show');
+                btn.setAttribute('aria-expanded', 'false');
             });
-
-            userDropdown.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-        }
-
-        // === Логика канбан‑доски задач (только drag&drop и удаление) ===
-        async function deleteTask(id, status) {
-            if (!confirm('Удалить задачу?')) return;
-
-            try {
-                await fetch(`/api/task/{{ task.id }}/tasks/${id}`, {
-                    method: 'DELETE'
-                });
-                // Перезагружаем страницу, чтобы Jinja заново отрисовал списки
-                window.location.reload();
-            } catch (error) {
-                console.error('Ошибка удаления задачи:', error);
-            }
-        }
-
-        async function moveTask(id, fromStatus, toStatus) {
-            try {
-                await fetch(`/api/task/{{ task.id }}/tasks/${id}/move`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fromStatus: fromStatus, toStatus: toStatus })
-                });
-                window.location.reload();
-            } catch (error) {
-                console.error('Ошибка смены статуса задачи:', error);
-            }
-        }
-
-        function initDragAndDrop() {
-            let draggedElement = null;
-
-            document.addEventListener('dragstart', function(e) {
-                if (e.target.classList.contains('task-card')) {
-                    draggedElement = e.target;
-                    e.target.classList.add('dragging');
-                }
-            });
-
-            document.addEventListener('dragend', function(e) {
-                if (e.target.classList.contains('task-card')) {
-                    e.target.classList.remove('dragging');
-                }
-            });
-
-            const taskLists = document.querySelectorAll('.task-list');
-
-            taskLists.forEach(list => {
-                list.addEventListener('dragover', function(e) {
-                    e.preventDefault();
-                    const afterElement = getDragAfterElement(list, e.clientY);
-                    if (afterElement == null) {
-                        list.appendChild(draggedElement);
-                    } else {
-                        list.insertBefore(draggedElement, afterElement);
-                    }
-                });
-
-                list.addEventListener('drop', async function(e) {
-                    e.preventDefault();
-                    if (!draggedElement) return;
-
-                    const taskId = parseInt(draggedElement.dataset.id);
-                    const oldStatus = draggedElement.dataset.status;
-                    const newStatus = list.id === 'inProgressList' ? 'inProgress' : 'completed';
-
-                    if (oldStatus !== newStatus) {
-                        await moveTask(taskId, oldStatus, newStatus);
-                    }
-                });
-            });
-        }
-
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.task-card:not(.dragging)')];
-
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
-
-        function closeModal() {
-            document.getElementById('taskModal').classList.remove('active');
-            document.getElementById('taskForm').reset();
-        }
-
-        document.getElementById('taskForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            closeModal();
+            dd.addEventListener('click', e => e.stopPropagation());
         });
     </script>
 </body>

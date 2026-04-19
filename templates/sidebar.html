@@ -1,23 +1,24 @@
+{% import "_icons.html" as icons %}
 <aside class="sidebar">
     <div class="logo center-logo">
-        <a href="/main" style="text-decoration: none; color: inherit;">
+        <a href="/main">
             <h2>CalendarName</h2>
         </a>
     </div>
 
     <div class="nav-section">
-        <h3 class="nav-title">ПРОЕКТЫ</h3>
+        <h3 class="nav-title">Проекты</h3>
         <ul class="nav-list">
             <li class="nav-item nav-item--create {% if active_page == 'create_task' %}active{% endif %}">
                 <a href="/create_task" class="create-project-btn">
-                    Создать проект
+                    {{ icons.plus(14) }}
+                    <span>Создать проект</span>
                 </a>
             </li>
 
-
             <li class="nav-item {% if active_page == 'all_tasks' %}active{% endif %}">
                 <a href="/main" class="nav-link">
-                    <span class="nav-icon">📁</span>
+                    {{ icons.folder() }}
                     <span>Все проекты</span>
                 </a>
             </li>
@@ -25,26 +26,30 @@
             {% if user %}
             <li class="nav-item {% if active_page == 'calendar' %}active{% endif %}">
                 <a href="/calendar" class="nav-link">
-                    <span class="nav-icon">📅</span>
+                    {{ icons.calendar() }}
                     <span>Календарь</span>
                 </a>
             </li>
             <li class="nav-item {% if active_page == 'schedule' %}active{% endif %}">
                 <a href="/user/{{ user.id }}/schedule" class="nav-link">
-                    <span class="nav-icon">🗓</span>
+                    {{ icons.clock() }}
                     <span>Моё расписание</span>
                 </a>
             </li>
             {% endif %}
 
+            {% if tasks %}
+            <li class="nav-section-divider"></li>
+            <li class="nav-subtitle">Мои проекты</li>
             {% for project in tasks %}
             <li class="nav-item {% if task and task.id == project.id %}active{% endif %}">
                 <a href="/task/{{ project.id }}" class="nav-link">
-                    <span class="nav-icon">📄</span>
+                    <span class="nav-dot" style="background: {{ project.color }}"></span>
                     <span>{{ project.name }}</span>
                 </a>
             </li>
             {% endfor %}
+            {% endif %}
         </ul>
     </div>
 </aside>

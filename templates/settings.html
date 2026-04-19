@@ -1,335 +1,241 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Настройки - CalendarName</title>
+    <title>Настройки профиля — CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <!-- Сайдбар -->
         {% include 'sidebar.html' %}
 
-        <!-- Основной контент -->
         <main class="main-content">
-            <!-- Хедер -->
             <header class="header">
                 <div class="header-left">
                     <h1>Настройки профиля</h1>
-                    <div class="breadcrumb">Настройки / Профиль</div>
+                    <div class="breadcrumb">
+                        <a href="/user/{{ user.id }}">Профиль</a>
+                         / Настройки
+                    </div>
                 </div>
-                <!-- Аватарка удалена -->
+                <div class="header-right">
+                    <a href="/user/{{ user.id }}" class="btn-secondary btn-small">К профилю</a>
+                    {% include '_user_menu.html' %}
+                </div>
             </header>
 
-            <!-- Основной контент настроек -->
-            <section class="settings-section">
-                <div class="settings-container">
-                    <!-- Левая колонка - навигация -->
-                    <div class="settings-sidebar">
-                        <div class="settings-nav">
-                            <div class="nav-item active">
-                                <span class="nav-icon">👤</span>
-                                <span>Профиль</span>
-                            </div>
-                            <div class="nav-item">
-                                <span class="nav-icon">🔔</span>
-                                <span>Уведомления</span>
-                            </div>
-                            <div class="nav-item">
-                                <span class="nav-icon">🎨</span>
-                                <span>Внешний вид</span>
-                            </div>
-                            <div class="nav-item">
-                                <span class="nav-icon">🔒</span>
-                                <span>Безопасность</span>
-                            </div>
-                            <div class="nav-item">
-                                <span class="nav-icon">💼</span>
-                                <span>Рабочее пространство</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Правая колонка - форма -->
-                    <div class="settings-content">
-                        <div class="settings-card">
-                            <h2>Публичный профиль</h2>
-                            <p class="settings-description">
-                                Ваша информация может отображаться в различных местах системы. 
-                                Вы можете изменить её в любое время.
-                            </p>
-
-                            <form class="settings-form" method="POST" action="{{ url_for('settings_page') }}" enctype="multipart/form-data">
-                                <input type="hidden" id="remove_avatar" name="remove_avatar" value="false">
-                                <input type="hidden" id="cropped_image" name="cropped_image" value="">
-                                <!-- Аватар -->
-                                <div class="form-section">
-                                    <h3>Фотография профиля</h3>
-                                    <div class="avatar-upload">
-                                        <div class="avatar-preview">
-                                            {% if user and user.avatar_url %}
-                                                <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}" alt="Avatar" class="avatar-preview-img">
-                                            {% else %}
-                                                <div class="avatar-placeholder">👤</div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="avatar-actions">
-                                            <input type="file" id="avatar" name="avatar" accept="image/*" style="display: none;" onchange="previewAvatar(event)">
-                                            <button type="button" class="btn-secondary" onclick="document.getElementById('avatar').click();">Изменить</button>
-                                            <button type="button" class="btn-secondary btn-remove" onclick="document.getElementById('remove_avatar').value='true'; document.querySelector('.settings-form').submit();">Удалить</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Имя -->
-                                <div class="form-group">
-                                    <label for="name">Имя</label>
-                                    <input type="text" id="name" name="name" placeholder="Введите ваше имя" 
-                                        value="{{ user.name }}">
-                                    <div class="form-hint">
-                                        Ваше имя может отображаться в системе где вы участвуете или упоминаетесь.
-                                    </div>
-                                </div>
-
-                                <!-- Фамилия -->
-                                <div class="form-group">
-                                    <label for="surname">Фамилия</label>
-                                    <input type="text" id="surname" name="surname" placeholder="Введите вашу фамилию" 
-                                        value="{{ user.surname }}">
-                                </div>
-
-                                <!-- Отчество -->
-                                <div class="form-group">
-                                    <label for="patronymic">Отчество</label>
-                                    <input type="text" id="patronymic" name="patronymic" placeholder="Введите ваше отчество" 
-                                        value="{{ user.patronymic }}">
-                                </div>
-
-                                <!-- Email -->
-                                <div class="form-group">
-                                    <label for="email">Email</label>
-                                    <input type="email" id="email" name="email" placeholder="Введите ваш email" 
-                                        value="{{ user.email }}">
-                                    <div class="form-hint">
-                                        Ваш email адрес
-                                    </div>
-                                </div>
-
-                                <!-- Bio -->
-                                <div class="form-group">
-                                    <label for="bio">О себе</label>
-                                    <textarea id="bio" name="bio" class="form-textarea" placeholder="Расскажите немного о себе">{{ user.bio or '' }}</textarea>
-                                    <div class="form-hint">
-                                        Вы можете упоминать других пользователей и организации, ссылаясь на них.
-                                    </div>
-                                </div>
-
-                                <!-- Position -->
-                                <div class="form-group">
-                                    <label for="position">Должность</label>
-                                    <input type="text" id="position" name="position" placeholder="Ваша должность" value="{{ user.position or '' }}">
-                                </div>
-
-                                <!-- Company -->
-                                <div class="form-group">
-                                    <label for="company">Компания</label>
-                                    <input type="text" id="company" name="company" placeholder="Название компании" value="{{ user.company or '' }}">
-                                </div>
-
-                                <!-- Workplace -->
-                                <div class="form-group">
-                                    <label for="workplace">Место работы</label>
-                                    <input type="text" id="workplace" name="workplace" placeholder="Место работы" value="{{ user.workplace or '' }}">
-                                </div>
-
-                                <!-- Pronouns -->
-                                <div class="form-group">
-                                    <label for="pronouns">Местоимения</label>
-                                    <select id="pronouns" name="pronouns" class="form-select">
-                                        <option value="">Не указывать</option>
-                                        <option value="he" {% if user.pronouns == 'he' %}selected{% endif %}>Он/Его</option>
-                                        <option value="she" {% if user.pronouns == 'she' %}selected{% endif %}>Она/Её</option>
-                                    </select>
-                                </div>
-
-                                <!-- URL -->
-                                <div class="form-group">
-                                    <label for="url">URL</label>
-                                    <input type="url" id="url" name="url" placeholder="https://example.com" value="{{ user.url or 'https://example.com' }}">
-                                </div>
-
-                                <!-- Приватность -->
-                                <div class="form-section">
-                                    <h3>Приватность</h3>
-                                    <p class="settings-description">Кто видит эти поля у тебя в профиле.</p>
-
-                                    {% set pfields = [
-                                        ('email',     'Email',       'self'),
-                                        ('bio',       'О себе',      'authed'),
-                                        ('position',  'Должность',   'authed'),
-                                        ('company',   'Компания',    'authed'),
-                                        ('workplace', 'Место работы','authed'),
-                                    ] %}
-                                    {% for fname, label, dflt in pfields %}
-                                    {% set cur = user['privacy_' ~ fname] or dflt %}
-                                    <div class="form-group">
-                                        <label for="privacy_{{ fname }}">{{ label }}</label>
-                                        <select id="privacy_{{ fname }}" name="privacy_{{ fname }}" class="form-select">
-                                            <option value="public" {% if cur == 'public' %}selected{% endif %}>Всем (даже без входа)</option>
-                                            <option value="authed" {% if cur == 'authed' %}selected{% endif %}>Только залогиненным</option>
-                                            <option value="self"   {% if cur == 'self' %}selected{% endif %}>Только мне</option>
-                                        </select>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-
-                                <!-- Кнопки -->
-                                <div class="form-actions">
-                                    <button type="button" class="btn-secondary">Отмена</button>
-                                    <button type="submit" class="btn-primary">Сохранить изменения</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+            <section class="form-section-page">
+                {% if saved %}
+                <div class="notice notice--success">
+                    <span class="notice-icon">{{ icons.alert() }}</span>
+                    <div class="notice-body">Изменения сохранены.</div>
                 </div>
+                {% endif %}
+                {% if error %}
+                <div class="notice notice--error">
+                    <span class="notice-icon">{{ icons.alert() }}</span>
+                    <div class="notice-body">{{ error }}</div>
+                </div>
+                {% endif %}
+
+                <form class="task-form" method="POST" action="{{ url_for('settings_page') }}" enctype="multipart/form-data">
+                    <input type="hidden" id="remove_avatar" name="remove_avatar" value="false">
+                    <input type="hidden" id="cropped_image" name="cropped_image" value="">
+
+                    <section class="form-block">
+                        <h2 class="form-block-title">Фотография профиля</h2>
+                        <div class="avatar-upload">
+                            <div class="avatar-preview" aria-hidden="true">
+                                {% if user and user.avatar_url %}
+                                    <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}" alt="" class="avatar-preview-img">
+                                {% else %}
+                                    <span class="user-avatar-initials">{{ (user.name[:1] if user.name else '?') | upper }}{{ (user.surname[:1] if user.surname else '') | upper }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="avatar-actions">
+                                <input type="file" id="avatar" name="avatar" accept="image/*" hidden onchange="previewAvatar(event)">
+                                <button type="button" class="btn-secondary" onclick="document.getElementById('avatar').click();">Загрузить новую</button>
+                                <button type="button" class="btn-secondary btn-ghost" onclick="document.getElementById('remove_avatar').value='true'; this.closest('form').submit();">Удалить</button>
+                            </div>
+                            <p class="field-hint">Квадратное изображение. Показываем в&nbsp;120×120 и&nbsp;в&nbsp;меню.</p>
+                        </div>
+                    </section>
+
+                    <section class="form-block">
+                        <h2 class="form-block-title">Имя и контакты</h2>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="surname">Фамилия</label>
+                                <input type="text" id="surname" name="surname" value="{{ user.surname or '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="name">Имя</label>
+                                <input type="text" id="name" name="name" value="{{ user.name or '' }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patronymic">Отчество <span class="field-optional">— необязательно</span></label>
+                            <input type="text" id="patronymic" name="patronymic" value="{{ user.patronymic or '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Почта</label>
+                            <input type="email" id="email" name="email" value="{{ user.email or '' }}">
+                            <div class="field-hint">На&nbsp;эту почту приходят ссылки для сброса пароля и&nbsp;подтверждения аккаунта.</div>
+                        </div>
+                    </section>
+
+                    <section class="form-block">
+                        <h2 class="form-block-title">О себе</h2>
+
+                        <div class="form-group">
+                            <label for="bio">Биография <span class="field-optional">— необязательно</span></label>
+                            <textarea id="bio" name="bio" rows="5" placeholder="Пара слов о себе, роли, интересах">{{ user.bio or '' }}</textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="position">Должность</label>
+                                <input type="text" id="position" name="position" value="{{ user.position or '' }}" placeholder="например, Фронтенд-разработчик">
+                            </div>
+                            <div class="form-group">
+                                <label for="company">Компания</label>
+                                <input type="text" id="company" name="company" value="{{ user.company or '' }}">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="workplace">Город</label>
+                                <input type="text" id="workplace" name="workplace" value="{{ user.workplace or '' }}" placeholder="Москва">
+                            </div>
+                            <div class="form-group">
+                                <label for="pronouns">Местоимения</label>
+                                <select id="pronouns" name="pronouns" class="form-select">
+                                    <option value="">Не&nbsp;указывать</option>
+                                    <option value="he" {% if user.pronouns == 'he' %}selected{% endif %}>Он/Его</option>
+                                    <option value="she" {% if user.pronouns == 'she' %}selected{% endif %}>Она/Её</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="url">Ссылка</label>
+                            <input type="url" id="url" name="url" placeholder="https://example.com" value="{{ user.url or '' }}">
+                        </div>
+                    </section>
+
+                    <section class="form-block">
+                        <h2 class="form-block-title">Приватность</h2>
+                        <p class="field-hint" style="margin-bottom: 16px;">
+                            Кто видит эти поля, когда открывает твой профиль.
+                        </p>
+
+                        {% set pfields = [
+                            ('email',     'Почта',        'self'),
+                            ('bio',       'Биография',    'authed'),
+                            ('position',  'Должность',    'authed'),
+                            ('company',   'Компания',     'authed'),
+                            ('workplace', 'Город',        'authed'),
+                        ] %}
+                        <div class="privacy-grid">
+                            {% for fname, label, dflt in pfields %}
+                            {% set cur = user['privacy_' ~ fname] or dflt %}
+                            <div class="form-group">
+                                <label for="privacy_{{ fname }}">{{ label }}</label>
+                                <select id="privacy_{{ fname }}" name="privacy_{{ fname }}" class="form-select">
+                                    <option value="public" {% if cur == 'public' %}selected{% endif %}>Публично</option>
+                                    <option value="authed" {% if cur == 'authed' %}selected{% endif %}>Залогиненным</option>
+                                    <option value="self"   {% if cur == 'self' %}selected{% endif %}>Только мне</option>
+                                </select>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <div class="form-actions form-actions--end">
+                        <a href="/user/{{ user.id }}" class="btn-secondary">Отмена</a>
+                        <button type="submit" class="btn-primary">Сохранить изменения</button>
+                    </div>
+                </form>
             </section>
         </main>
     </div>
 
-    <!-- Модальное окно для кропа -->
-    <div id="cropModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Выберите область фотографии</h2>
-                <span class="close">&times;</span>
-            </div>
+    <div id="cropModal" class="modal-overlay" hidden>
+        <div class="modal-shell">
+            <header class="modal-head">
+                <h2>Выбери область фотографии</h2>
+                <button type="button" class="modal-close" aria-label="Закрыть">&times;</button>
+            </header>
             <div class="modal-body">
-                <img id="cropImage" src="" alt="Crop Image" style="max-width: 100%;">
+                <img id="cropImage" src="" alt="">
             </div>
-            <div class="modal-footer" style="padding: 10px; text-align: right;">
-                <button id="cropSave" class="btn-primary">Сохранить</button>
-                <button id="cropCancel" class="btn-secondary">Отмена</button>
-            </div>
+            <footer class="modal-foot">
+                <button id="cropCancel" type="button" class="btn-secondary">Отмена</button>
+                <button id="cropSave" type="button" class="btn-primary">Сохранить</button>
+            </footer>
         </div>
     </div>
 
-
     <script>
-        setTimeout(function() {
-            const flashMessages = document.querySelectorAll('.flash-message');
-            flashMessages.forEach(function(message) {
-                message.style.display = 'none';
-            });
-        }, 5000);
-    </script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('userMenuButton');
+            const dd  = document.getElementById('userDropdown');
+            if (btn && dd) {
+                btn.addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('show'); });
+                document.addEventListener('click', () => dd.classList.remove('show'));
+                dd.addEventListener('click', e => e.stopPropagation());
+            }
 
-    <script>
+            const modal = document.getElementById('cropModal');
+            modal.querySelector('.modal-close').addEventListener('click', closeCropModal);
+            document.getElementById('cropCancel').addEventListener('click', closeCropModal);
+            document.getElementById('cropSave').addEventListener('click', saveCrop);
+        });
+
         let cropper;
+
+        function openCropModal() {
+            document.getElementById('cropModal').hidden = false;
+        }
+        function closeCropModal() {
+            document.getElementById('cropModal').hidden = true;
+            if (cropper) { cropper.destroy(); cropper = null; }
+        }
 
         function previewAvatar(event) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    // Показать модальное окно с кроппером
-                    const cropImage = document.getElementById('cropImage');
-                    cropImage.src = e.target.result;
-                    document.getElementById('cropModal').style.display = 'flex';
-
-                    // Инициализировать кроппер
-                    if (cropper) {
-                        cropper.destroy();
-                    }
-                    cropper = new Cropper(cropImage, {
-                        aspectRatio: 1,
-                        viewMode: 1,
-                        autoCropArea: 1,
-                        responsive: true,
-                        restore: false,
-                        checkCrossOrigin: false,
-                        checkOrientation: false,
-                        modal: true,
-                        guides: true,
-                        center: true,
-                        highlight: false,
-                        background: false,
-                        scalable: true,
-                        zoomable: true,
-                        zoomOnTouch: true,
-                        zoomOnWheel: true,
-                        wheelZoomRatio: 0.1,
-                        cropBoxMovable: true,
-                        cropBoxResizable: true,
-                        toggleDragModeOnDblclick: true,
-                    });
-                };
-                reader.readAsDataURL(file);
-            }
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('cropImage');
+                img.src = e.target.result;
+                openCropModal();
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(img, {
+                    aspectRatio: 1, viewMode: 1, autoCropArea: 1,
+                    responsive: true, background: false, guides: true,
+                });
+            };
+            reader.readAsDataURL(file);
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Закрытие модального окна
-            document.querySelector('.close').onclick = function() {
-                document.getElementById('cropModal').style.display = 'none';
-                if (cropper) {
-                    cropper.destroy();
-                    cropper = null;
-                }
-            };
-
-            document.getElementById('cropCancel').onclick = function() {
-                document.getElementById('cropModal').style.display = 'none';
-                if (cropper) {
-                    cropper.destroy();
-                    cropper = null;
-                }
-            };
-
-            document.getElementById('cropSave').onclick = function() {
-                if (cropper) {
-                    const canvas = cropper.getCroppedCanvas({
-                        width: 120,
-                        height: 120,
-                    });
-                    const croppedImage = canvas.toDataURL('image/jpeg');
-
-                    // Обновить превью
-                    // Внутри функции cropSave
-                    const avatarPreview = document.querySelector('.avatar-preview');
-                    avatarPreview.innerHTML = '<img src="' + croppedImage + '" alt="Avatar Preview" class="avatar-preview-img">';
-
-                    // Сохранить base64 в hidden field
-                    document.getElementById('cropped_image').value = croppedImage;
-
-                    document.getElementById('cropModal').style.display = 'none';
-                    cropper.destroy();
-                    cropper = null;
-                }
-            };
-
-            // Обработка формы настроек - теперь отправляется POST
-
-            // Обработка кнопки "Отмена"
-            const settingsForm = document.querySelector('.settings-form');
-            const cancelButton = settingsForm?.querySelector('.btn-secondary');
-            if (cancelButton) {
-                cancelButton.addEventListener('click', function() {
-                    settingsForm.reset();
-                    // Сбросить превью к оригиналу
-                    const avatarPreview = document.querySelector('.avatar-preview');
-                    const originalAvatar = "{{ url_for('static', filename='user_avatars/' ~ user.avatar_url ~ '.jpg') if user and user.avatar_url else '' }}";
-                    // В обработчике кнопки "Отмена"
-                    if (originalAvatar) {
-                        avatarPreview.innerHTML = '<img src="' + originalAvatar + '" alt="Avatar" class="avatar-preview-img">';
-                    } else {
-                        avatarPreview.innerHTML = '<div class="avatar-placeholder">👤</div>';
-                    }
-                });
-            }
-        });
+        function saveCrop() {
+            if (!cropper) return;
+            const canvas = cropper.getCroppedCanvas({ width: 240, height: 240 });
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            const preview = document.querySelector('.avatar-preview');
+            preview.innerHTML = '<img src="' + dataUrl + '" alt="" class="avatar-preview-img">';
+            document.getElementById('cropped_image').value = dataUrl;
+            closeCropModal();
+        }
     </script>
 </body>
 </html>

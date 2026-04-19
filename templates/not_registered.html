@@ -1,210 +1,33 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Требуется авторизация - CalendarName</title>
+    <title>Требуется авторизация — CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
     <div class="container start-page">
-        <!-- Основной контент -->
         <main class="main-content">
-            <!-- Хедер -->
-            <header class="header">
-                <div class="header-left">
-                    <div class="logo">
-                        <a href="/" style="text-decoration: none; color: inherit;">
-                            <h2>CalendarName</h2>
-                        </a>
-                    </div>
-                    <div class="breadcrumb">Доступ ограничен</div>
-                </div>
-            </header>
+            <nav class="start-topbar">
+                <a href="/" class="start-logo">CalendarName</a>
+                <a href="/registration" class="btn-secondary btn-small">Создать аккаунт</a>
+            </nav>
 
-            <!-- Основное содержимое -->
-            <section class="hero-section">
-                <div class="hero-content">
-                    <h2>Требуется авторизация</h2>
-                    <p class="hero-description">
-                        Для доступа к этой странице необходимо войти в свой аккаунт. 
-                        Пожалуйста, авторизуйтесь или зарегистрируйтесь, чтобы продолжить работу с системой.
-                    </p>
-                    <div class="hero-actions">
-                        <button class="btn-secondary large" onclick="openAuthModal()">
-                            <span>Авторизация</span>
-                        </button>
-                        <button class="btn-primary large" onclick="openRegModal()">
-                            <span>Регистрация</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="hero-visual">
-                    <div class="demo-board">
-                        <div class="demo-column">
-                            <div class="demo-task"></div>
-                            <div class="demo-task"></div>
-                        </div>
-                        <div class="demo-column">
-                            <div class="demo-task"></div>
-                        </div>
-                        <div class="demo-column">
-                            <div class="demo-task"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <section class="auth-shell">
+                <p class="auth-code">Access · 401</p>
+                <h1>Нужно&nbsp;<em>войти</em>.</h1>
+                <p class="hero-description">
+                    Эта страница доступна только авторизованным. Войди в&nbsp;аккаунт или зарегистрируйся&nbsp;— это быстро.
+                </p>
 
-            <!-- Информация о возможностях -->
-            <section class="features-section">
-                <h2>Что вы получите после регистрации?</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">👤</div>
-                        <h3>Личный профиль</h3>
-                        <p>Создайте свой профиль с фотографией, описанием и контактной информацией</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">⚙️</div>
-                        <h3>Настройки</h3>
-                        <p>Настройте систему под свои предпочтения и рабочие процессы</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3>Статистика</h3>
-                        <p>Отслеживайте свою продуктивность и прогресс по задачам</p>
-                    </div>
+                <div class="form-actions">
+                    <a href="/" class="btn-primary full-width">Войти</a>
+                    <a href="/registration" class="btn-secondary full-width">Регистрация</a>
                 </div>
             </section>
         </main>
     </div>
-
-    <!-- Модальное окно авторизации -->
-    <div id="authModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Вход в аккаунт</h2>
-                <span class="close" onclick="closeAuthModal()">&times;</span>
-            </div>
-            <form class="auth-form">
-                <div class="form-group">
-                    <label for="login">Email или ID пользователя</label>
-                    <input type="text" id="login" name="login" placeholder="Введите почту или ID пользователя" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Пароль</label>
-                    <input type="password" id="password" name="password" placeholder="Введите пароль" required>
-                </div>
-                <button type="submit" class="btn-primary full-width">Войти</button>
-                <div class="auth-links">
-                    <a href="#" class="forgot-password">Забыли пароль?</a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Модальное окно регистрации пользователя -->
-    <div id="regModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Регистрация</h2>
-                <span class="close" onclick="closeRegModal()">&times;</span>
-            </div>
-            <form class="auth-form reg-form">
-                <div class="form-group">
-                    <label for="username">ID пользователя *</label>
-                    <input type="text" id="username" name="username" placeholder="Придумайте ID" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Пароль *</label>
-                    <input type="password" id="password" name="password" placeholder="Придумайте пароль" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="lastName">Фамилия *</label>
-                        <input type="text" id="lastName" name="lastName" placeholder="Введите фамилию" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="firstName">Имя *</label>
-                        <input type="text" id="firstName" name="firstName" placeholder="Введите имя" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="middleName">Отчество</label>
-                    <input type="text" id="middleName" name="middleName" placeholder="Введите отчество (при наличии)">
-                </div>
-                <button type="submit" class="btn-primary full-width">Зарегистрироваться</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Модальное окно успешной регистрации -->
-    <div id="successModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Успешная регистрация</h2>
-                <span class="close" onclick="closeSuccessModal()">&times;</span>
-            </div>
-            <div class="success-content">
-                <div class="success-icon">✅</div>
-                <h3>Регистрация завершена!</h3>
-                <p>Ваш аккаунт успешно создан. Теперь вы можете войти в систему.</p>
-                <button class="btn-primary full-width" onclick="closeSuccessModal()">Понятно</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Функции для управления модальными окнами
-        function openAuthModal() {
-            document.getElementById('authModal').style.display = 'flex';
-        }
-
-        function closeAuthModal() {
-            document.getElementById('authModal').style.display = 'none';
-        }
-
-        function openRegModal() {
-            document.getElementById('regModal').style.display = 'flex';
-        }
-
-        function closeRegModal() {
-            document.getElementById('regModal').style.display = 'none';
-        }
-
-        function showSuccessModal() {
-            document.getElementById('successModal').style.display = 'flex';
-        }
-
-        function closeSuccessModal() {
-            document.getElementById('successModal').style.display = 'none';
-        }
-
-        // Закрытие модальных окон при клике вне их
-        window.onclick = function(event) {
-            const modals = ['authModal', 'regModal', 'successModal'];
-            modals.forEach(modalId => {
-                const modal = document.getElementById(modalId);
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
-        }
-
-        // Обработка формы авторизации
-        document.querySelector('.auth-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            // Здесь будет логика авторизации
-            alert('Форма авторизации отправлена!');
-            closeAuthModal();
-        });
-
-        // Обработка формы регистрации
-        document.querySelector('.reg-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            closeRegModal();
-            showSuccessModal();
-        });
-    </script>
 </body>
 </html>

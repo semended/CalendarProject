@@ -1,187 +1,213 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalendarName - Управление {{ task.name }}</title>
+    <title>Управление — {{ task.name }}</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
-<body class="task-management-page">
+<body class="task-page">
 <div class="container">
     {% include 'sidebar.html' %}
 
     <main class="main-content">
-        <header class="page-header">
-            <div class="page-header-content">
-                <h2>{{ task.name }} - Управление</h2>
-                <a href="/task/{{ task.id }}" class="btn-back-link">
-                    <button class="btn-secondary btn-back">← Вернуться к задачам</button>
-                </a>
+        <header class="header">
+            <div class="header-left">
+                <h1>Управление · {{ task.name }}</h1>
+                <div class="breadcrumb">
+                    <a href="/main">Проекты</a>
+                     / <a href="/task/{{ task.id }}">{{ task.name }}</a>
+                     / Управление
+                </div>
+            </div>
+            <div class="header-right">
+                <a href="/task/{{ task.id }}" class="btn-secondary btn-small">К доскам</a>
+                {% include '_user_menu.html' %}
             </div>
         </header>
 
-        <!-- Статистика -->
-        <div class="stats">
-            <div class="stat-card">
-                <div class="stat-value" id="totalTasks">0</div>
-                <div class="stat-label">Всего задач</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="inProgressTasks">0</div>
-                <div class="stat-label">Задач в работе</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="completedTasks">0</div>
-                <div class="stat-label">Завершено задач</div>
-            </div>
-        </div>
+        <section class="form-section-page">
+            <section class="form-block">
+                <h2 class="form-block-title">Команда</h2>
 
-        <section class="management-section">
-            <h3>Команда</h3>
-            <div class="team-management">
-                <div class="team-list" id="teamList">
-                    {% if team %}
-                        {% for user in team %}
-                            <div class="team-card">
-                                <div class="team-email">{{ user.email }}</div>
-                                <div class="team-role">{{ user.role_name }}</div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="empty-state">Данные отсутствуют</p>
-                    {% endif %}
-                </div>
+                {% if team and team|length > 0 %}
+                <ul class="team-list team-list--wide">
+                    {% for member in team %}
+                    <li class="team-card">
+                        <div class="team-card-avatar">
+                            <span class="user-avatar-initials">{{ (member.name[:1] if member.name else '?') | upper }}{{ (member.surname[:1] if member.surname else '') | upper }}</span>
+                        </div>
+                        <div class="team-card-body">
+                            <div class="team-card-name">{{ member.name }} {{ member.surname }}</div>
+                            <div class="team-card-role">{{ member.role_name }}</div>
+                        </div>
+                        <span class="team-card-email tabular">{{ member.email }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="empty-state">В команде пока никого.</p>
+                {% endif %}
 
                 {% if perms and perms['task.manage_members'] %}
-                <form class="team-actions"
-                      id="addUserForm"
+                <form class="form-row form-row--tight"
                       method="POST"
                       action="{{ url_for('task_management_page', task_id=task.id) }}">
-                    <input type="email"
-                           id="userEmail"
-                           name="email"
-                           class="team-input"
-                           placeholder="Email пользователя"
-                           required>
-
-                    <select id="userRole" name="role_id" class="team-select" required>
-                        <option value="">Роль</option>
-                        <option value="1">Тимлид</option>
-                        <option value="2">Менеджер</option>
-                        <option value="3">Разработчик</option>
-                    </select>
-
-                    <button type="submit" class="btn-primary team-btn">
-                        Добавить
-                    </button>
+                    <div class="form-group form-group--grow">
+                        <label for="userEmail">Email участника</label>
+                        <input type="email" id="userEmail" name="email"
+                               placeholder="teammate@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">Роль</label>
+                        <select id="userRole" name="role_id" class="form-select" required>
+                            <option value="">—</option>
+                            <option value="1">Тимлид</option>
+                            <option value="2">Менеджер</option>
+                            <option value="3">Разработчик</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group--action">
+                        <button type="submit" class="btn-primary">Добавить</button>
+                    </div>
                 </form>
                 {% else %}
-                <p class="empty-state">У тебя нет прав добавлять участников.</p>
+                <p class="field-hint">У тебя нет прав добавлять участников.</p>
                 {% endif %}
-            </div>
-        </section>
+            </section>
 
-        {% if perms and perms['task.edit_settings'] %}
-        <section class="management-section">
-            <h3>Настройки</h3>
+            {% if perms and perms['task.edit_settings'] %}
+            <section class="form-block">
+                <h2 class="form-block-title">Настройки проекта</h2>
 
-            <form class="task-settings"
-                  id="taskSettingsForm"
-                  method="POST"
-                  action="{{ url_for('task_management_page', task_id=task.id) }}">
-                <div class="setting-group">
-                    <label for="taskName">Название</label>
-                    <input type="text"
-                           id="taskName"
-                           name="task_name"
-                           value="{{ task.name }}"
-                           required>
-                </div>
-                <div class="setting-group">
-                    <label for="taskDescription">Описание</label>
-                    <textarea id="taskDescription"
-                              name="task_description">{{ task.description }}</textarea>
-                </div>
-                <div class="setting-group">
-                    <label for="taskColor">Цвет</label>
-                    <div class="color-picker-wrapper">
-                        <input type="color"
-                               id="taskColor"
-                               name="task_color"
-                               value="{{ task.color }}">
-                        <span class="color-label">Выберите цвет</span>
+                <form class="task-form"
+                      method="POST"
+                      action="{{ url_for('task_management_page', task_id=task.id) }}">
+                    <div class="form-group">
+                        <label for="taskName">Название</label>
+                        <input type="text" id="taskName" name="task_name"
+                               value="{{ task.name }}" required maxlength="100">
                     </div>
-                </div>
-                <div class="setting-group">
-                    <label for="taskAssignee">Ответственный</label>
-                    <select id="taskAssignee" name="assignee_id" class="form-select">
-                        <option value="">Не назначен</option>
-                        {% for c in assignee_candidates %}
-                        <option value="{{ c.id }}" {% if task.assignee_id == c.id %}selected{% endif %}>
-                            {{ c.name }} {{ c.surname }} ({{ c.email }})
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="setting-group">
-                    <label for="taskState">Состояние</label>
-                    <select id="taskState" name="task_state" class="form-select">
-                        {% set cur = task.state or 'todo' %}
-                        <option value="todo"        {% if cur == 'todo' %}selected{% endif %}>К выполнению</option>
-                        <option value="in_progress" {% if cur == 'in_progress' %}selected{% endif %}>В работе</option>
-                        <option value="review"      {% if cur == 'review' %}selected{% endif %}>На ревью</option>
-                        <option value="done"        {% if cur == 'done' %}selected{% endif %}>Завершено</option>
-                        <option value="paused"      {% if cur == 'paused' %}selected{% endif %}>На паузе</option>
-                    </select>
-                </div>
-                <div class="setting-actions">
-                    <button type="submit" class="btn-primary">
-                        Сохранить настройки
-                    </button>
-                </div>
-            </form>
+
+                    <div class="form-group">
+                        <label for="taskDescription">Описание <span class="field-optional">— необязательно</span></label>
+                        <textarea id="taskDescription" name="task_description" rows="5" maxlength="500">{{ task.description or '' }}</textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="taskAssignee">Ответственный</label>
+                            <select id="taskAssignee" name="assignee_id" class="form-select">
+                                <option value="">Не назначен</option>
+                                {% for c in assignee_candidates %}
+                                <option value="{{ c.id }}" {% if task.assignee_id == c.id %}selected{% endif %}>
+                                    {{ c.name }} {{ c.surname }} · {{ c.email }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="taskState">Состояние</label>
+                            <select id="taskState" name="task_state" class="form-select">
+                                {% set cur = task.state or 'todo' %}
+                                <option value="todo"        {% if cur == 'todo' %}selected{% endif %}>К выполнению</option>
+                                <option value="in_progress" {% if cur == 'in_progress' %}selected{% endif %}>В работе</option>
+                                <option value="review"      {% if cur == 'review' %}selected{% endif %}>На ревью</option>
+                                <option value="done"        {% if cur == 'done' %}selected{% endif %}>Завершено</option>
+                                <option value="paused"      {% if cur == 'paused' %}selected{% endif %}>На паузе</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Цвет маркера</label>
+                        <div class="color-picker-container">
+                            <div class="color-presets" role="radiogroup" aria-label="Цвет">
+                                <button type="button" class="color-preset" data-color="#0ea5e9" style="--c: #0ea5e9" aria-label="Синий"></button>
+                                <button type="button" class="color-preset" data-color="#10b981" style="--c: #10b981" aria-label="Зелёный"></button>
+                                <button type="button" class="color-preset" data-color="#f59e0b" style="--c: #f59e0b" aria-label="Жёлтый"></button>
+                                <button type="button" class="color-preset" data-color="#ef4444" style="--c: #ef4444" aria-label="Красный"></button>
+                                <button type="button" class="color-preset" data-color="#8b5cf6" style="--c: #8b5cf6" aria-label="Фиолетовый"></button>
+                                <button type="button" class="color-preset" data-color="#e5745a" style="--c: #e5745a" aria-label="Терракот"></button>
+                            </div>
+                            <input type="color" id="taskColor" name="task_color"
+                                   value="{{ task.color or '#0ea5e9' }}" class="color-input-native">
+                        </div>
+                    </div>
+
+                    <div class="form-actions form-actions--end">
+                        <a href="/task/{{ task.id }}" class="btn-secondary">Отмена</a>
+                        <button type="submit" class="btn-primary">Сохранить изменения</button>
+                    </div>
+                </form>
+            </section>
+            {% endif %}
         </section>
-        {% endif %}
     </main>
 
     <aside class="right-sidebar">
-        <div class="task-info-card">
-            <h3>Информация</h3>
-            <div class="info-item">
-                <span class="info-label">Создан:</span>
-                <span class="info-value">
-                    {{ task.created_at.strftime('%d.%m.%Y') if task.created_at else 'Не указано' }}
-                </span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Создатель:</span>
-                <span class="info-value">{{ user.name }} {{ user.surname }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Цвет:</span>
-                <span class="color-preview" style="background-color: {{ task.color }}"></span>
-            </div>
+        <div class="aside-section">
+            <h3 class="aside-title">Проект</h3>
+            <dl class="meta-list">
+                <div class="meta-row">
+                    <dt>Создан</dt>
+                    <dd class="tabular">{{ task.created_at.strftime('%d.%m.%Y') if task.created_at else '—' }}</dd>
+                </div>
+                <div class="meta-row">
+                    <dt>Срок</dt>
+                    <dd class="tabular">{{ task.ended_at.strftime('%d.%m.%Y') if task.ended_at else 'без срока' }}</dd>
+                </div>
+                <div class="meta-row">
+                    <dt>Статус</dt>
+                    <dd>
+                        <span class="status-chip status-{{ task.status }}">
+                            {% if task.status == 'completed' %}Завершён
+                            {% elif task.status == 'paused' %}На паузе
+                            {% elif task.status == 'overdue' %}Просрочен
+                            {% else %}В работе
+                            {% endif %}
+                        </span>
+                    </dd>
+                </div>
+                <div class="meta-row">
+                    <dt>Маркер</dt>
+                    <dd><span class="color-preview" style="background: {{ task.color }};"></span></dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="aside-section">
+            <h3 class="aside-title">Навигация</h3>
+            <a href="/task/{{ task.id }}" class="btn-secondary full-width">К доскам</a>
+            <a href="/task/{{ task.id }}/overview" class="btn-secondary full-width">Обзор · Гант</a>
         </div>
     </aside>
 </div>
 
 <script>
-    const taskId = {{ task.id }};
-    let tasks = { inProgress: [], completed: [] };
-
     document.addEventListener('DOMContentLoaded', function() {
-        if (typeof loadTasks === 'function') {
-            loadTasks();
+        const btn = document.getElementById('userMenuButton');
+        const dd  = document.getElementById('userDropdown');
+        if (btn && dd) {
+            btn.addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('show'); });
+            document.addEventListener('click', () => dd.classList.remove('show'));
+            dd.addEventListener('click', e => e.stopPropagation());
         }
-        updateStats();
-    });
 
-    function updateStats() {
-        const total = tasks.inProgress.length + tasks.completed.length;
-        document.getElementById('totalTasks').textContent = total;
-        document.getElementById('inProgressTasks').textContent = tasks.inProgress.length;
-        document.getElementById('completedTasks').textContent = tasks.completed.length;
-    }
+        const taskColorInput = document.getElementById('taskColor');
+        const presets = document.querySelectorAll('.color-preset');
+        if (taskColorInput && presets.length) {
+            presets.forEach(p => {
+                if (p.getAttribute('data-color') === taskColorInput.value) p.classList.add('active');
+                p.addEventListener('click', function() {
+                    taskColorInput.value = this.getAttribute('data-color');
+                    presets.forEach(x => x.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        }
+    });
 </script>
 </body>
 </html>

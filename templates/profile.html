@@ -1,168 +1,108 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профиль - CalendarName</title>
+    <title>{% if is_self %}Мой профиль{% else %}{{ user.name }} {{ user.surname }}{% endif %} — CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <!-- Сайдбар -->
-        {% include 'sidebar.html' %}
+        {% with user=viewer %}{% include 'sidebar.html' %}{% endwith %}
 
-        <!-- Основной контент -->
         <main class="main-content">
-            <!-- Хедер -->
             <header class="header">
                 <div class="header-left">
-                    <h1>Мой профиль</h1>
-                    <div class="breadcrumb">Профиль</div>
+                    <h1>{% if is_self %}Мой профиль{% else %}{{ user.name }} {{ user.surname }}{% endif %}</h1>
+                    <div class="breadcrumb">
+                        {% if is_self %}Профиль{% else %}Участники / {{ user.name }} {{ user.surname }}{% endif %}
+                    </div>
                 </div>
-                <!-- Аватарка удалена -->
+                <div class="header-right">
+                    {% if is_self %}
+                    <a href="/user/settings" class="btn-primary">
+                        {{ icons.settings(14) }}
+                        <span>Настройки</span>
+                    </a>
+                    {% endif %}
+                    {% if viewer %}
+                        {% with user=viewer %}{% include '_user_menu.html' %}{% endwith %}
+                    {% endif %}
+                </div>
             </header>
 
-            <!-- Основной контент профиля -->
-            <section class="profile-section">
-                <div class="profile-container">
-                    <!-- Левая колонка - информация профиля -->
-                    <div class="profile-sidebar">
-                        <div class="profile-card">
-                            <div class="profile-avatar-large">
-                                {% if user and user.avatar_url %}
-                                    <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}"
-                                        alt="Avatar"
-                                        onerror="this.onerror=null; this.parentNode.innerHTML='👤';">
-                                {% else %}
-                                    👤
-                                {% endif %}
-                            </div>
-                            <div class="profile-info">
-                                <h2>{{ user['name'] }} {{ user['surname'] }}</h2>
-                                {% if visible and visible.bio %}
-                                <p class="profile-bio">{{ user['bio'] }}</p>
-                                {% endif %}
-
-                                <div class="profile-details">
-                                    {% if visible and visible.position %}
-                                    <div class="detail-item">
-                                        <span class="detail-icon">💼</span>
-                                        {% if user['position'] %}<span>{{ user['position'] }}</span>{% else %}<span>Отсутствует</span>{% endif %}
-                                    </div>
-                                    {% endif %}
-                                    {% if visible and visible.company %}
-                                    <div class="detail-item">
-                                        <span class="detail-icon">🏢</span>
-                                        {% if user['company'] %}<span>{{ user['company'] }}</span>{% else %}<span>Отсутствует</span>{% endif %}
-                                    </div>
-                                    {% endif %}
-                                    {% if visible and visible.workplace %}
-                                    <div class="detail-item">
-                                        <span class="detail-icon">📍</span>
-                                        {% if user['workplace'] %}<span>{{ user['workplace'] }}</span>{% else %}<span>Отсутствует</span>{% endif %}
-                                    </div>
-                                    {% endif %}
-                                    {% if visible and visible.email %}
-                                    <div class="detail-item">
-                                        <span class="detail-icon">✉️</span>
-                                        <span>{{ user['email'] }}</span>
-                                    </div>
-                                    {% endif %}
-                                </div>
-
-                                {% if is_self %}
-                                <a href="/user/settings" style="text-decoration: none;">
-                                    <button class="btn-primary full-width" style="margin-top: 20px;">
-                                        Редактировать профиль
-                                    </button>
-                                </a>
-                                {% endif %}
-                            </div>
+            <section class="profile-page">
+                <aside class="profile-aside">
+                    <div class="profile-card">
+                        <div class="profile-avatar-xl" aria-hidden="true">
+                            {% if user.avatar_url %}
+                                <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}" alt="">
+                            {% else %}
+                                <span class="user-avatar-initials">{{ (user.name[:1] if user.name else '?') | upper }}{{ (user.surname[:1] if user.surname else '') | upper }}</span>
+                            {% endif %}
                         </div>
+                        <h2 class="profile-name">{{ user.name }} {{ user.surname }}</h2>
+                        {% if user.patronymic %}
+                        <p class="profile-patronymic">{{ user.patronymic }}</p>
+                        {% endif %}
+
+                        {% if visible and visible.bio and user.bio %}
+                        <p class="profile-bio">{{ user.bio }}</p>
+                        {% endif %}
+
+                        <dl class="profile-details">
+                            {% if visible and visible.position and user.position %}
+                            <div class="profile-detail">
+                                <dt>Должность</dt>
+                                <dd>{{ user.position }}</dd>
+                            </div>
+                            {% endif %}
+                            {% if visible and visible.company and user.company %}
+                            <div class="profile-detail">
+                                <dt>Компания</dt>
+                                <dd>{{ user.company }}</dd>
+                            </div>
+                            {% endif %}
+                            {% if visible and visible.workplace and user.workplace %}
+                            <div class="profile-detail">
+                                <dt>Город</dt>
+                                <dd>{{ user.workplace }}</dd>
+                            </div>
+                            {% endif %}
+                            {% if visible and visible.email %}
+                            <div class="profile-detail">
+                                <dt>Почта</dt>
+                                <dd class="tabular">{{ user.email }}</dd>
+                            </div>
+                            {% endif %}
+                        </dl>
+
+                        {% if is_self %}
+                        <a href="/user/settings" class="btn-secondary full-width">Редактировать профиль</a>
+                        {% endif %}
                     </div>
+                </aside>
 
-                    <!-- Правая колонка - активность -->
-                    <div class="profile-content">
-                        <!-- Статистика -->
-                        <div class="profile-stats">
-                            <div class="stat-card">
-                                <div class="stat-value">24</div>
-                                <div class="stat-label">Проектов</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">156</div>
-                                <div class="stat-label">Задач выполнено</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">89%</div>
-                                <div class="stat-label">Эффективность</div>
-                            </div>
-                        </div>
+                <div class="profile-main">
+                    <section class="profile-block">
+                        <h3 class="profile-block-title">О человеке</h3>
+                        {% if visible and visible.bio and user.bio %}
+                        <p class="profile-block-text">{{ user.bio }}</p>
+                        {% else %}
+                        <p class="empty-state">Пока ничего не рассказал(а).</p>
+                        {% endif %}
+                    </section>
 
-                        <!-- Последняя активность -->
-                        <div class="activity-section">
-                            <h3>Недавняя активность</h3>
-                            <div class="activity-list">
-                                <div class="activity-item">
-                                    <div class="activity-icon">📝</div>
-                                    <div class="activity-content">
-                                        <div class="activity-title">План улучшений технического долга</div>
-                                        <div class="activity-description">Командная документация - Вы и Иван работали над этим.</div>
-                                        <div class="activity-time">Сегодня</div>
-                                    </div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-icon">📋</div>
-                                    <div class="activity-content">
-                                        <div class="activity-title">Заметки к встрече</div>
-                                        <div class="activity-description">Командная документация - Иван редактировал сегодня.</div>
-                                        <div class="activity-time">Сегодня</div>
-                                    </div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-icon">🐛</div>
-                                    <div class="activity-content">
-                                        <div class="activity-title">FEL-661 Футеры главной страницы используют inline стили</div>
-                                        <div class="activity-description">Frontend библиотека - Иван прокомментировал сегодня.</div>
-                                        <div class="activity-time">Сегодня</div>
-                                    </div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-icon">🔧</div>
-                                    <div class="activity-content">
-                                        <div class="activity-title">FEL-354 Пользователям iPhone нужен доступ к вертикальному виду</div>
-                                        <div class="activity-description">Frontend библиотека - Иван редактировал вчера.</div>
-                                        <div class="activity-time">Вчера</div>
-                                    </div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-icon">📊</div>
-                                    <div class="activity-content">
-                                        <div class="activity-title">Что говорят наши клиенты? Инсайты из 3 раундов</div>
-                                        <div class="activity-description">Исследования - Вы и Иван работали над этим.</div>
-                                        <div class="activity-time">2 дня назад</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button class="btn-secondary full-width" style="margin-top: 16px;">
-                                Показать больше
-                            </button>
-                        </div>
-
-                        <!-- Рабочие пространства -->
-                        <div class="workspaces-section">
-                            <h3>Рабочие пространства</h3>
-                            <div class="workspace-item">
-                                <div class="workspace-icon">📊</div>
-                                <div class="workspace-name">Jira Software</div>
-                            </div>
-                        </div>
-                    </div>
+                    {% if is_self %}
+                    <section class="profile-block">
+                        <h3 class="profile-block-title">Расписание</h3>
+                        <p class="profile-block-text">
+                            Посмотри свою неделю — занятость, встречи и дедлайны.
+                        </p>
+                        <a href="/user/{{ user.id }}/schedule" class="btn-secondary">Открыть расписание</a>
+                    </section>
+                    {% endif %}
                 </div>
             </section>
         </main>
@@ -170,22 +110,12 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Обработка кнопки "Редактировать профиль"
-            const editProfileButton = document.querySelector('.btn-primary.full-width');
-            if (editProfileButton) {
-                editProfileButton.addEventListener('click', function() {
-                    window.location.href = '/user/settings';
-                });
-            }
-
-            // Обработка кнопки "Показать больше"
-            const showMoreButton = document.querySelector('.btn-secondary.full-width');
-            if (showMoreButton) {
-                showMoreButton.addEventListener('click', function() {
-                    alert('Загружается больше активностей...');
-                    // Здесь будет логика загрузки дополнительных активностей
-                });
-            }
+            const btn = document.getElementById('userMenuButton');
+            const dd  = document.getElementById('userDropdown');
+            if (!btn || !dd) return;
+            btn.addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('show'); });
+            document.addEventListener('click', () => dd.classList.remove('show'));
+            dd.addEventListener('click', e => e.stopPropagation());
         });
     </script>
 </body>

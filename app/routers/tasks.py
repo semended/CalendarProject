@@ -35,7 +35,7 @@ async def main_page(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    tasks = await crud.get_tasks_by_user_id(db, user.id)
+    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
     await _decorate_tasks_with_counts(db, tasks)
     return templates.TemplateResponse(
         request,
@@ -58,7 +58,7 @@ async def calendar_page(
         except ValueError:
             pass
     rendered = await availability.render_month(db, user.id, anchor)
-    tasks = await crud.get_tasks_by_user_id(db, user.id)
+    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
 
     first = rendered["month_first"]
     prev_first = (first - timedelta(days=1)).replace(day=1)
@@ -99,7 +99,7 @@ async def create_task_get(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    tasks = await crud.get_tasks_by_user_id(db, user.id)
+    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
     candidates = await crud.get_assignee_candidates(db, parent_task_id, user.id)
     parent_task = await crud.get_task_by_id(db, parent_task_id) if parent_task_id else None
     return templates.TemplateResponse(
@@ -121,6 +121,7 @@ async def create_task_get(
 async def create_task_post(
     request: Request,
     parent_task_id: Optional[int] = None,
+    parent_task_id_form: Optional[int] = Form(None, alias="parent_task_id"),
     taskName: str = Form(...),
     taskDescription: str = Form(""),
     taskColor: str = Form("#0ea5e9"),
@@ -129,13 +130,17 @@ async def create_task_post(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if parent_task_id is not None:
-        if not await has_permission(db, user.id, parent_task_id, P_CREATE_SUBTASK):
+    # Поддерживаем оба способа передачи parent_task_id: через URL-path и через hidden-поле
+    # формы (шаблон current_task.html шлёт POST на /create_task с hidden parent_task_id).
+    effective_parent_id = parent_task_id if parent_task_id is not None else parent_task_id_form
+
+    if effective_parent_id is not None:
+        if not await has_permission(db, user.id, effective_parent_id, P_CREATE_SUBTASK):
             raise HTTPException(status_code=403, detail="Нет прав на создание подзадачи")
 
     if not taskName or not taskName.strip():
-        tasks = await crud.get_tasks_by_user_id(db, user.id)
-        candidates = await crud.get_assignee_candidates(db, parent_task_id, user.id)
+        tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
+        candidates = await crud.get_assignee_candidates(db, effective_parent_id, user.id)
         return templates.TemplateResponse(
             request,
             "create_task.html",
@@ -143,7 +148,7 @@ async def create_task_post(
                 "active_page": "create_task",
                 "user": user,
                 "tasks": tasks,
-                "parent_task_id": parent_task_id,
+                "parent_task_id": effective_parent_id,
                 "assignee_candidates": candidates,
                 "error": "Название проекта обязательно для заполнения",
             },
@@ -157,7 +162,7 @@ async def create_task_post(
         duration = 2_147_000_000
 
     if assignee_id is not None:
-        candidates = await crud.get_assignee_candidates(db, parent_task_id, user.id)
+        candidates = await crud.get_assignee_candidates(db, effective_parent_id, user.id)
         if not any(c.id == assignee_id for c in candidates):
             assignee_id = None
 
@@ -168,10 +173,12 @@ async def create_task_post(
         description=taskDescription.strip(),
         color=taskColor,
         duration=duration,
-        parent_task_id=parent_task_id,
+        parent_task_id=effective_parent_id,
         ended_at=ended_at,
         assignee_id=assignee_id,
     )
+    if effective_parent_id is not None:
+        return RedirectResponse(url=f"/task/{effective_parent_id}", status_code=303)
     return RedirectResponse(url="/main", status_code=303)
 
 
@@ -187,7 +194,7 @@ async def task_get(
     for t in in_progress_tasks:
         t.tasks = len(await crud.get_subtasks(db, t.id))
         t.members = len(await crud.get_users_in_task(db, t.id))
-    tasks = await crud.get_tasks_by_user_id(db, user.id)
+    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
     team = await crud.get_users_in_task(db, task_id)
     for member in team:
         member.role_name = await crud.get_user_role_in_task(db, member.id, task_id)
@@ -221,7 +228,7 @@ async def task_overview_get(
     db: AsyncSession = Depends(get_db),
 ):
     root = await crud.get_task_by_id(db, task_id)
-    tasks = await crud.get_tasks_by_user_id(db, user.id)
+    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
 
     async def collect_descendants(node: Task):
         children = await crud.get_subtasks(db, node.id)
@@ -232,19 +239,31 @@ async def task_overview_get(
 
     tree = await collect_descendants(root) if root else []
 
-    flat = []
+    # Палитра для треков первого уровня — используем, если у подзадачи
+    # не задан явный color. В demo все подзадачи наследуют цвет корня,
+    # поэтому без палитры все треки слились бы в один блоб.
+    TRACK_PALETTE = [
+        "#b84a28", "#5a7a4a", "#7c4a6b", "#a67f2a",
+        "#2f6b89", "#9c4c2c", "#4f6d8c", "#7a5a2c",
+    ]
 
-    def flatten(nodes, depth=0):
-        for n in nodes:
-            flat.append((n["task"], depth))
-            flatten(n["children"], depth + 1)
+    # Для каждого ряда: цвет цепочки (= track_id первого уровня),
+    # чтобы зависимые таски красились одинаково, параллельные — по-разному.
+    rows_raw = []  # (task, depth, track_id)
 
-    flatten(tree)
+    def walk_tree(nodes, depth=0, track_id=None):
+        for idx, n in enumerate(nodes):
+            # track_id задаётся на первом уровне и наследуется вниз
+            local_track = track_id if track_id is not None else idx
+            rows_raw.append((n["task"], depth, local_track))
+            walk_tree(n["children"], depth + 1, local_track)
+
+    walk_tree(tree)
 
     now = datetime.now()
     starts = [root.created_at] if root and root.created_at else []
     ends = []
-    for t, _ in flat:
+    for t, _, _ in rows_raw:
         if t.created_at:
             starts.append(t.created_at)
         if t.ended_at:
@@ -260,15 +279,29 @@ async def task_overview_get(
     def pct(dt: datetime) -> float:
         return max(0.0, min(100.0, (dt - start).total_seconds() / total_seconds * 100.0))
 
+    # Цвет треков первого уровня: берём собственный color подзадачи,
+    # только если он явно отличается от цвета корня (т.е. пользователь
+    # его переопределил). Иначе — палитра по индексу трека.
+    track_color_by_id: dict[int, str] = {}
+    first_level = [n for n in tree]
+    for i, n in enumerate(first_level):
+        own = (n["task"].color or "").lower()
+        root_color = (root.color or "").lower() if root else ""
+        if own and own != root_color:
+            track_color_by_id[i] = n["task"].color
+        else:
+            track_color_by_id[i] = TRACK_PALETTE[i % len(TRACK_PALETTE)]
+
     rows = []
-    for t, depth in flat:
+    current_track = None
+    for t, depth, track_id in rows_raw:
         t_start = t.created_at or start
         t_end = t.ended_at or end
         left = pct(t_start)
         width = max(1.5, pct(t_end) - left)
-        if t.ended_at and t.ended_at < now:
+        if t.state == "done":
             cls = "done"
-        elif t.ended_at and t.ended_at < now + timedelta(days=1):
+        elif t.ended_at and t.ended_at < now:
             cls = "overdue"
         else:
             cls = "open"
@@ -278,7 +311,11 @@ async def task_overview_get(
             "left": round(left, 2),
             "width": round(width, 2),
             "cls": cls,
+            "color": track_color_by_id.get(track_id, "#b84a28"),
+            "track_start": track_id != current_track,
+            "track_id": track_id,
         })
+        current_track = track_id
 
     today_pct = round(pct(now), 2) if start <= now <= end else None
 
@@ -286,6 +323,15 @@ async def task_overview_get(
     for i in range(6):
         tick_dt = start + timedelta(seconds=total_seconds * i / 6)
         axis_ticks.append(tick_dt.strftime("%d.%m"))
+
+    # Сводка треков для легенды
+    track_legend = []
+    for i, n in enumerate(first_level):
+        track_legend.append({
+            "name": n["task"].name,
+            "color": track_color_by_id[i],
+            "count": 1 + _count_descendants(n["children"]),
+        })
 
     return templates.TemplateResponse(
         request,
@@ -300,8 +346,16 @@ async def task_overview_get(
             "axis_ticks": axis_ticks,
             "today_pct": today_pct,
             "range_label": f"{start.strftime('%d.%m.%Y')} — {end.strftime('%d.%m.%Y')}",
+            "track_legend": track_legend,
         },
     )
+
+
+def _count_descendants(nodes) -> int:
+    total = 0
+    for n in nodes:
+        total += 1 + _count_descendants(n["children"])
+    return total
 
 
 @router.get("/task_management/{task_id}", name="task_management_page")
@@ -316,7 +370,7 @@ async def task_management_get(
 
     task = await crud.get_task_by_id(db, task_id)
     team = await crud.get_users_in_task(db, task_id)
-    tasks = await crud.get_tasks_by_user_id(db, user.id)
+    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
     for member in team:
         member.role_name = await crud.get_user_role_in_task(db, member.id, task_id)
     candidates = await crud.get_assignee_candidates(db, task_id, user.id)

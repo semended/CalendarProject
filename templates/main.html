@@ -1,9 +1,10 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalendarName</title>
+    <title>Все проекты — CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
@@ -14,68 +15,55 @@
             <header class="header">
                 <div class="header-left">
                     <h1>Все проекты</h1>
-                    <div class="breadcrumb">Проекты / Все проекты</div>
+                    <div class="breadcrumb">
+                        <a href="/main">Проекты</a>
+                    </div>
                 </div>
                 <div class="header-right">
-                    <div class="user-menu-container">
-                        <div class="user-avatar" id="userMenuButton">
-                            {% if user and user.avatar_url %}
-                                <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}" alt="Avatar" class="user-avatar-img">
-                            {% else %}
-                                👤
-                            {% endif %}
-                        </div>
-                        <div class="user-dropdown" id="userDropdown">
-                            <a href="/user/{{ user.id }}" class="dropdown-item">
-                                <span class="dropdown-icon">👤</span>
-                                <span>Мой профиль</span>
-                            </a>
-                            <a href="/user/settings" class="dropdown-item">
-                                <span class="dropdown-icon">⚙️</span>
-                                <span>Настройки</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="/logout" class="dropdown-item">
-                                <span class="dropdown-icon">🚪</span>
-                                <span>Выйти из аккаунта</span>
-                            </a>
-                        </div>
-                    </div>
+                    <a href="/create_task" class="btn-primary">
+                        {{ icons.plus(14) }}
+                        <span>Новый проект</span>
+                    </a>
+                    {% include '_user_menu.html' %}
                 </div>
             </header>
 
             {% if user and not user.confirmed %}
-            <div class="error-container" style="background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
-                <span>✉️ Почта <strong>{{ user.email }}</strong> не подтверждена. Проверь ящик или запроси письмо заново.</span>
-                <form method="POST" action="{{ url_for('resend_verification') }}" style="margin: 0;">
-                    <button type="submit" class="btn-secondary">Отправить ещё раз</button>
+            <div class="notice notice--warn">
+                <span class="notice-icon">{{ icons.mail() }}</span>
+                <div class="notice-body">
+                    Почта <strong>{{ user.email }}</strong> не подтверждена. Проверь ящик или запроси письмо заново.
+                </div>
+                <form method="POST" action="{{ url_for('resend_verification') }}">
+                    <button type="submit" class="btn-secondary btn-small">Отправить ещё раз</button>
                 </form>
             </div>
             {% endif %}
 
+            {% if tasks and tasks|length > 0 %}
             <section class="stats-section">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-value" id="totaltasks">{{ tasks|length }}</div>
-                        <div class="stat-label">Всего проектов</div>
+                        <div class="stat-value tabular" id="totaltasks">{{ tasks|length }}</div>
+                        <div class="stat-label">Всего</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="activetasks">
+                        <div class="stat-value tabular" id="activetasks">
                             {{ tasks|selectattr('status', 'equalto', 'active')|list|length }}
                         </div>
-                        <div class="stat-label">Активные</div>
+                        <div class="stat-label">В работе</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value" id="completedtasks">
+                        <div class="stat-value tabular" id="overduetasks">
+                            {{ tasks|selectattr('status', 'equalto', 'overdue')|list|length }}
+                        </div>
+                        <div class="stat-label">Просрочены</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value tabular" id="completedtasks">
                             {{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}
                         </div>
                         <div class="stat-label">Завершены</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="pausedtasks">
-                            {{ tasks|selectattr('status', 'equalto', 'paused')|list|length }}
-                        </div>
-                        <div class="stat-label">На паузе</div>
                     </div>
                 </div>
             </section>
@@ -85,25 +73,26 @@
                     <h2>Мои проекты</h2>
                     <div class="tasks-actions">
                         <div class="dropdown">
-                            <button class="btn-secondary dropdown-toggle" id="filterDropdown">
-                                Фильтр
+                            <button class="btn-secondary btn-small dropdown-toggle" id="filterDropdown">
+                                Все
                             </button>
                             <div class="dropdown-menu" id="filterMenu">
-                                <div class="dropdown-item" data-filter="all">Все проекты</div>
-                                <div class="dropdown-item" data-filter="active">Активные</div>
-                                <div class="dropdown-item" data-filter="completed">Завершенные</div>
+                                <div class="dropdown-item" data-filter="all">Все</div>
+                                <div class="dropdown-item" data-filter="active">В работе</div>
+                                <div class="dropdown-item" data-filter="overdue">Просрочены</div>
+                                <div class="dropdown-item" data-filter="completed">Завершены</div>
                                 <div class="dropdown-item" data-filter="paused">На паузе</div>
                             </div>
                         </div>
                         <div class="dropdown">
-                            <button class="btn-secondary dropdown-toggle" id="sortDropdown">
-                                Сортировка
+                            <button class="btn-secondary btn-small dropdown-toggle" id="sortDropdown">
+                                По сроку ↑
                             </button>
                             <div class="dropdown-menu" id="sortMenu">
-                                <div class="dropdown-item" data-sort="deadline-asc">Завершается раньше</div>
-                                <div class="dropdown-item" data-sort="deadline-desc">Завершается позже</div>
-                                <div class="dropdown-item" data-sort="name-asc">По названию (А-Я)</div>
-                                <div class="dropdown-item" data-sort="name-desc">По названию (Я-А)</div>
+                                <div class="dropdown-item" data-sort="deadline-asc">По сроку ↑</div>
+                                <div class="dropdown-item" data-sort="deadline-desc">По сроку ↓</div>
+                                <div class="dropdown-item" data-sort="name-asc">А → Я</div>
+                                <div class="dropdown-item" data-sort="name-desc">Я → А</div>
                             </div>
                         </div>
                     </div>
@@ -112,47 +101,49 @@
                 <div class="tasks-grid" id="tasksGrid">
                     {% for task in tasks %}
                     <a href="/task/{{ task.id }}" class="task-link">
-                        <div class="task-card"
+                        <article class="task-card" style="--card-accent: {{ task.color }};"
                              data-task-id="{{ task.id }}"
                              data-status="{{ task.status }}"
                              data-name="{{ task.name|lower }}"
                              data-deadline="{{ task.ended_at or '' }}">
-                            <div class="task-header">
-                                <div class="task-color" style="background-color: {{ task.color }}"></div>
-                                <h3>{{ task.name }}</h3>
+                            <div class="task-card-head">
+                                <span class="status-chip status-{{ task.status }}">
+                                    {% if task.status == 'completed' %}Завершён
+                                    {% elif task.status == 'paused' %}На паузе
+                                    {% elif task.status == 'overdue' %}Просрочен
+                                    {% else %}В работе
+                                    {% endif %}
+                                </span>
+                                {% if task.ended_at %}
+                                <span class="task-deadline tabular">до {{ task.ended_at.strftime('%d.%m.%Y') if task.ended_at.__class__.__name__ != 'str' else task.ended_at[:10] }}</span>
+                                {% else %}
+                                <span class="task-deadline task-deadline--none">без срока</span>
+                                {% endif %}
                             </div>
-                            <div class="task-content">
-                                <p>{{ task.description }}</p>
-                                <div class="task-meta">
-                                    <div class="task-stats">
-                                        <span class="stat">📋 {{ task.tasks }} задач</span>
-                                        <span class="stat">👥 {{ task.members }} участников</span>
-                                    </div>
-                                    <div class="task-date
-                                        {% if task.status == 'completed' %} completed
-                                        {% elif task.status == 'paused' %} paused
-                                        {% endif %}
-                                    ">
-                                        {% if task.status == 'completed' %}
-                                            Завершен
-                                        {% elif task.status == 'paused' %}
-                                            На паузе
-                                        {% else %}
-                                            {% if task.ended_at %}
-                                                {% set dl = task.ended_at | replace('T', ' ') %}
-                                                Срок: {{ dl[:10] }}
-                                            {% else %}
-                                                Без срока
-                                            {% endif %}
-                                        {% endif %}
-                                    </div>
-                                </div>
+                            <h3 class="task-card-title">{{ task.name }}</h3>
+                            <p class="task-card-desc">{{ task.description or '—' }}</p>
+                            <div class="task-card-foot">
+                                <span class="tabular">{{ task.tasks }} {% if task.tasks == 1 %}задача{% elif task.tasks < 5 %}задачи{% else %}задач{% endif %}</span>
+                                <span class="dot-sep">·</span>
+                                <span class="tabular">{{ task.members }} {% if task.members == 1 %}участник{% elif task.members < 5 %}участника{% else %}участников{% endif %}</span>
                             </div>
-                        </div>
+                        </article>
                     </a>
                     {% endfor %}
                 </div>
             </section>
+            {% else %}
+            <section class="empty-state-page">
+                <div class="empty-state-page__inner">
+                    <h2>Пока ни одного проекта</h2>
+                    <p>Создай первый — ты сможешь разложить его на подзадачи, пригласить команду и видеть дедлайны в календаре.</p>
+                    <a href="/create_task" class="btn-primary btn-large">
+                        {{ icons.plus(16) }}
+                        <span>Создать первый проект</span>
+                    </a>
+                </div>
+            </section>
+            {% endif %}
         </main>
     </div>
 
@@ -166,21 +157,19 @@
         });
 
         function initializeUserMenu() {
-            const userMenuButton = document.getElementById('userMenuButton');
-            const userDropdown = document.getElementById('userDropdown');
-
-            userMenuButton.addEventListener('click', function(e) {
+            const btn = document.getElementById('userMenuButton');
+            const dd  = document.getElementById('userDropdown');
+            if (!btn) return;
+            btn.addEventListener('click', e => {
                 e.stopPropagation();
-                userDropdown.classList.toggle('show');
+                const open = dd.classList.toggle('show');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
             });
-
-            document.addEventListener('click', function() {
-                userDropdown.classList.remove('show');
+            document.addEventListener('click', () => {
+                dd.classList.remove('show');
+                btn.setAttribute('aria-expanded', 'false');
             });
-
-            userDropdown.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
+            dd.addEventListener('click', e => e.stopPropagation());
         }
 
         function initializeDropdowns() {
@@ -188,6 +177,7 @@
             const filterMenu = document.getElementById('filterMenu');
             const sortDropdown = document.getElementById('sortDropdown');
             const sortMenu = document.getElementById('sortMenu');
+            if (!filterDropdown) return;
 
             filterDropdown.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -229,26 +219,19 @@
 
         function applyFilterAndSort() {
             const grid = document.getElementById('tasksGrid');
+            if (!grid) return;
             const links = Array.from(grid.querySelectorAll('.task-link'));
 
-            // фильтрация
             links.forEach(link => {
                 const card = link.querySelector('.task-card');
                 const status = card.getAttribute('data-status');
-                if (currentFilter === 'all' || status === currentFilter) {
-                    link.style.display = '';
-                } else {
-                    link.style.display = 'none';
-                }
+                link.style.display = (currentFilter === 'all' || status === currentFilter) ? '' : 'none';
             });
 
-            // сортировка видимых
             const visibleLinks = links.filter(l => l.style.display !== 'none');
-
             visibleLinks.sort((a, b) => {
                 const ca = a.querySelector('.task-card');
                 const cb = b.querySelector('.task-card');
-
                 if (currentSort.startsWith('deadline')) {
                     const da = ca.getAttribute('data-deadline') || '';
                     const db = cb.getAttribute('data-deadline') || '';
@@ -260,14 +243,9 @@
                 } else {
                     const na = ca.getAttribute('data-name');
                     const nb = cb.getAttribute('data-name');
-                    if (currentSort === 'name-asc') {
-                        return na.localeCompare(nb);
-                    } else {
-                        return nb.localeCompare(na);
-                    }
+                    return currentSort === 'name-asc' ? na.localeCompare(nb) : nb.localeCompare(na);
                 }
             });
-
             visibleLinks.forEach(link => grid.appendChild(link));
         }
     </script>

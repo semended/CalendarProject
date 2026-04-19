@@ -1,3 +1,4 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -14,19 +15,26 @@
         <header class="header">
             <div class="header-left">
                 <h1>Календарь</h1>
-                <div class="breadcrumb">Проекты / Календарь</div>
+                <div class="breadcrumb">
+                    <a href="/main">Проекты</a>
+                     / Календарь
+                </div>
             </div>
             <div class="header-right">
-                <a href="/user/{{ user.id }}/schedule" class="btn-secondary">Неделя →</a>
+                <div class="view-switch" role="tablist">
+                    <a href="/calendar" class="active" aria-current="page">Месяц</a>
+                    <a href="/user/{{ user.id }}/schedule">Неделя</a>
+                </div>
+                {% include '_user_menu.html' %}
             </div>
         </header>
 
         <section class="schedule-section">
             <div class="schedule-nav">
-                <a href="?month={{ prev_month }}" class="btn-secondary">← Пред.</a>
-                <div class="schedule-range">{{ month_label }}</div>
-                <a href="?month={{ next_month }}" class="btn-secondary">След. →</a>
-                <a href="?month={{ this_month }}" class="btn-secondary">Сегодня</a>
+                <a href="?month={{ prev_month }}" class="btn-secondary btn-small">← Пред.</a>
+                <div class="schedule-range tabular">{{ month_label }}</div>
+                <a href="?month={{ this_month }}" class="btn-secondary btn-small">Сегодня</a>
+                <a href="?month={{ next_month }}" class="btn-secondary btn-small">След. →</a>
             </div>
 
             <div class="cal-grid">
@@ -44,18 +52,19 @@
                         <div class="cal-events">
                             {% for ev in events[:3] %}
                                 {% if ev.kind == 'deadline' %}
-                                <span class="cal-event cal-event-deadline" style="border-left-color: {{ ev.color or '#e5745a' }};" title="Дедлайн: {{ ev.name }} · {{ ev.start_at.strftime('%H:%M') }}">
-                                    <span class="cal-event-dot" style="background: {{ ev.color or '#e5745a' }};"></span>
-                                    {{ ev.name }}
+                                <span class="cal-event cal-event-deadline" style="border-left-color: {{ ev.color or '#b84a28' }};" title="Дедлайн · {{ ev.name }} · {{ ev.start_at.strftime('%H:%M') }}">
+                                    <span class="cal-event-dot" style="background: {{ ev.color or '#b84a28' }};"></span>
+                                    <span class="cal-event-name">{{ ev.name }}</span>
                                 </span>
                                 {% else %}
                                 <span class="cal-event cal-event-slot" title="{{ ev.start_at.strftime('%H:%M') }}–{{ ev.end_at.strftime('%H:%M') }} · {{ ev.name }}">
-                                    {{ ev.start_at.strftime('%H:%M') }} {{ ev.name }}
+                                    <span class="tabular">{{ ev.start_at.strftime('%H:%M') }}</span>
+                                    <span class="cal-event-name">{{ ev.name }}</span>
                                 </span>
                                 {% endif %}
                             {% endfor %}
                             {% if events|length > 3 %}
-                            <span class="cal-event-more">+{{ events|length - 3 }} ещё</span>
+                            <span class="cal-event-more tabular">+{{ events|length - 3 }}</span>
                             {% endif %}
                         </div>
                     </a>
@@ -65,5 +74,16 @@
         </section>
     </main>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btn = document.getElementById('userMenuButton');
+        const dd  = document.getElementById('userDropdown');
+        if (!btn || !dd) return;
+        btn.addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('show'); });
+        document.addEventListener('click', () => dd.classList.remove('show'));
+        dd.addEventListener('click', e => e.stopPropagation());
+    });
+</script>
 </body>
 </html>

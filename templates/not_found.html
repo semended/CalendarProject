@@ -1,38 +1,32 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Страница не найдена - CalendarName</title>
+    <title>Страница не найдена — CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
     <div class="container start-page">
-        <!-- Основной контент -->
         <main class="main-content">
-            <div class="not-found-container">
-                <!-- Иконка -->
-                <div class="not-found-icon">🔍</div>
-                
-                <!-- Код ошибки -->
-                <div class="not-found-code">404</div>
-                
-                <!-- Заголовок -->
-                <h1 class="not-found-title">Страница не найдена</h1>
-                
-                <!-- Описание -->
-                <p class="not-found-description">
-                    К сожалению, запрашиваемая страница не существует. 
-                    Возможно, она была перемещена или удалена. 
-                    Проверьте правильность адреса или вернитесь на главную страницу.
+            <nav class="start-topbar">
+                <a href="/" class="start-logo">CalendarName</a>
+                <a href="/" class="btn-secondary btn-small">На главную</a>
+            </nav>
+
+            <section class="auth-shell">
+                <p class="auth-code">Error · 404</p>
+                <h1>Страница&nbsp;<em>не&nbsp;найдена</em>.</h1>
+                <p class="hero-description">
+                    Такой страницы здесь нет&nbsp;— возможно, её удалили или ссылка битая. Проверь адрес или вернись назад.
                 </p>
 
-                <!-- Действия -->
-                <div class="not-found-actions">
-                    <a href="javascript:history.back()" class="btn-secondary btn-back">Вернуться назад</a>
-                    <a href="{{ url_for('start_page') }}" class="btn-primary btn-return">Вернуться в начало</a>
+                <div class="form-actions">
+                    <a href="javascript:history.back()" class="btn-secondary full-width">Назад</a>
+                    <a href="/" class="btn-primary full-width">На главную</a>
                 </div>
-            </div>
+            </section>
         </main>
     </div>
 </body>

@@ -1,211 +1,135 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Создать задачу - CalendarName</title>
+    <title>{% if parent_task %}Новая подзадача{% else %}Новый проект{% endif %} — CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <!-- Сайдбар -->
         {% include 'sidebar.html' %}
 
-        <!-- Основной контент -->
         <main class="main-content">
-            <!-- Хедер -->
             <header class="header">
                 <div class="header-left">
-                    <h1>Создать задачу</h1>
-                    <div class="breadcrumb">Задачи / Создать задачу</div>
+                    <h1>
+                        {% if parent_task %}Новая подзадача{% else %}Новый проект{% endif %}
+                    </h1>
+                    <div class="breadcrumb">
+                        <a href="/main">Проекты</a>
+                        {% if parent_task %}
+                         / <a href="/task/{{ parent_task.id }}">{{ parent_task.name }}</a>
+                         / Подзадача
+                        {% else %}
+                         / Создать
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="header-right">
-                    <div class="user-menu-container">
-                        <div class="user-avatar" id="userMenuButton">
-                            {% if user and user.avatar_url %}
-                                <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}" alt="Avatar" class="user-avatar-img">
-                            {% else %}
-                                👤
-                            {% endif %}
-                        </div>
-                        <div class="user-dropdown" id="userDropdown">
-                            <a href="/user/{{ user.id }}" class="dropdown-item">
-                                <span class="dropdown-icon">👤</span>
-                                <span>Мой профиль</span>
-                            </a>
-                            <a href="/user/settings" class="dropdown-item">
-                                <span class="dropdown-icon">⚙️</span>
-                                <span>Настройки</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="/logout" class="dropdown-item">
-                                <span class="dropdown-icon">🚪</span>
-                                <span>Выйти из аккаунта</span>
-                            </a>
-                        </div>
-                    </div>
+                    {% include '_user_menu.html' %}
                 </div>
             </header>
 
-            <!-- Форма создания задачи -->
-            <section class="create-task-section">
-                <div class="create-task-layout">
-                    <!-- Левая колонка - форма -->
-                    <div class="create-task-container">
-                        <div class="form-intro">
-                            <div class="form-icon">📋</div>
-                            <h2>Новая задача</h2>
-                            <!-- NEW: если есть родитель, показать от кого наследуется -->
-                            {% if parent_task %}
-                                <p class="field-hint">Наследуется от: {{ parent_task.name }}</p>
-                            {% elif parent_task_name %}
-                                <p class="field-hint">Наследуется от: {{ parent_task_name }}</p>
-                            {% endif %}
-                        </div>
-
-                        {% if error %}
-                        <div class="error-message">
-                            <span class="error-icon">⚠️</span>
-                            {{ error }}
-                        </div>
-                        {% endif %}
-
-                        <form class="task-form" id="createtaskForm" method="POST">
-                            <!-- NEW: скрытое поле с parent_task_id -->
-                            {% if parent_task_id %}
-                                <input type="hidden" name="parent_task_id" value="{{ parent_task_id }}">
-                            {% elif parent_task %}
-                                <input type="hidden" name="parent_task_id" value="{{ parent_task.id }}">
-                            {% endif %}
-
-                            <!-- Основная информация -->
-                            <div class="form-section">
-                                <h3 class="section-title">Основная информация</h3>
-
-                                <div class="form-group task-name-group">
-                                    <label for="taskName" class="task-name-label">
-                                        <span class="field-icon-large">📝</span>
-                                        Название *
-                                    </label>
-                                    <div class="task-name-input-wrapper">
-                                        <input type="text" id="taskName" name="taskName"
-                                               placeholder="Введите название"
-                                               required maxlength="100">
-                                        <div class="input-decoration"></div>
-                                    </div>
-                                    <div class="field-hint">Максимум 100 символов. <span id="nameCharCount">0/100</span></div>
-                                </div>
-
-                                <div class="form-group task-description-group">
-                                    <label for="taskDescription" class="task-description-label">
-                                        <span class="field-icon-large">📖</span>
-                                        Описание
-                                    </label>
-                                    <div class="task-description-wrapper">
-                                        <textarea id="taskDescription" name="taskDescription"
-                                                  placeholder="Составьте подробное описание"
-                                                  rows="8" maxlength="500"></textarea>
-                                        <div class="textarea-decoration">
-                                            <div class="textarea-glow"></div>
-                                        </div>
-                                    </div>
-                                    <div class="field-hint">Максимум 500 символов. <span id="descCharCount">0/500</span></div>
-                                </div>
-                            </div>
-
-                            <!-- Настройки задачи -->
-                            <div class="form-section">
-                                <h3 class="section-title">Настройки</h3>
-
-                                {% if assignee_candidates and assignee_candidates|length > 0 %}
-                                <div class="form-group">
-                                    <label for="assigneeSelect">Ответственный</label>
-                                    <select id="assigneeSelect" name="assignee_id" class="form-select">
-                                        <option value="">Не назначен</option>
-                                        {% for c in assignee_candidates %}
-                                        <option value="{{ c.id }}" {% if c.id == user.id %}selected{% endif %}>
-                                            {{ c.name }} {{ c.surname }} ({{ c.email }})
-                                        </option>
-                                        {% endfor %}
-                                    </select>
-                                    <div class="field-hint">Кто возьмёт задачу в работу</div>
-                                </div>
-                                {% endif %}
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="taskDeadline">
-                                            <span class="field-icon">📅</span>
-                                            Срок выполнения
-                                        </label>
-                                        <input type="date" id="taskDeadline" name="taskDeadline">
-                                        <div class="field-hint">Оставьте пустым, если срок не определен</div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="taskColor">
-                                            <span class="field-icon">🎨</span>
-                                            Цвет
-                                        </label>
-                                        <div class="color-picker-container">
-                                            <div class="color-presets">
-                                                <button type="button" class="color-preset" data-color="#0ea5e9" title="Синий"></button>
-                                                <button type="button" class="color-preset" data-color="#10b981" title="Зеленый"></button>
-                                                <button type="button" class="color-preset" data-color="#f59e0b" title="Желтый"></button>
-                                                <button type="button" class="color-preset" data-color="#ef4444" title="Красный"></button>
-                                                <button type="button" class="color-preset" data-color="#8b5cf6" title="Фиолетовый"></button>
-                                                <button type="button" class="color-preset" data-color="#06b6d4" title="Бирюзовый"></button>
-                                            </div>
-                                            <input type="color" id="taskColor" name="taskColor" value="#0ea5e9">
-                                        </div>
-                                        <div class="field-hint">Выберите цвет для визуального отличия</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <a href="/main" class="btn-secondary" style="text-decoration: none;">
-                                    <span>Отмена</span>
-                                </a>
-                                <button type="submit" class="btn-primary btn-large">
-                                    <span>Создать задачу</span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Правая колонка - превью -->
-                    <div class="task-preview">
-                        <div class="preview-card">
-                            <h3>Предварительный просмотр</h3>
-                            <div class="task-card-preview" id="taskPreview">
-                                <div class="task-header">
-                                    <div class="task-color" style="background-color: #0ea5e9"></div>
-                                    <h4 id="previewTitle">Название</h4>
-                                </div>
-                                <div class="task-content">
-                                    <p id="previewDescription">Описание появится здесь...</p>
-                                    <div class="task-meta">
-                                        <div class="task-stats">
-                                            <span class="stat">📋 0 задач</span>
-                                            <span class="stat">👥 1 участник</span>
-                                        </div>
-                                        <div class="task-date" id="previewDate">Срок: не указан</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="tips-card">
-                            <h4>💡 Советы</h4>
-                            <ul class="tips-list">
-                                <li>Выберите понятное и описательное название</li>
-                                <li>Добавьте подробное описание целей и задач</li>
-                                <li>Установите срок выполнения</li>
-                            </ul>
-                        </div>
-                    </div>
+            <section class="form-section-page">
+                {% if error %}
+                <div class="notice notice--error">
+                    <span class="notice-icon">{{ icons.alert() }}</span>
+                    <div class="notice-body">{{ error }}</div>
                 </div>
+                {% endif %}
+
+                <form class="task-form" id="createtaskForm" method="POST">
+                    {% if parent_task_id %}
+                        <input type="hidden" name="parent_task_id" value="{{ parent_task_id }}">
+                    {% elif parent_task %}
+                        <input type="hidden" name="parent_task_id" value="{{ parent_task.id }}">
+                    {% endif %}
+
+                    <section class="form-block">
+                        <h2 class="form-block-title">{% if parent_task %}Что за подзадача{% else %}Что за проект{% endif %}</h2>
+
+                        <div class="form-group">
+                            <label for="taskName">{% if parent_task %}Название подзадачи{% else %}Название проекта{% endif %}</label>
+                            <input type="text" id="taskName" name="taskName"
+                                   placeholder="{% if parent_task %}Например: «Сверстать главную»{% else %}Например: «Запуск сайта»{% endif %}"
+                                   required maxlength="100" autocomplete="off">
+                            <div class="field-hint">
+                                {% if parent_task %}Конкретный шаг внутри «{{ parent_task.name }}».{% else %}Короткое имя, которое увидит вся команда.{% endif %}
+                                <span id="nameCharCount" class="tabular">0/100</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="taskDescription">{% if parent_task %}Суть подзадачи{% else %}Описание проекта{% endif %} <span class="field-optional">— необязательно</span></label>
+                            <textarea id="taskDescription" name="taskDescription"
+                                      placeholder="{% if parent_task %}Что надо сделать, критерии «готово», ссылки{% else %}Цель проекта, контекст, ключевые требования{% endif %}"
+                                      rows="6" maxlength="500"></textarea>
+                            <div class="field-hint">
+                                <span id="descCharCount" class="tabular">0/500</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="form-block">
+                        <h2 class="form-block-title">{% if parent_task %}Когда сделать и кто делает{% else %}Сроки и команда{% endif %}</h2>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="taskDeadline">Срок</label>
+                                <input type="date" id="taskDeadline" name="taskDeadline">
+                                <div class="field-hint">Можно оставить пустым</div>
+                            </div>
+
+                            {% if assignee_candidates and assignee_candidates|length > 0 %}
+                            <div class="form-group">
+                                <label for="assigneeSelect">Ответственный</label>
+                                <select id="assigneeSelect" name="assignee_id" class="form-select">
+                                    <option value="">Не назначен</option>
+                                    {% for c in assignee_candidates %}
+                                    <option value="{{ c.id }}" {% if c.id == user.id %}selected{% endif %}>
+                                        {{ c.name }} {{ c.surname }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="field-hint">Кто возьмёт в&nbsp;работу</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </section>
+
+                    {% if not parent_task %}
+                    <section class="form-block">
+                        <h2 class="form-block-title">Маркер проекта</h2>
+                        <div class="form-group">
+                            <label>Цвет</label>
+                            <div class="color-picker-container">
+                                <div class="color-presets" role="radiogroup" aria-label="Цвет">
+                                    <button type="button" class="color-preset" data-color="#0ea5e9" style="--c: #0ea5e9" aria-label="Синий"></button>
+                                    <button type="button" class="color-preset" data-color="#10b981" style="--c: #10b981" aria-label="Зелёный"></button>
+                                    <button type="button" class="color-preset" data-color="#f59e0b" style="--c: #f59e0b" aria-label="Жёлтый"></button>
+                                    <button type="button" class="color-preset" data-color="#ef4444" style="--c: #ef4444" aria-label="Красный"></button>
+                                    <button type="button" class="color-preset" data-color="#8b5cf6" style="--c: #8b5cf6" aria-label="Фиолетовый"></button>
+                                    <button type="button" class="color-preset" data-color="#e5745a" style="--c: #e5745a" aria-label="Терракот"></button>
+                                </div>
+                                <input type="color" id="taskColor" name="taskColor" value="#0ea5e9" class="color-input-native">
+                            </div>
+                            <div class="field-hint">По этому цвету проект будет виден в&nbsp;ленте, календаре и&nbsp;на&nbsp;Ганте. Подзадачи наследуют цвет проекта.</div>
+                        </div>
+                    </section>
+                    {% else %}
+                    {# подзадача наследует цвет корневого проекта — color-picker не показываем #}
+                    <input type="hidden" id="taskColor" name="taskColor" value="{{ parent_task.color or '#0ea5e9' }}">
+                    {% endif %}
+
+                    <div class="form-actions form-actions--end">
+                        <a href="{% if parent_task %}/task/{{ parent_task.id }}{% else %}/main{% endif %}" class="btn-secondary">Отмена</a>
+                        <button type="submit" class="btn-primary btn-large">
+                            {% if parent_task %}Создать подзадачу{% else %}Создать проект{% endif %}
+                        </button>
+                    </div>
+                </form>
             </section>
         </main>
     </div>
@@ -216,111 +140,46 @@
             initializetaskForm();
         });
 
-        // Инициализация пользовательского меню
         function initializeUserMenu() {
-            const userMenuButton = document.getElementById('userMenuButton');
-            const userDropdown = document.getElementById('userDropdown');
-
-            userMenuButton.addEventListener('click', function(e) {
-                e.stopPropagation();
-                userDropdown.classList.toggle('show');
-            });
-
-            document.addEventListener('click', function() {
-                userDropdown.classList.remove('show');
-            });
-
-            userDropdown.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
+            const btn = document.getElementById('userMenuButton');
+            const dd  = document.getElementById('userDropdown');
+            if (!btn) return;
+            btn.addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('show'); });
+            document.addEventListener('click', () => dd.classList.remove('show'));
+            dd.addEventListener('click', e => e.stopPropagation());
         }
 
-        // Инициализация формы задачи
         function initializetaskForm() {
             const taskNameInput = document.getElementById('taskName');
             const taskDescriptionInput = document.getElementById('taskDescription');
-            const taskDeadlineInput = document.getElementById('taskDeadline');
             const taskColorInput = document.getElementById('taskColor');
             const colorPresets = document.querySelectorAll('.color-preset');
 
-            // Счетчики символов
             taskNameInput.addEventListener('input', function() {
                 updateCharCount('nameCharCount', this.value.length, 100);
-                updatePreview();
             });
-
             taskDescriptionInput.addEventListener('input', function() {
                 updateCharCount('descCharCount', this.value.length, 500);
-                updatePreview();
             });
 
-            // Обновление превью при вводе
-            taskDeadlineInput.addEventListener('input', updatePreview);
-            taskColorInput.addEventListener('input', updatePreview);
-
-            // Предустановленные цвета
             colorPresets.forEach(preset => {
                 preset.addEventListener('click', function() {
-                    const color = this.getAttribute('data-color');
-                    taskColorInput.value = color;
-                    updatePreview();
-
+                    taskColorInput.value = this.getAttribute('data-color');
                     colorPresets.forEach(p => p.classList.remove('active'));
                     this.classList.add('active');
                 });
             });
-
-            // Установить начальный активный цвет
-            const initialColor = taskColorInput.value;
             colorPresets.forEach(preset => {
-                if (preset.getAttribute('data-color') === initialColor) {
+                if (preset.getAttribute('data-color') === taskColorInput.value) {
                     preset.classList.add('active');
                 }
             });
-
-            // Инициализировать превью
-            updatePreview();
         }
 
-        // Обновление счетчика символов
         function updateCharCount(elementId, currentLength, maxLength) {
-            const element = document.getElementById(elementId);
-            element.textContent = `${currentLength}/${maxLength}`;
-
-            if (currentLength > maxLength * 0.9) {
-                element.style.color = 'var(--error)';
-            } else if (currentLength > maxLength * 0.8) {
-                element.style.color = 'var(--warning)';
-            } else {
-                element.style.color = 'var(--text-tertiary)';
-            }
-        }
-
-        // Обновление превью задачи
-        function updatePreview() {
-            const taskName = document.getElementById('taskName').value || 'Название';
-            const taskDescription = document.getElementById('taskDescription').value || 'Описание появится здесь...';
-            const taskDeadline = document.getElementById('taskDeadline').value;
-            const taskColor = document.getElementById('taskColor').value;
-
-            document.getElementById('previewTitle').textContent = taskName;
-            document.getElementById('previewDescription').textContent = taskDescription;
-            document.querySelector('#taskPreview .task-color').style.backgroundColor = taskColor;
-
-            const dateElement = document.getElementById('previewDate');
-            if (taskDeadline) {
-                const date = new Date(taskDeadline);
-                const formattedDate = date.toLocaleDateString('ru-RU', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                });
-                dateElement.textContent = `Срок: ${formattedDate}`;
-                dateElement.className = 'task-date';
-            } else {
-                dateElement.textContent = 'Срок: не указан';
-                dateElement.className = 'task-date';
-            }
+            const el = document.getElementById(elementId);
+            el.textContent = `${currentLength}/${maxLength}`;
+            el.classList.toggle('near-limit', currentLength > maxLength * 0.9);
         }
     </script>
 </body>

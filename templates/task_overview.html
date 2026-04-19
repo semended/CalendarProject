@@ -1,3 +1,4 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -13,76 +14,74 @@
         <main class="main-content">
             <header class="header">
                 <div class="header-left">
-                    <h1>Обзор — {{ task.name }}</h1>
-                    <div class="breadcrumb">Задачи / {{ task.name }} / Обзор</div>
+                    <h1>{{ task.name }}</h1>
+                    <div class="breadcrumb">
+                        <a href="/main">Проекты</a>
+                         / <a href="/task/{{ task.id }}">{{ task.name }}</a>
+                         / Обзор
+                    </div>
                 </div>
                 <div class="header-right">
-                    <a href="/task/{{ task.id }}" class="btn-secondary">К доскам</a>
-                    <div class="user-menu-container">
-                        <div class="user-avatar" id="userMenuButton">
-                            {% if user and user.avatar_url %}
-                                <img src="{{ url_for('static', filename='user_avatars/' + user.avatar_url + '.jpg') }}" alt="Avatar" class="user-avatar-img">
-                            {% else %}
-                                👤
-                            {% endif %}
-                        </div>
-                        <div class="user-dropdown" id="userDropdown">
-                            <a href="/user/{{ user.id }}" class="dropdown-item">
-                                <span class="dropdown-icon">👤</span>
-                                <span>Мой профиль</span>
-                            </a>
-                            <a href="/user/settings" class="dropdown-item">
-                                <span class="dropdown-icon">⚙️</span>
-                                <span>Настройки</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="/logout" class="dropdown-item">
-                                <span class="dropdown-icon">🚪</span>
-                                <span>Выйти из аккаунта</span>
-                            </a>
-                        </div>
-                    </div>
+                    <a href="/task/{{ task.id }}" class="btn-secondary btn-small">К доскам</a>
+                    {% include '_user_menu.html' %}
                 </div>
             </header>
 
-            <div class="overview-tabs">
-                <div class="overview-tab active" data-tab="gantt">Таймлайн</div>
-                <div class="overview-tab" data-tab="tree">Дерево</div>
+            <div class="overview-tabs" role="tablist">
+                <button type="button" class="overview-tab active" data-tab="gantt" role="tab">Таймлайн</button>
+                <button type="button" class="overview-tab" data-tab="tree" role="tab">Дерево</button>
             </div>
 
             <section class="overview-panel active" data-panel="gantt">
                 <div class="gantt-wrap">
                     <div class="gantt-legend">
-                        <h3>Диаграмма Ганта</h3>
-                        <div class="gantt-range">{{ range_label }}</div>
+                        <div class="gantt-legend-range tabular">{{ range_label }}</div>
+                        {% if track_legend %}
+                        <ul class="gantt-tracks">
+                            {% for tr in track_legend %}
+                            <li class="gantt-track-chip">
+                                <span class="gantt-track-swatch" style="background: {{ tr.color }};"></span>
+                                <span class="gantt-track-name">{{ tr.name }}</span>
+                                <span class="gantt-track-count tabular">{{ tr.count }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
                     </div>
 
                     {% if rows %}
                     <div class="gantt-grid" style="--cols: {{ axis_ticks|length }};">
-                        <div></div>
+                        <div class="gantt-corner"></div>
                         <div class="gantt-axis">
                             {% for tick in axis_ticks %}
-                            <div class="tick">{{ tick }}</div>
+                            <div class="tick tabular">{{ tick }}</div>
                             {% endfor %}
                         </div>
 
                         {% for r in rows %}
-                        <div class="gantt-label" title="{{ r.task.name }}">
-                            <span class="dot" style="background: {{ r.task.color }}"></span>
+                        <div class="gantt-label {% if r.track_start and not loop.first %}gantt-row--track-start{% endif %}"
+                             title="{{ r.task.name }}">
+                            <span class="dot" style="background: {{ r.color }};"></span>
                             <span class="name" style="padding-left: {{ r.depth * 12 }}px;">{{ r.task.name }}</span>
                         </div>
-                        <div class="gantt-track">
+                        <div class="gantt-track {% if r.track_start and not loop.first %}gantt-row--track-start{% endif %}">
                             <div class="bar {{ r.cls }}"
-                                 style="--left: {{ r.left }}%; --width: {{ r.width }}%; --bar-color: {{ r.task.color }};"
-                                 title="{{ r.task.name }}">
-                                {{ r.task.name }}
-                            </div>
+                                 style="--left: {{ r.left }}%; --width: {{ r.width }}%; --bar-color: {{ r.color }};"
+                                 aria-label="{{ r.task.name }}"
+                                 title="{{ r.task.name }} · {% if r.task.ended_at %}до {{ r.task.ended_at.strftime('%d.%m') }}{% else %}без дедлайна{% endif %}"></div>
                             {% if loop.first and today_pct is not none %}
-                            <div class="gantt-today" style="left: {{ today_pct }}%;"></div>
+                            <div class="gantt-today" style="left: {{ today_pct }}%;" aria-hidden="true"></div>
                             {% endif %}
                         </div>
                         {% endfor %}
                     </div>
+                    <p class="gantt-note">
+                        <span class="legend-dot done" aria-hidden="true"></span> завершено
+                        <span class="dot-sep">·</span>
+                        <span class="legend-dot overdue" aria-hidden="true"></span> просрочено
+                        <span class="dot-sep">·</span>
+                        <span class="legend-dot open" aria-hidden="true"></span> в работе
+                    </p>
                     {% else %}
                     <p class="empty-state">Подзадач нет — добавь задачи, чтобы увидеть таймлайн.</p>
                     {% endif %}
@@ -108,7 +107,7 @@
                                         <span class="dot" style="background: {{ n.task.color }}"></span>
                                         <span>{{ n.task.name }}</span>
                                         {% if n.task.ended_at %}
-                                        <span class="meta">до {{ n.task.ended_at.strftime('%d.%m') }}</span>
+                                        <span class="meta tabular">до {{ n.task.ended_at.strftime('%d.%m') }}</span>
                                         {% endif %}
                                     </a>
                                     {% if n.children %}
@@ -133,9 +132,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             const btn = document.getElementById('userMenuButton');
             const dd  = document.getElementById('userDropdown');
-            btn.addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('show'); });
-            document.addEventListener('click', () => dd.classList.remove('show'));
-            dd.addEventListener('click', e => e.stopPropagation());
+            if (btn && dd) {
+                btn.addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('show'); });
+                document.addEventListener('click', () => dd.classList.remove('show'));
+                dd.addEventListener('click', e => e.stopPropagation());
+            }
 
             const tabs = document.querySelectorAll('.overview-tab');
             const panels = document.querySelectorAll('.overview-panel');

@@ -1,3 +1,4 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,24 +10,22 @@
 <body>
     <div class="container start-page">
         <main class="main-content">
-            <header class="header">
-                <div class="header-left">
-                    <h1><a href="{{ url_for('start_page') }}" style="text-decoration:none; color:inherit;">CalendarName</a></h1>
-                    <div class="breadcrumb">{{ title }}</div>
-                </div>
-            </header>
+            <nav class="start-topbar">
+                <a href="/" class="start-logo">CalendarName</a>
+                <a href="/" class="btn-secondary btn-small">На главную</a>
+            </nav>
 
-            <section class="hero-section">
-                <div class="hero-content">
-                    <h2>{{ title }}</h2>
-                    <p class="hero-description">{{ message }}</p>
-                    <div class="form-actions">
-                        {% if login_link %}
-                        <a href="{{ url_for('start_page') }}" class="btn-primary full-width">Войти</a>
-                        {% else %}
-                        <a href="{{ url_for('start_page') }}" class="btn-secondary full-width">На главную</a>
-                        {% endif %}
-                    </div>
+            <section class="auth-shell">
+                <p class="hero-eyebrow">{{ title }}</p>
+                <h1>{{ title }}</h1>
+                <p class="hero-description">{{ message }}</p>
+
+                <div class="form-actions">
+                    {% if login_link %}
+                    <a href="/" class="btn-primary full-width">Войти</a>
+                    {% else %}
+                    <a href="/" class="btn-secondary full-width">На главную</a>
+                    {% endif %}
                 </div>
             </section>
         </main>

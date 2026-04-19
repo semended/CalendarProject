@@ -44,7 +44,7 @@ async def settings_get(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    tasks = await crud.get_tasks_by_user_id(db, user.id)
+    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
     return templates.TemplateResponse(
         request,
         "settings.html",
@@ -137,7 +137,7 @@ async def schedule_get(
 
     is_self = viewer.id == target.id
     rendered = await availability.render_week(db, target.id, anchor, is_self)
-    tasks = await crud.get_tasks_by_user_id(db, viewer.id)
+    tasks = await crud.get_tasks_by_user_id(db, viewer.id, roots_only=True)
     prev_week = (availability.week_start(anchor) - timedelta(days=7)).isoformat()
     next_week = (availability.week_start(anchor) + timedelta(days=7)).isoformat()
     today_iso = date.today().isoformat()
@@ -204,7 +204,7 @@ async def user_page(
         return templates.TemplateResponse(
             request, "not_found.html", status_code=404
         )
-    tasks = await crud.get_tasks_by_user_id(db, viewer.id) if viewer else []
+    tasks = await crud.get_tasks_by_user_id(db, viewer.id, roots_only=True) if viewer else []
     from app.visibility import PRIVACY_FIELDS, is_visible
     visible = {f: is_visible(target, viewer, f) for f in PRIVACY_FIELDS}
     is_self = viewer is not None and viewer.id == target.id

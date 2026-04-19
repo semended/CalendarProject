@@ -1,86 +1,97 @@
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация - CalendarName</title>
+    <title>Регистрация — CalendarName</title>
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
-    <div class="container register-page">
+    <div class="container start-page">
         <main class="main-content">
-            <!-- Хедер -->
-            <header class="header">
-                <div class="header-left">
-                    <h1><a href="{{ url_for('start_page') }}">CalendarName</a></h1>
-                    <div class="breadcrumb">Регистрация нового аккаунта</div>
-                </div>
-            </header>
+            <nav class="start-topbar">
+                <a href="/" class="start-logo">CalendarName</a>
+                <a href="/" class="btn-secondary btn-small">Уже есть аккаунт — войти</a>
+            </nav>
 
-            <!-- Форма регистрации -->
-            <section class="register-section">
-                <div class="register-container">
-                    <h2>Создание аккаунта</h2>
-                    <p class="register-description">
-                        Заполните все необходимые поля для регистрации в системе
+            <section class="hero-section">
+                <div class="hero-content">
+                    <p class="hero-eyebrow">Регистрация · займёт минуту</p>
+                    <h1 class="hero-h1">Заведи свой&nbsp;CalendarName.<br><em>Планировать можно&nbsp;завтра.</em></h1>
+                    <p class="hero-description">
+                        Подтверждение почты уйдёт сразу после регистрации — это нужно, чтобы восстановить доступ, если забудешь пароль.
                     </p>
-                    
-                    <form class="register-form" method="POST" action="/registration">
-                        <!--контейнер ошибок -->
-                        {% if error %}
-                        <div class="error-container">
-                            <div class="error-message">
-                                <span class="error-icon">⚠️</span>
-                                {{ error }}
-                            </div>
-                        </div>
-                        {% endif %}
 
-                        <div class="form-group">
-                            <label for="reg_email">Email *</label>
-                            <input type="email" id="reg_email" name="email" placeholder="Введите email" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="reg_password">Пароль *</label>
-                            <input type="password" id="reg_password" name="password" placeholder="Придумайте пароль" required>
-                        </div>
+                    {% if error %}
+                    <div class="notice notice--error">
+                        <span class="notice-icon">{{ icons.alert() }}</span>
+                        <div class="notice-body">{{ error }}</div>
+                    </div>
+                    {% endif %}
 
-                        <div class="form-row">
+                    <div class="auth-section">
+                        <form class="auth-form" method="POST" action="/registration" autocomplete="on">
                             <div class="form-group">
-                                <label for="surname">Фамилия *</label>
-                                <input type="text" id="surname" name="surname" placeholder="Введите фамилию" required>
+                                <label for="reg_email">Почта</label>
+                                <input type="email" id="reg_email" name="email" placeholder="you@example.com" required autocomplete="email">
                             </div>
                             <div class="form-group">
-                                <label for="name">Имя *</label>
-                                <input type="text" id="name" name="name" placeholder="Введите имя" required>
+                                <label for="reg_password">Пароль</label>
+                                <input type="password" id="reg_password" name="password" placeholder="минимум 8 символов" required minlength="8" autocomplete="new-password">
                             </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="patronymic">Отчество</label>
-                            <input type="text" id="patronymic" name="patronymic" placeholder="Введите отчество (при наличии)">
-                        </div>
-                        
-                        <button type="submit" class="btn-primary full-width">Зарегистрироваться</button>
-                        
-                        <div class="register-links">
-                            <p>Уже есть аккаунт? <a href="{{ url_for('start_page') }}">Войдите здесь</a></p>
-                        </div>
-                    </form>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="reg_surname">Фамилия</label>
+                                    <input type="text" id="reg_surname" name="surname" placeholder="Иванов" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="reg_name">Имя</label>
+                                    <input type="text" id="reg_name" name="name" placeholder="Иван" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reg_patronymic">Отчество <span class="field-optional">— необязательно</span></label>
+                                <input type="text" id="reg_patronymic" name="patronymic" placeholder="Иванович">
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary full-width">Создать аккаунт</button>
+                                <a href="/" class="btn-secondary full-width">Назад ко входу</a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+
+                <aside class="benefits-section">
+                    <ul class="benefits-list">
+                        <li>
+                            <span class="benefit-num">01</span>
+                            <div>
+                                <h3>Бесплатно</h3>
+                                <p>Учебный проект — никаких тарифов, лимитов и&nbsp;подписок. Пользуйся спокойно.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="benefit-num">02</span>
+                            <div>
+                                <h3>Почта — для&nbsp;сброса пароля</h3>
+                                <p>Единственная точка восстановления доступа. Подтверди письмо, когда придёт.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="benefit-num">03</span>
+                            <div>
+                                <h3>Данные не&nbsp;продаются</h3>
+                                <p>Сервис крутится на&nbsp;студенческом железе — данным просто некуда «утекать».</p>
+                            </div>
+                        </li>
+                    </ul>
+                </aside>
             </section>
         </main>
     </div>
-
-    <script>
-        // Автоматическое закрытие flash сообщений
-        setTimeout(function() {
-            const flashMessages = document.querySelectorAll('.flash-message');
-            flashMessages.forEach(function(message) {
-                message.style.display = 'none';
-            });
-        }, 5000);
-    </script>
 </body>
 </html>

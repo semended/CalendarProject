@@ -1,0 +1,32 @@
+{# Набор inline-SVG иконок. Все в outline-стиле, 1.5px stroke, currentColor.
+   Использование: {% import "_icons.html" as icons %} {{ icons.folder() }} #}
+
+{% macro _svg(path, size=16) %}
+<svg class="icon" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none"
+     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">{{ path | safe }}</svg>
+{% endmacro %}
+
+{% macro folder(size=16) %}{{ _svg('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>', size) }}{% endmacro %}
+
+{% macro calendar(size=16) %}{{ _svg('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>', size) }}{% endmacro %}
+
+{% macro clock(size=16) %}{{ _svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', size) }}{% endmacro %}
+
+{% macro doc(size=16) %}{{ _svg('<path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/>', size) }}{% endmacro %}
+
+{% macro user(size=16) %}{{ _svg('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', size) }}{% endmacro %}
+
+{% macro settings(size=16) %}{{ _svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .4 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.4 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .4-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.4-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.4H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.4 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>', size) }}{% endmacro %}
+
+{% macro logout(size=16) %}{{ _svg('<path d="M15 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 17l-5-5 5-5M5 12h12"/>', size) }}{% endmacro %}
+
+{% macro plus(size=16) %}{{ _svg('<path d="M12 5v14M5 12h14"/>', size) }}{% endmacro %}
+
+{% macro alert(size=16) %}{{ _svg('<path d="M12 9v4M12 17h.01M4.9 19h14.2a2 2 0 0 0 1.73-3L13.73 4a2 2 0 0 0-3.46 0L3.17 16a2 2 0 0 0 1.73 3z"/>', size) }}{% endmacro %}
+
+{% macro users_group(size=16) %}{{ _svg('<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><circle cx="17" cy="8" r="3"/><path d="M22 21a5 5 0 0 0-5-5"/>', size) }}{% endmacro %}
+
+{% macro mail(size=16) %}{{ _svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 7 9-7"/>', size) }}{% endmacro %}
+
+{% macro chevron_down(size=14) %}{{ _svg('<path d="M6 9l6 6 6-6"/>', size) }}{% endmacro %}
