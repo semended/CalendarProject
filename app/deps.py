@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Depends, Request
+from fastapi import Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -33,6 +33,16 @@ def get_current_user(
     user = get_current_user_optional(request, db)
     if user is None:
         raise RedirectToLogin()
+    return user
+
+
+def get_current_user_api(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> User:
+    user = get_current_user_optional(request, db)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Не авторизован")
     return user
 
 

@@ -80,6 +80,35 @@ static/            — CSS и загружаемые аватарки
 - Сессии через `starlette.middleware.sessions` вместо `flask_login`.
 - Все `url_for` в шаблонах продолжают работать благодаря compat-шиму (`app/templating.py`).
 
+## REST API
+
+Рядом с Jinja-страницами живёт JSON API под `/api/v1/*` со схемами Pydantic:
+
+- `POST /api/v1/auth/register` — регистрация (JSON body)
+- `POST /api/v1/auth/login` — логин (ставит ту же session cookie)
+- `POST /api/v1/auth/logout`
+- `GET  /api/v1/auth/me`, `GET /api/v1/users/me`
+- `GET  /api/v1/users/{id}` — публичный профиль с учётом privacy
+- `GET  /api/v1/tasks` — задачи текущего юзера
+- `POST /api/v1/tasks` — создать задачу/подзадачу
+- `GET  /api/v1/tasks/{id}`, `PATCH /api/v1/tasks/{id}`
+- `GET  /api/v1/tasks/{id}/subtasks`
+
+Аутентификация — те же cookie-сессии что и у Jinja-страниц (нет двойной системы логина). Для неавторизованных API отдаёт `401 JSON`, а не редирект.
+
+Интерактивная документация:
+
+- Swagger UI: <http://127.0.0.1:8080/docs>
+- ReDoc: <http://127.0.0.1:8080/redoc>
+
+## Тесты
+
+```bash
+pytest
+```
+
+Сейчас есть только smoke-тесты (`tests/test_api_smoke.py`) — проверяют что API-роуты зарегистрированы и гейтятся авторизацией. Покрытие будет расширяться.
+
 ## TODO
 
 Текущие оставшиеся задачки проекта — см. `TODO.md`.
