@@ -308,33 +308,3 @@ async def get_user_role_in_task(
     return result.scalar_one_or_none()
 
 
-def init_db() -> None:
-    """Инициализация схемы: sync-операция, запускается как отдельный скрипт."""
-    import asyncio
-
-    from sqlalchemy import text
-
-    from app.database import Base, engine
-
-    async def _run():
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-            for col, default in [
-                ("privacy_email",     "'self'"),
-                ("privacy_bio",       "'authed'"),
-                ("privacy_position",  "'authed'"),
-                ("privacy_company",   "'authed'"),
-                ("privacy_workplace", "'authed'"),
-            ]:
-                await conn.execute(text(
-                    f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} VARCHAR(16) NOT NULL DEFAULT {default}"
-                ))
-            await conn.execute(text(
-                "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assignee_id BIGINT REFERENCES users(id)"
-            ))
-            await conn.execute(text(
-                "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS state VARCHAR(20) NOT NULL DEFAULT 'todo'"
-            ))
-        await engine.dispose()
-
-    asyncio.run(_run())

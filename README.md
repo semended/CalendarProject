@@ -39,7 +39,15 @@ cp .env.example .env
 ### 4. Инициализация схемы
 
 ```bash
-python -m app.init_db
+alembic upgrade head
+```
+
+Все изменения схемы ведутся через Alembic (директория `alembic/versions/`). Новую
+миграцию сгенерировать так:
+
+```bash
+alembic revision --autogenerate -m "описание изменения"
+alembic upgrade head
 ```
 
 ### 5. Запуск
@@ -62,7 +70,6 @@ app/
   security.py      — bcrypt-хеширование паролей (с fallback на legacy plaintext)
   deps.py          — зависимости FastAPI (get_current_user и пр.)
   templating.py    — Jinja2Templates с Flask-совместимым url_for
-  init_db.py       — точка входа для создания таблиц
   routers/
     auth.py        — / (start), /registration, /logout
     tasks.py       — /main, /create_task, /task/{id}, /task_management/{id}
