@@ -1,6 +1,8 @@
 from typing import Dict, List, Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models import Task, TaskRole, TaskRolePermission, TaskUserRole
 
@@ -25,38 +27,44 @@ ROLE_DEFAULTS: Dict[str, List[str]] = {
 }
 
 
-def ensure_role_permissions(db: Session, role: TaskRole) -> None:
-    if role.permissions:
+async def ensure_role_permissions(db: AsyncSession, role: TaskRole) -> None:
+    existing = await db.execute(
+        select(TaskRolePermission).where(TaskRolePermission.task_role_id == role.id)
+    )
+    if existing.scalars().first() is not None:
         return
     defaults = ROLE_DEFAULTS.get(role.name, [P_VIEW])
     for p in defaults:
         db.add(TaskRolePermission(task_role_id=role.id, name=p, permission=p))
-    db.commit()
-    db.refresh(role)
+    await db.commit()
 
 
-def _find_role_in_task(db: Session, user_id: int, task_id: int) -> Optional[TaskRole]:
-    tur = (
-        db.query(TaskUserRole)
-        .filter(TaskUserRole.user_id == user_id, TaskUserRole.task_id == task_id)
-        .first()
+async def _find_role_in_task(
+    db: AsyncSession, user_id: int, task_id: int
+) -> Optional[TaskRole]:
+    result = await db.execute(
+        select(TaskUserRole)
+        .options(selectinload(TaskUserRole.task_role).selectinload(TaskRole.permissions))
+        .where(TaskUserRole.user_id == user_id, TaskUserRole.task_id == task_id)
     )
+    tur = result.scalar_one_or_none()
     return tur.task_role if tur else None
 
 
-def has_permission(db: Session, user_id: int, task_id: int, perm: str) -> bool:
+async def has_permission(db: AsyncSession, user_id: int, task_id: int, perm: str) -> bool:
     cur_id: Optional[int] = task_id
     while cur_id is not None:
-        role = _find_role_in_task(db, user_id, cur_id)
+        role = await _find_role_in_task(db, user_id, cur_id)
         if role is not None:
-            ensure_role_permissions(db, role)
+            await ensure_role_permissions(db, role)
+            # role.permissions уже подгружены через selectinload
             return any(p.permission == perm for p in role.permissions)
-        task = db.get(Task, cur_id)
+        task = await db.get(Task, cur_id)
         if task is None:
             break
         cur_id = task.parent_task_id
     return False
 
 
-def user_perms(db: Session, user_id: int, task_id: int) -> Dict[str, bool]:
-    return {p: has_permission(db, user_id, task_id, p) for p in ALL_PERMS}
+async def user_perms(db: AsyncSession, user_id: int, task_id: int) -> Dict[str, bool]:
+    return {p: await has_permission(db, user_id, task_id, p) for p in ALL_PERMS}

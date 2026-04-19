@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
 from app.database import get_db
@@ -12,20 +12,20 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("/me", response_model=UserMe)
-def api_users_me(user: User = Depends(get_current_user_api)):
+async def api_users_me(user: User = Depends(get_current_user_api)):
     return user
 
 
 @router.get("/{user_id}", response_model=UserPublic)
-def api_users_get(
+async def api_users_get(
     user_id: int,
     request: Request,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    target = crud.get_user_by_id(db, user_id)
+    target = await crud.get_user_by_id(db, user_id)
     if target is None:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
-    viewer = get_current_user_optional(request, db)
+    viewer = await get_current_user_optional(request, db)
 
     # Всегда-публичные поля (нет соответствующих privacy_* настроек в модели).
     # Если позже появятся privacy_patronymic / privacy_pronouns / privacy_url / privacy_avatar_url —

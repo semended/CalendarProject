@@ -5,7 +5,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import availability, crud
 from app.config import ALLOWED_EXTENSIONS, UPLOAD_FOLDER
@@ -39,12 +39,12 @@ def _remove_if_exists(path: Optional[str]) -> None:
 # so the string "settings" doesn't get interpreted as a user id.
 
 @router.get("/user/settings", name="settings_page")
-def settings_get(
+async def settings_get(
     request: Request,
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    tasks = crud.get_tasks_by_user_id(db, user.id)
+    tasks = await crud.get_tasks_by_user_id(db, user.id)
     return templates.TemplateResponse(
         "settings.html",
         {"request": request, "user": user, "tasks": tasks},
@@ -55,7 +55,7 @@ def settings_get(
 async def settings_post(
     request: Request,
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     form = await request.form()
     user_id = user.id
@@ -64,7 +64,7 @@ async def settings_post(
     # 1) remove_avatar
     if form.get("remove_avatar") == "true":
         _remove_if_exists(old_avatar_path)
-        crud.update_user_avatar(db, user_id, "")
+        await crud.update_user_avatar(db, user_id, "")
         return RedirectResponse(url="/user/settings", status_code=303)
 
     user_dict: dict = {}
@@ -108,19 +108,19 @@ async def settings_post(
             continue
         user_dict[key] = value
 
-    crud.update_user(db, user_id, user_dict)
+    await crud.update_user(db, user_id, user_dict)
     return RedirectResponse(url="/user/settings", status_code=303)
 
 
 @router.get("/user/{user_id}/schedule", name="user_schedule_page")
-def schedule_get(
+async def schedule_get(
     request: Request,
     user_id: int,
     week: Optional[str] = None,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    target = crud.get_user_by_id(db, user_id)
-    viewer = get_current_user_optional(request, db)
+    target = await crud.get_user_by_id(db, user_id)
+    viewer = await get_current_user_optional(request, db)
     if target is None:
         return templates.TemplateResponse("not_found.html", {"request": request}, status_code=404)
     if viewer is None:
@@ -135,8 +135,8 @@ def schedule_get(
         anchor = date.today()
 
     is_self = viewer.id == target.id
-    rendered = availability.render_week(db, target.id, anchor, is_self)
-    tasks = crud.get_tasks_by_user_id(db, viewer.id)
+    rendered = await availability.render_week(db, target.id, anchor, is_self)
+    tasks = await crud.get_tasks_by_user_id(db, viewer.id)
     prev_week = (availability.week_start(anchor) - timedelta(days=7)).isoformat()
     next_week = (availability.week_start(anchor) + timedelta(days=7)).isoformat()
     today_iso = date.today().isoformat()
@@ -161,7 +161,7 @@ def schedule_get(
 
 
 @router.post("/user/{user_id}/schedule")
-def schedule_post(
+async def schedule_post(
     user_id: int,
     action: str = Form(...),
     slot_id: Optional[int] = Form(None),
@@ -171,20 +171,20 @@ def schedule_post(
     kind: Optional[str] = Form("busy"),
     note: Optional[str] = Form(None),
     viewer: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     if viewer.id != user_id:
         raise HTTPException(status_code=403, detail="Редактировать можно только свой график")
 
     if action == "delete" and slot_id is not None:
-        availability.delete_slot(db, slot_id, viewer.id)
+        await availability.delete_slot(db, slot_id, viewer.id)
     elif action == "add" and slot_date and start_time and end_time:
         try:
             d = date.fromisoformat(slot_date)
             st = datetime.combine(d, time.fromisoformat(start_time))
             et = datetime.combine(d, time.fromisoformat(end_time))
             if et > st:
-                availability.add_slot(db, viewer.id, st, et, kind or "busy", note)
+                await availability.add_slot(db, viewer.id, st, et, kind or "busy", note)
         except ValueError:
             pass
 
@@ -192,18 +192,18 @@ def schedule_post(
 
 
 @router.get("/user/{user_id}", name="user_page")
-def user_page(
+async def user_page(
     request: Request,
     user_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    target = crud.get_user_by_id(db, user_id)
-    viewer = get_current_user_optional(request, db)
+    target = await crud.get_user_by_id(db, user_id)
+    viewer = await get_current_user_optional(request, db)
     if target is None:
         return templates.TemplateResponse(
             "not_found.html", {"request": request}, status_code=404
         )
-    tasks = crud.get_tasks_by_user_id(db, viewer.id) if viewer else []
+    tasks = await crud.get_tasks_by_user_id(db, viewer.id) if viewer else []
     from app.visibility import PRIVACY_FIELDS, is_visible
     visible = {f: is_visible(target, viewer, f) for f in PRIVACY_FIELDS}
     is_self = viewer is not None and viewer.id == target.id

@@ -3,10 +3,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv(
+_raw_db_url = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg2://postgres:123@localhost:5432/testdb",
+    "postgresql+asyncpg://postgres:123@localhost:5432/testdb",
 )
+# Принимаем и sync-URL из старых .env — переключаем драйвер на asyncpg.
+if _raw_db_url.startswith("postgresql+psycopg2://"):
+    DATABASE_URL = _raw_db_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
+elif _raw_db_url.startswith("postgresql://"):
+    DATABASE_URL = _raw_db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+else:
+    DATABASE_URL = _raw_db_url
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-insecure-secret-change-me")
 SQL_ECHO = os.getenv("SQL_ECHO", "false").lower() in {"1", "true", "yes"}
 

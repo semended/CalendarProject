@@ -1,15 +1,16 @@
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Task, TaskRole, TaskRolePermission, TaskUserRole, User
 
 
 # ----- users -----
 
-def add_user(
-    db: Session,
+async def add_user(
+    db: AsyncSession,
     email: str,
     name: str,
     surname: str,
@@ -29,13 +30,13 @@ def add_user(
         workplace=workplace, pronouns=pronouns, url=url, confirmed=confirmed,
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def update_user(db: Session, user_id: int, user_dict: dict) -> Optional[User]:
-    user = db.get(User, user_id)
+async def update_user(db: AsyncSession, user_id: int, user_dict: dict) -> Optional[User]:
+    user = await db.get(User, user_id)
     if not user:
         return None
 
@@ -56,53 +57,55 @@ def update_user(db: Session, user_id: int, user_dict: dict) -> Optional[User]:
         elif key == "url":
             setattr(user, key, "https://example.com")
 
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def update_user_avatar(db: Session, user_id: int, avatar_url: str) -> Optional[User]:
-    user = db.get(User, user_id)
+async def update_user_avatar(db: AsyncSession, user_id: int, avatar_url: str) -> Optional[User]:
+    user = await db.get(User, user_id)
     if not user:
         return None
     user.avatar_url = avatar_url
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def update_user_password(db: Session, user_id: int, hashed_password: str) -> None:
-    user = db.get(User, user_id)
+async def update_user_password(db: AsyncSession, user_id: int, hashed_password: str) -> None:
+    user = await db.get(User, user_id)
     if user is None:
         return
     user.password = hashed_password
-    db.commit()
+    await db.commit()
 
 
-def mark_user_confirmed(db: Session, user_id: int) -> None:
-    user = db.get(User, user_id)
+async def mark_user_confirmed(db: AsyncSession, user_id: int) -> None:
+    user = await db.get(User, user_id)
     if user is None:
         return
     user.confirmed = True
-    db.commit()
+    await db.commit()
 
 
-def get_user_by_id(db: Session, user_id: int) -> Optional[User]:
-    return db.get(User, user_id)
+async def get_user_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
+    return await db.get(User, user_id)
 
 
-def get_user_by_email(db: Session, email: str) -> Optional[User]:
-    return db.query(User).filter(User.email == email).first()
+async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
+    result = await db.execute(select(User).where(User.email == email))
+    return result.scalar_one_or_none()
 
 
-def get_all_users(db: Session) -> List[User]:
-    return db.query(User).all()
+async def get_all_users(db: AsyncSession) -> List[User]:
+    result = await db.execute(select(User))
+    return list(result.scalars().all())
 
 
 # ----- tasks -----
 
-def create_task(
-    db: Session,
+async def create_task(
+    db: AsyncSession,
     creator_id: int,
     name: str,
     description: str,
@@ -118,13 +121,13 @@ def create_task(
         assignee_id=assignee_id,
     )
     db.add(task)
-    db.commit()
-    db.refresh(task)
+    await db.commit()
+    await db.refresh(task)
     return task
 
 
-def create_task_bundle(
-    db: Session,
+async def create_task_bundle(
+    db: AsyncSession,
     creator_id: int,
     name: str,
     description: str,
@@ -136,89 +139,99 @@ def create_task_bundle(
 ) -> Task:
     from app.permissions import ensure_role_permissions
 
-    task = create_task(db, creator_id, name, description, color, duration, parent_task_id, ended_at, assignee_id)
-    teamlead = create_task_role(db, task.id, "Тимлид")
-    manager = create_task_role(db, task.id, "Менеджер")
-    dev = create_task_role(db, task.id, "Разработчик")
+    task = await create_task(
+        db, creator_id, name, description, color, duration, parent_task_id, ended_at, assignee_id
+    )
+    teamlead = await create_task_role(db, task.id, "Тимлид")
+    manager = await create_task_role(db, task.id, "Менеджер")
+    dev = await create_task_role(db, task.id, "Разработчик")
     for role in (teamlead, manager, dev):
-        ensure_role_permissions(db, role)
-    assign_user_to_task_role(db, creator_id, task.id, teamlead.id)
+        await ensure_role_permissions(db, role)
+    await assign_user_to_task_role(db, creator_id, task.id, teamlead.id)
     return task
 
 
-def get_root_task(db: Session, task_id: int) -> Optional[Task]:
-    task = db.get(Task, task_id)
+async def get_root_task(db: AsyncSession, task_id: int) -> Optional[Task]:
+    task = await db.get(Task, task_id)
     while task is not None and task.parent_task_id is not None:
-        task = db.get(Task, task.parent_task_id)
+        task = await db.get(Task, task.parent_task_id)
     return task
 
 
-def get_assignee_candidates(db: Session, task_id: Optional[int], creator_id: int) -> List[User]:
+async def get_assignee_candidates(
+    db: AsyncSession, task_id: Optional[int], creator_id: int
+) -> List[User]:
     """Кандидаты на assignee: участники корневого проекта + сам creator."""
     if task_id is None:
-        u = db.get(User, creator_id)
+        u = await db.get(User, creator_id)
         return [u] if u else []
-    root = get_root_task(db, task_id)
+    root = await get_root_task(db, task_id)
     if root is None:
-        u = db.get(User, creator_id)
+        u = await db.get(User, creator_id)
         return [u] if u else []
-    return get_users_in_task(db, root.id)
+    return await get_users_in_task(db, root.id)
 
 
-def update_task_assignee(db: Session, task_id: int, assignee_id: Optional[int]) -> Optional[Task]:
-    task = db.get(Task, task_id)
+async def update_task_assignee(
+    db: AsyncSession, task_id: int, assignee_id: Optional[int]
+) -> Optional[Task]:
+    task = await db.get(Task, task_id)
     if task is None:
         return None
     task.assignee_id = assignee_id
-    db.commit()
-    db.refresh(task)
+    await db.commit()
+    await db.refresh(task)
     return task
 
 
-def update_task_state(db: Session, task_id: int, state: str) -> Optional[Task]:
-    task = db.get(Task, task_id)
+async def update_task_state(db: AsyncSession, task_id: int, state: str) -> Optional[Task]:
+    task = await db.get(Task, task_id)
     if task is None:
         return None
     task.state = state
-    db.commit()
-    db.refresh(task)
+    await db.commit()
+    await db.refresh(task)
     return task
 
 
-def get_tasks_by_assignee(db: Session, user_id: int) -> List[Task]:
-    return db.query(Task).filter(Task.assignee_id == user_id).all()
+async def get_tasks_by_assignee(db: AsyncSession, user_id: int) -> List[Task]:
+    result = await db.execute(select(Task).where(Task.assignee_id == user_id))
+    return list(result.scalars().all())
 
 
-def get_task_by_id(db: Session, task_id: int) -> Optional[Task]:
-    return db.get(Task, task_id)
+async def get_task_by_id(db: AsyncSession, task_id: int) -> Optional[Task]:
+    return await db.get(Task, task_id)
 
 
-def get_tasks_by_creator(db: Session, creator_id: int) -> List[Task]:
-    return db.query(Task).filter(Task.creator_id == creator_id).all()
+async def get_tasks_by_creator(db: AsyncSession, creator_id: int) -> List[Task]:
+    result = await db.execute(select(Task).where(Task.creator_id == creator_id))
+    return list(result.scalars().all())
 
 
-def get_tasks_by_user_id(db: Session, user_id: int) -> List[Task]:
-    task_ids = {
-        tur.task_id
-        for tur in db.query(TaskUserRole).filter(TaskUserRole.user_id == user_id).all()
-    }
+async def get_tasks_by_user_id(db: AsyncSession, user_id: int) -> List[Task]:
+    tur_result = await db.execute(
+        select(TaskUserRole.task_id).where(TaskUserRole.user_id == user_id)
+    )
+    task_ids = {row for row in tur_result.scalars().all()}
     if not task_ids:
         return []
-    return db.query(Task).filter(Task.id.in_(task_ids)).all()
+    result = await db.execute(select(Task).where(Task.id.in_(task_ids)))
+    return list(result.scalars().all())
 
 
-def get_subtasks(db: Session, parent_task_id: int) -> List[Task]:
-    return db.query(Task).filter(Task.parent_task_id == parent_task_id).all()
+async def get_subtasks(db: AsyncSession, parent_task_id: int) -> List[Task]:
+    result = await db.execute(select(Task).where(Task.parent_task_id == parent_task_id))
+    return list(result.scalars().all())
 
 
-def update_task_info(
-    db: Session,
+async def update_task_info(
+    db: AsyncSession,
     task_id: int,
     name: Optional[str] = None,
     description: Optional[str] = None,
     color: Optional[str] = None,
 ) -> Optional[Task]:
-    task = db.query(Task).filter(Task.id == task_id).first()
+    task = await db.get(Task, task_id)
     if task is None:
         return None
     if name is not None:
@@ -227,87 +240,101 @@ def update_task_info(
         task.description = description
     if color is not None:
         task.color = color
-    db.commit()
-    db.refresh(task)
+    await db.commit()
+    await db.refresh(task)
     return task
 
 
-def update_task_status(db: Session, task_id: int, ended_at: Optional[datetime] = None) -> Optional[Task]:
-    task = db.get(Task, task_id)
+async def update_task_status(
+    db: AsyncSession, task_id: int, ended_at: Optional[datetime] = None
+) -> Optional[Task]:
+    task = await db.get(Task, task_id)
     if task is None:
         return None
     if ended_at is not None:
         task.ended_at = ended_at
-    db.commit()
-    db.refresh(task)
+    await db.commit()
+    await db.refresh(task)
     return task
 
 
 # ----- roles -----
 
-def create_task_role(db: Session, task_id: int, name: str) -> TaskRole:
+async def create_task_role(db: AsyncSession, task_id: int, name: str) -> TaskRole:
     task_role = TaskRole(task_id=task_id, name=name)
     db.add(task_role)
-    db.commit()
-    db.refresh(task_role)
+    await db.commit()
+    await db.refresh(task_role)
     return task_role
 
 
-def add_permission_to_task_role(db: Session, task_role_id: int, name: str, permission: str) -> TaskRolePermission:
+async def add_permission_to_task_role(
+    db: AsyncSession, task_role_id: int, name: str, permission: str
+) -> TaskRolePermission:
     obj = TaskRolePermission(task_role_id=task_role_id, name=name, permission=permission)
     db.add(obj)
-    db.commit()
-    db.refresh(obj)
+    await db.commit()
+    await db.refresh(obj)
     return obj
 
 
-def assign_user_to_task_role(db: Session, user_id: int, task_id: int, task_role_id: int) -> TaskUserRole:
+async def assign_user_to_task_role(
+    db: AsyncSession, user_id: int, task_id: int, task_role_id: int
+) -> TaskUserRole:
     assignment = TaskUserRole(user_id=user_id, task_id=task_id, task_role_id=task_role_id)
     db.add(assignment)
-    db.commit()
-    db.refresh(assignment)
+    await db.commit()
+    await db.refresh(assignment)
     return assignment
 
 
-def get_users_in_task(db: Session, task_id: int) -> List[User]:
-    return (
-        db.query(User)
+async def get_users_in_task(db: AsyncSession, task_id: int) -> List[User]:
+    result = await db.execute(
+        select(User)
         .join(TaskUserRole, User.id == TaskUserRole.user_id)
-        .filter(TaskUserRole.task_id == task_id)
-        .all()
+        .where(TaskUserRole.task_id == task_id)
     )
+    return list(result.scalars().all())
 
 
-def get_user_role_in_task(db: Session, user_id: int, task_id: int) -> Optional[str]:
-    tur = (
-        db.query(TaskUserRole)
-        .filter(TaskUserRole.user_id == user_id, TaskUserRole.task_id == task_id)
-        .first()
+async def get_user_role_in_task(
+    db: AsyncSession, user_id: int, task_id: int
+) -> Optional[str]:
+    result = await db.execute(
+        select(TaskRole.name)
+        .join(TaskUserRole, TaskUserRole.task_role_id == TaskRole.id)
+        .where(TaskUserRole.user_id == user_id, TaskUserRole.task_id == task_id)
     )
-    if tur and tur.task_role:
-        return tur.task_role.name
-    return None
+    return result.scalar_one_or_none()
 
 
 def init_db() -> None:
+    """Инициализация схемы: sync-операция, запускается как отдельный скрипт."""
+    import asyncio
+
     from sqlalchemy import text
 
     from app.database import Base, engine
-    Base.metadata.create_all(engine)
-    with engine.begin() as conn:
-        for col, default in [
-            ("privacy_email",     "'self'"),
-            ("privacy_bio",       "'authed'"),
-            ("privacy_position",  "'authed'"),
-            ("privacy_company",   "'authed'"),
-            ("privacy_workplace", "'authed'"),
-        ]:
-            conn.execute(text(
-                f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} VARCHAR(16) NOT NULL DEFAULT {default}"
+
+    async def _run():
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+            for col, default in [
+                ("privacy_email",     "'self'"),
+                ("privacy_bio",       "'authed'"),
+                ("privacy_position",  "'authed'"),
+                ("privacy_company",   "'authed'"),
+                ("privacy_workplace", "'authed'"),
+            ]:
+                await conn.execute(text(
+                    f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} VARCHAR(16) NOT NULL DEFAULT {default}"
+                ))
+            await conn.execute(text(
+                "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assignee_id BIGINT REFERENCES users(id)"
             ))
-        conn.execute(text(
-            "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assignee_id BIGINT REFERENCES users(id)"
-        ))
-        conn.execute(text(
-            "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS state VARCHAR(20) NOT NULL DEFAULT 'todo'"
-        ))
+            await conn.execute(text(
+                "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS state VARCHAR(20) NOT NULL DEFAULT 'todo'"
+            ))
+        await engine.dispose()
+
+    asyncio.run(_run())

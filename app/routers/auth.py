@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
 from app.config import APP_BASE_URL
@@ -57,21 +57,21 @@ def _send_password_reset_email(user: User) -> None:
 # ---------- login / logout ----------
 
 @router.get("/", name="start_page")
-def start_page_get(request: Request, db: Session = Depends(get_db)):
-    user = get_current_user_optional(request, db)
+async def start_page_get(request: Request, db: AsyncSession = Depends(get_db)):
+    user = await get_current_user_optional(request, db)
     if user is not None:
         return RedirectResponse(url="/main", status_code=303)
     return templates.TemplateResponse("start.html", {"request": request})
 
 
 @router.post("/", name="start_page")
-def start_page_post(
+async def start_page_post(
     request: Request,
     email: str = Form(...),
     password: str = Form(...),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    user = crud.get_user_by_email(db, email)
+    user = await crud.get_user_by_email(db, email)
     if user is None:
         return templates.TemplateResponse(
             "start.html", {"request": request, "error": "Неправильный логин"}
@@ -82,14 +82,14 @@ def start_page_post(
         )
 
     if not is_hashed(user.password):
-        crud.update_user_password(db, user.id, hash_password(password))
+        await crud.update_user_password(db, user.id, hash_password(password))
 
     login_session(request, user)
     return RedirectResponse(url="/main", status_code=303)
 
 
 @router.get("/logout", name="exit_page")
-def logout(request: Request):
+async def logout(request: Request):
     logout_session(request)
     return RedirectResponse(url="/", status_code=303)
 
@@ -97,27 +97,27 @@ def logout(request: Request):
 # ---------- registration + email verification ----------
 
 @router.get("/registration", name="register_page")
-def register_page_get(request: Request):
+async def register_page_get(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 
 @router.post("/registration", name="register_page")
-def register_page_post(
+async def register_page_post(
     request: Request,
     email: str = Form(...),
     name: str = Form(...),
     surname: str = Form(...),
     password: str = Form(...),
     patronymic: str | None = Form(None),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    if crud.get_user_by_email(db, email) is not None:
+    if await crud.get_user_by_email(db, email) is not None:
         return templates.TemplateResponse(
             "register.html",
             {"request": request, "error": "Пользователь с такой почтой уже существует!"},
         )
 
-    user = crud.add_user(
+    user = await crud.add_user(
         db,
         email=email,
         name=name,
@@ -131,7 +131,7 @@ def register_page_post(
 
 
 @router.get("/verify-email/{token}", name="verify_email")
-def verify_email(request: Request, token: str, db: Session = Depends(get_db)):
+async def verify_email(request: Request, token: str, db: AsyncSession = Depends(get_db)):
     try:
         email = read_verify_token(token)
     except TokenError:
@@ -146,7 +146,7 @@ def verify_email(request: Request, token: str, db: Session = Depends(get_db)):
             status_code=400,
         )
 
-    user = crud.get_user_by_email(db, email)
+    user = await crud.get_user_by_email(db, email)
     if user is None:
         return templates.TemplateResponse(
             "auth_message.html",
@@ -159,7 +159,7 @@ def verify_email(request: Request, token: str, db: Session = Depends(get_db)):
         )
 
     if not user.confirmed:
-        crud.mark_user_confirmed(db, user.id)
+        await crud.mark_user_confirmed(db, user.id)
 
     return templates.TemplateResponse(
         "auth_message.html",
@@ -172,7 +172,7 @@ def verify_email(request: Request, token: str, db: Session = Depends(get_db)):
 
 
 @router.post("/resend-verification", name="resend_verification")
-def resend_verification(user: User = Depends(get_current_user)):
+async def resend_verification(user: User = Depends(get_current_user)):
     if not user.confirmed:
         _send_verification_email(user)
     return RedirectResponse(url="/main", status_code=303)
@@ -181,19 +181,19 @@ def resend_verification(user: User = Depends(get_current_user)):
 # ---------- password reset ----------
 
 @router.get("/password-reset", name="password_reset_request")
-def password_reset_request_get(request: Request):
+async def password_reset_request_get(request: Request):
     return templates.TemplateResponse(
         "password_reset_request.html", {"request": request}
     )
 
 
 @router.post("/password-reset", name="password_reset_request")
-def password_reset_request_post(
+async def password_reset_request_post(
     request: Request,
     email: str = Form(...),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    user = crud.get_user_by_email(db, email)
+    user = await crud.get_user_by_email(db, email)
     if user is not None:
         _send_password_reset_email(user)
     # intentionally no leak whether user exists
@@ -208,7 +208,9 @@ def password_reset_request_post(
 
 
 @router.get("/password-reset/{token}", name="password_reset_confirm")
-def password_reset_confirm_get(request: Request, token: str, db: Session = Depends(get_db)):
+async def password_reset_confirm_get(
+    request: Request, token: str, db: AsyncSession = Depends(get_db)
+):
     try:
         email = read_reset_token(token)
     except TokenError:
@@ -223,7 +225,7 @@ def password_reset_confirm_get(request: Request, token: str, db: Session = Depen
             status_code=400,
         )
 
-    user = crud.get_user_by_email(db, email)
+    user = await crud.get_user_by_email(db, email)
     if user is None:
         return templates.TemplateResponse(
             "auth_message.html",
@@ -242,12 +244,12 @@ def password_reset_confirm_get(request: Request, token: str, db: Session = Depen
 
 
 @router.post("/password-reset/{token}", name="password_reset_confirm")
-def password_reset_confirm_post(
+async def password_reset_confirm_post(
     request: Request,
     token: str,
     password: str = Form(...),
     password2: str = Form(...),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     try:
         email = read_reset_token(token)
@@ -273,7 +275,7 @@ def password_reset_confirm_post(
             {"request": request, "token": token, "error": "Пароль должен быть не короче 6 символов"},
         )
 
-    user = crud.get_user_by_email(db, email)
+    user = await crud.get_user_by_email(db, email)
     if user is None:
         return templates.TemplateResponse(
             "auth_message.html",
@@ -285,7 +287,7 @@ def password_reset_confirm_post(
             status_code=404,
         )
 
-    crud.update_user_password(db, user.id, hash_password(password))
+    await crud.update_user_password(db, user.id, hash_password(password))
     logout_session(request)
     return templates.TemplateResponse(
         "auth_message.html",

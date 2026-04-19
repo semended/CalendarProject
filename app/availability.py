@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from typing import List, Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import AvailabilitySlot, Task
 
@@ -34,30 +35,33 @@ def week_days(anchor: date) -> List[date]:
     return [start + timedelta(days=i) for i in range(7)]
 
 
-def get_manual_slots(db: Session, user_id: int, start: datetime, end: datetime) -> List[AvailabilitySlot]:
-    return (
-        db.query(AvailabilitySlot)
-        .filter(
+async def get_manual_slots(
+    db: AsyncSession, user_id: int, start: datetime, end: datetime
+) -> List[AvailabilitySlot]:
+    result = await db.execute(
+        select(AvailabilitySlot)
+        .where(
             AvailabilitySlot.user_id == user_id,
             AvailabilitySlot.start_at < end,
             AvailabilitySlot.end_at > start,
         )
         .order_by(AvailabilitySlot.start_at)
-        .all()
     )
+    return list(result.scalars().all())
 
 
-def get_deadline_slots(db: Session, user_id: int, start: datetime, end: datetime) -> List[RenderedSlot]:
-    rows = (
-        db.query(Task)
-        .filter(
+async def get_deadline_slots(
+    db: AsyncSession, user_id: int, start: datetime, end: datetime
+) -> List[RenderedSlot]:
+    result = await db.execute(
+        select(Task).where(
             Task.assignee_id == user_id,
             Task.ended_at.isnot(None),
             Task.ended_at >= start,
             Task.ended_at < end,
         )
-        .all()
     )
+    rows = list(result.scalars().all())
     out: List[RenderedSlot] = []
     for t in rows:
         dl = t.ended_at
@@ -76,12 +80,14 @@ def get_deadline_slots(db: Session, user_id: int, start: datetime, end: datetime
     return out
 
 
-def render_week(db: Session, user_id: int, anchor: date, viewer_is_self: bool) -> dict:
+async def render_week(
+    db: AsyncSession, user_id: int, anchor: date, viewer_is_self: bool
+) -> dict:
     days = week_days(anchor)
     start_dt = datetime.combine(days[0], time.min)
     end_dt = datetime.combine(days[-1] + timedelta(days=1), time.min)
 
-    manual = get_manual_slots(db, user_id, start_dt, end_dt)
+    manual = await get_manual_slots(db, user_id, start_dt, end_dt)
     rendered: List[RenderedSlot] = [
         RenderedSlot(
             start_at=s.start_at,
@@ -94,7 +100,7 @@ def render_week(db: Session, user_id: int, anchor: date, viewer_is_self: bool) -
         )
         for s in manual
     ]
-    rendered.extend(get_deadline_slots(db, user_id, start_dt, end_dt))
+    rendered.extend(await get_deadline_slots(db, user_id, start_dt, end_dt))
 
     hours = list(range(DAY_START_HOUR, DAY_END_HOUR))
     grid: List[List[List[RenderedSlot]]] = [
@@ -158,7 +164,7 @@ def month_grid(anchor: date) -> List[List[date]]:
     return weeks
 
 
-def render_month(db: Session, user_id: int, anchor: date) -> dict:
+async def render_month(db: AsyncSession, user_id: int, anchor: date) -> dict:
     first, nxt = month_bounds(anchor)
     grid = month_grid(anchor)
     grid_start = grid[0][0]
@@ -169,16 +175,15 @@ def render_month(db: Session, user_id: int, anchor: date) -> dict:
 
     by_day: dict[date, list[CalendarEvent]] = {}
 
-    tasks = (
-        db.query(Task)
-        .filter(
+    result = await db.execute(
+        select(Task).where(
             Task.assignee_id == user_id,
             Task.ended_at.isnot(None),
             Task.ended_at >= start_dt,
             Task.ended_at < end_dt,
         )
-        .all()
     )
+    tasks = list(result.scalars().all())
     for t in tasks:
         d = t.ended_at.date()
         by_day.setdefault(d, []).append(CalendarEvent(
@@ -190,7 +195,7 @@ def render_month(db: Session, user_id: int, anchor: date) -> dict:
             end_at=None,
         ))
 
-    slots = get_manual_slots(db, user_id, start_dt, end_dt)
+    slots = await get_manual_slots(db, user_id, start_dt, end_dt)
     for s in slots:
         d = s.start_at.date()
         by_day.setdefault(d, []).append(CalendarEvent(
@@ -212,7 +217,14 @@ def render_month(db: Session, user_id: int, anchor: date) -> dict:
     }
 
 
-def add_slot(db: Session, user_id: int, start_at: datetime, end_at: datetime, kind: str, note: Optional[str]) -> AvailabilitySlot:
+async def add_slot(
+    db: AsyncSession,
+    user_id: int,
+    start_at: datetime,
+    end_at: datetime,
+    kind: str,
+    note: Optional[str],
+) -> AvailabilitySlot:
     if kind not in KINDS:
         kind = "busy"
     slot = AvailabilitySlot(
@@ -223,15 +235,15 @@ def add_slot(db: Session, user_id: int, start_at: datetime, end_at: datetime, ki
         note=note or None,
     )
     db.add(slot)
-    db.commit()
-    db.refresh(slot)
+    await db.commit()
+    await db.refresh(slot)
     return slot
 
 
-def delete_slot(db: Session, slot_id: int, user_id: int) -> bool:
-    slot = db.get(AvailabilitySlot, slot_id)
+async def delete_slot(db: AsyncSession, slot_id: int, user_id: int) -> bool:
+    slot = await db.get(AvailabilitySlot, slot_id)
     if slot is None or slot.user_id != user_id:
         return False
-    db.delete(slot)
-    db.commit()
+    await db.delete(slot)
+    await db.commit()
     return True

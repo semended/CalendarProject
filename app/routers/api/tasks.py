@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
 from app.database import get_db
@@ -26,21 +26,21 @@ def _naive(dt: datetime) -> datetime:
 
 
 @router.get("", response_model=List[TaskResponse])
-def api_list_my_tasks(
+async def api_list_my_tasks(
     user: User = Depends(get_current_user_api),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    return crud.get_tasks_by_user_id(db, user.id)
+    return await crud.get_tasks_by_user_id(db, user.id)
 
 
 @router.post("", response_model=TaskResponse, status_code=201)
-def api_create_task(
+async def api_create_task(
     payload: TaskCreate,
     user: User = Depends(get_current_user_api),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     if payload.parent_task_id is not None:
-        if not has_permission(db, user.id, payload.parent_task_id, P_CREATE_SUBTASK):
+        if not await has_permission(db, user.id, payload.parent_task_id, P_CREATE_SUBTASK):
             raise HTTPException(status_code=403, detail="Нет прав на создание подзадачи")
 
     ended_at = _naive(payload.ended_at) if payload.ended_at is not None else None
@@ -51,14 +51,14 @@ def api_create_task(
 
     assignee_id = payload.assignee_id
     if assignee_id is not None:
-        candidates = crud.get_assignee_candidates(db, payload.parent_task_id, user.id)
+        candidates = await crud.get_assignee_candidates(db, payload.parent_task_id, user.id)
         if not any(c.id == assignee_id for c in candidates):
             raise HTTPException(
                 status_code=422,
                 detail="Этот пользователь не может быть назначен на задачу",
             )
 
-    return crud.create_task_bundle(
+    return await crud.create_task_bundle(
         db,
         creator_id=user.id,
         name=payload.name.strip(),
@@ -72,56 +72,56 @@ def api_create_task(
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
-def api_get_task(
+async def api_get_task(
     task_id: int,
     user: User = Depends(get_current_user_api),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    task = crud.get_task_by_id(db, task_id)
+    task = await crud.get_task_by_id(db, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Задача не найдена")
-    if not has_permission(db, user.id, task_id, P_VIEW):
+    if not await has_permission(db, user.id, task_id, P_VIEW):
         raise HTTPException(status_code=403, detail="Нет доступа к этой задаче")
     return task
 
 
 @router.get("/{task_id}/subtasks", response_model=List[TaskResponse])
-def api_list_subtasks(
+async def api_list_subtasks(
     task_id: int,
     user: User = Depends(get_current_user_api),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    if not has_permission(db, user.id, task_id, P_VIEW):
+    if not await has_permission(db, user.id, task_id, P_VIEW):
         raise HTTPException(status_code=403, detail="Нет доступа к этой задаче")
-    return crud.get_subtasks(db, task_id)
+    return await crud.get_subtasks(db, task_id)
 
 
 @router.patch("/{task_id}", response_model=TaskResponse)
-def api_update_task(
+async def api_update_task(
     task_id: int,
     payload: TaskUpdate,
     user: User = Depends(get_current_user_api),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    task = crud.get_task_by_id(db, task_id)
+    task = await crud.get_task_by_id(db, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Задача не найдена")
-    if not has_permission(db, user.id, task_id, P_EDIT_SETTINGS):
+    if not await has_permission(db, user.id, task_id, P_EDIT_SETTINGS):
         raise HTTPException(status_code=403, detail="Нет прав на редактирование задачи")
 
     if payload.name is not None or payload.description is not None or payload.color is not None:
-        crud.update_task_info(db, task_id, payload.name, payload.description, payload.color)
+        await crud.update_task_info(db, task_id, payload.name, payload.description, payload.color)
 
     if payload.assignee_id is not None:
-        candidates = crud.get_assignee_candidates(db, task_id, user.id)
+        candidates = await crud.get_assignee_candidates(db, task_id, user.id)
         if not any(c.id == payload.assignee_id for c in candidates):
             raise HTTPException(
                 status_code=422,
                 detail="Этот пользователь не может быть назначен на задачу",
             )
-        crud.update_task_assignee(db, task_id, payload.assignee_id)
+        await crud.update_task_assignee(db, task_id, payload.assignee_id)
 
     if payload.state is not None:
-        crud.update_task_state(db, task_id, payload.state)
+        await crud.update_task_state(db, task_id, payload.state)
 
-    return crud.get_task_by_id(db, task_id)
+    return await crud.get_task_by_id(db, task_id)

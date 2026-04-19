@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import availability, crud
 from app.database import get_db
@@ -22,21 +22,21 @@ from app.templating import templates
 router = APIRouter()
 
 
-def _decorate_tasks_with_counts(db: Session, tasks):
+async def _decorate_tasks_with_counts(db: AsyncSession, tasks):
     for t in tasks:
-        t.tasks = len(crud.get_subtasks(db, t.id))
-        t.members = len(crud.get_users_in_task(db, t.id))
+        t.tasks = len(await crud.get_subtasks(db, t.id))
+        t.members = len(await crud.get_users_in_task(db, t.id))
     return tasks
 
 
 @router.get("/main", name="main_page")
-def main_page(
+async def main_page(
     request: Request,
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    tasks = crud.get_tasks_by_user_id(db, user.id)
-    _decorate_tasks_with_counts(db, tasks)
+    tasks = await crud.get_tasks_by_user_id(db, user.id)
+    await _decorate_tasks_with_counts(db, tasks)
     return templates.TemplateResponse(
         "main.html",
         {"request": request, "active_page": "all_tasks", "user": user, "tasks": tasks},
@@ -44,11 +44,11 @@ def main_page(
 
 
 @router.get("/calendar", name="calendar_page")
-def calendar_page(
+async def calendar_page(
     request: Request,
     month: Optional[str] = None,
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     anchor = date.today()
     if month:
@@ -56,8 +56,8 @@ def calendar_page(
             anchor = date.fromisoformat(month + "-01")
         except ValueError:
             pass
-    rendered = availability.render_month(db, user.id, anchor)
-    tasks = crud.get_tasks_by_user_id(db, user.id)
+    rendered = await availability.render_month(db, user.id, anchor)
+    tasks = await crud.get_tasks_by_user_id(db, user.id)
 
     first = rendered["month_first"]
     prev_first = (first - timedelta(days=1)).replace(day=1)
@@ -92,15 +92,15 @@ def calendar_page(
 
 @router.get("/create_task", name="create_task_page")
 @router.get("/create_task/{parent_task_id}", name="create_task_page")
-def create_task_get(
+async def create_task_get(
     request: Request,
     parent_task_id: Optional[int] = None,
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    tasks = crud.get_tasks_by_user_id(db, user.id)
-    candidates = crud.get_assignee_candidates(db, parent_task_id, user.id)
-    parent_task = crud.get_task_by_id(db, parent_task_id) if parent_task_id else None
+    tasks = await crud.get_tasks_by_user_id(db, user.id)
+    candidates = await crud.get_assignee_candidates(db, parent_task_id, user.id)
+    parent_task = await crud.get_task_by_id(db, parent_task_id) if parent_task_id else None
     return templates.TemplateResponse(
         "create_task.html",
         {
@@ -117,7 +117,7 @@ def create_task_get(
 
 @router.post("/create_task")
 @router.post("/create_task/{parent_task_id}")
-def create_task_post(
+async def create_task_post(
     request: Request,
     parent_task_id: Optional[int] = None,
     taskName: str = Form(...),
@@ -126,15 +126,15 @@ def create_task_post(
     taskDeadline: Optional[str] = Form(None),
     assignee_id: Optional[int] = Form(None),
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     if parent_task_id is not None:
-        if not has_permission(db, user.id, parent_task_id, P_CREATE_SUBTASK):
+        if not await has_permission(db, user.id, parent_task_id, P_CREATE_SUBTASK):
             raise HTTPException(status_code=403, detail="Нет прав на создание подзадачи")
 
     if not taskName or not taskName.strip():
-        tasks = crud.get_tasks_by_user_id(db, user.id)
-        candidates = crud.get_assignee_candidates(db, parent_task_id, user.id)
+        tasks = await crud.get_tasks_by_user_id(db, user.id)
+        candidates = await crud.get_assignee_candidates(db, parent_task_id, user.id)
         return templates.TemplateResponse(
             "create_task.html",
             {
@@ -156,11 +156,11 @@ def create_task_post(
         duration = 2_147_000_000
 
     if assignee_id is not None:
-        candidates = crud.get_assignee_candidates(db, parent_task_id, user.id)
+        candidates = await crud.get_assignee_candidates(db, parent_task_id, user.id)
         if not any(c.id == assignee_id for c in candidates):
             assignee_id = None
 
-    crud.create_task_bundle(
+    await crud.create_task_bundle(
         db,
         creator_id=user.id,
         name=taskName.strip(),
@@ -175,21 +175,21 @@ def create_task_post(
 
 
 @router.get("/task/{task_id}", name="task_page")
-def task_get(
+async def task_get(
     request: Request,
     task_id: int,
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    task = crud.get_task_by_id(db, task_id)
-    in_progress_tasks = crud.get_subtasks(db, task_id)
+    task = await crud.get_task_by_id(db, task_id)
+    in_progress_tasks = await crud.get_subtasks(db, task_id)
     for t in in_progress_tasks:
-        t.tasks = len(crud.get_subtasks(db, t.id))
-        t.members = len(crud.get_users_in_task(db, t.id))
-    tasks = crud.get_tasks_by_user_id(db, user.id)
-    team = crud.get_users_in_task(db, task_id)
+        t.tasks = len(await crud.get_subtasks(db, t.id))
+        t.members = len(await crud.get_users_in_task(db, t.id))
+    tasks = await crud.get_tasks_by_user_id(db, user.id)
+    team = await crud.get_users_in_task(db, task_id)
     for member in team:
-        member.role_name = crud.get_user_role_in_task(db, member.id, task_id)
+        member.role_name = await crud.get_user_role_in_task(db, member.id, task_id)
 
     return templates.TemplateResponse(
         "current_task.html",
@@ -201,35 +201,35 @@ def task_get(
             "tasks": tasks,
             "in_progress_tasks": in_progress_tasks,
             "team": team,
-            "perms": user_perms(db, user.id, task_id),
+            "perms": await user_perms(db, user.id, task_id),
         },
     )
 
 
 @router.post("/task/{task_id}")
-def task_post(task_id: int, user: User = Depends(get_current_user)):
+async def task_post(task_id: int, user: User = Depends(get_current_user)):
     # Original Flask behaviour: POST on /task/<id> redirects to create subtask.
     return RedirectResponse(url=f"/create_task/{task_id}", status_code=303)
 
 
 @router.get("/task/{task_id}/overview", name="task_overview_page")
-def task_overview_get(
+async def task_overview_get(
     request: Request,
     task_id: int,
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    root = crud.get_task_by_id(db, task_id)
-    tasks = crud.get_tasks_by_user_id(db, user.id)
+    root = await crud.get_task_by_id(db, task_id)
+    tasks = await crud.get_tasks_by_user_id(db, user.id)
 
-    def collect_descendants(node: Task):
-        children = crud.get_subtasks(db, node.id)
+    async def collect_descendants(node: Task):
+        children = await crud.get_subtasks(db, node.id)
         out = []
         for c in children:
-            out.append({"task": c, "children": collect_descendants(c)})
+            out.append({"task": c, "children": await collect_descendants(c)})
         return out
 
-    tree = collect_descendants(root) if root else []
+    tree = await collect_descendants(root) if root else []
 
     flat = []
 
@@ -304,21 +304,21 @@ def task_overview_get(
 
 
 @router.get("/task_management/{task_id}", name="task_management_page")
-def task_management_get(
+async def task_management_get(
     request: Request,
     task_id: int,
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    if not has_permission(db, user.id, task_id, P_VIEW):
+    if not await has_permission(db, user.id, task_id, P_VIEW):
         raise HTTPException(status_code=403, detail="Нет доступа к этой задаче")
 
-    task = crud.get_task_by_id(db, task_id)
-    team = crud.get_users_in_task(db, task_id)
-    tasks = crud.get_tasks_by_user_id(db, user.id)
+    task = await crud.get_task_by_id(db, task_id)
+    team = await crud.get_users_in_task(db, task_id)
+    tasks = await crud.get_tasks_by_user_id(db, user.id)
     for member in team:
-        member.role_name = crud.get_user_role_in_task(db, member.id, task_id)
-    candidates = crud.get_assignee_candidates(db, task_id, user.id)
+        member.role_name = await crud.get_user_role_in_task(db, member.id, task_id)
+    candidates = await crud.get_assignee_candidates(db, task_id, user.id)
 
     return templates.TemplateResponse(
         "task_management.html",
@@ -330,13 +330,13 @@ def task_management_get(
             "task": task,
             "team": team,
             "assignee_candidates": candidates,
-            "perms": user_perms(db, user.id, task_id),
+            "perms": await user_perms(db, user.id, task_id),
         },
     )
 
 
 @router.post("/task_management/{task_id}")
-def task_management_post(
+async def task_management_post(
     request: Request,
     task_id: int,
     email: Optional[str] = Form(None),
@@ -347,32 +347,32 @@ def task_management_post(
     assignee_id: Optional[str] = Form(None),
     task_state: Optional[str] = Form(None),
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     if email is not None:
-        if not has_permission(db, user.id, task_id, P_MANAGE_MEMBERS):
+        if not await has_permission(db, user.id, task_id, P_MANAGE_MEMBERS):
             raise HTTPException(status_code=403, detail="Нет прав на управление участниками")
-        target = crud.get_user_by_email(db, email)
+        target = await crud.get_user_by_email(db, email)
         if target is None:
             return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
         # TODO: валидация что role_id принадлежит этой таске
-        crud.assign_user_to_task_role(db, target.id, task_id, int(role_id))
+        await crud.assign_user_to_task_role(db, target.id, task_id, int(role_id))
         return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
 
-    if not has_permission(db, user.id, task_id, P_EDIT_SETTINGS):
+    if not await has_permission(db, user.id, task_id, P_EDIT_SETTINGS):
         raise HTTPException(status_code=403, detail="Нет прав на редактирование задачи")
 
-    crud.update_task_info(db, task_id, task_name, task_description, task_color)
+    await crud.update_task_info(db, task_id, task_name, task_description, task_color)
 
     if assignee_id is not None:
         new_assignee = int(assignee_id) if assignee_id.strip() else None
         if new_assignee is not None:
-            candidates = crud.get_assignee_candidates(db, task_id, user.id)
+            candidates = await crud.get_assignee_candidates(db, task_id, user.id)
             if not any(c.id == new_assignee for c in candidates):
                 new_assignee = None
-        crud.update_task_assignee(db, task_id, new_assignee)
+        await crud.update_task_assignee(db, task_id, new_assignee)
 
     if task_state and task_state in ("todo", "in_progress", "review", "done", "paused"):
-        crud.update_task_state(db, task_id, task_state)
+        await crud.update_task_state(db, task_id, task_state)
 
     return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
