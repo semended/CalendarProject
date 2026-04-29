@@ -75,6 +75,7 @@ Thumbs.db
 Desktop.ini
 
 # Local environment
+.env
 *.env
 .env.*
 !.env.example
@@ -90,6 +91,14 @@ instance/
 *~
 *.swp
 *.swo
+
+# Claude / AI tooling
+.claude/
+claude.local.md
+CLAUDE.local.md
+
+# Personal artifacts (PDFs, screenshots, course materials)
+presentation.pdf
 
 temp_local.py
 .gitignore
