@@ -4,6 +4,20 @@ HSSE 25-26, учебный проект — веб-приложение для �
 
 Бэкенд на **FastAPI** + **SQLAlchemy** + **PostgreSQL**, фронт пока рендерится на Jinja-шаблонах.
 
+## Что умеет сервис
+
+| Возможность | Технологии |
+|---|---|
+| **Регистрация и вход** — создание аккаунта, логин/логаут, cookie-сессии | FastAPI, Starlette Sessions Middleware, bcrypt (passlib) |
+| **Управление задачами** — создание, редактирование, просмотр, статусы (в работе / выполнена / просрочена), иерархия подзадач | FastAPI, SQLAlchemy 2.0 async, asyncpg, PostgreSQL |
+| **Роли и права на задачах** — назначение участников, гибкая модель прав (TaskUserRole / TaskRolePermission) | SQLAlchemy ORM, PostgreSQL |
+| **Профиль пользователя** — настройки, загрузка аватарки, настройки приватности | FastAPI (Form + UploadFile), SQLAlchemy, файловая система |
+| **HTML-интерфейс** — серверный рендеринг страниц | Jinja2, CSS (собственные стили, без фреймворков) |
+| **REST JSON API** — все операции доступны через `/api/v1/*`, совместим с той же сессией | FastAPI, Pydantic v2 |
+| **Интерактивная документация** — автогенерируемые Swagger UI и ReDoc | FastAPI (OpenAPI), Swagger UI, ReDoc |
+| **Миграции схемы БД** — версионирование и накат изменений | Alembic, asyncpg |
+| **Интеграционные тесты** — тесты против реальной БД, без моков | pytest, pytest-asyncio, asyncpg, PostgreSQL (`testdb_test`) |
+
 ## Быстрый старт
 
 ### 1. Postgres

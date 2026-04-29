@@ -92,4 +92,21 @@ instance/
 *.swo
 
 temp_local.py
-.gitignore
+
+# AI agent artifacts — local state (personal, never share)
+.claude/
+.cursor/
+.windsurf/
+.aider
+.aider.conf.yml
+.aider.tags.cache.v3/
+.continue/
+.sourcegraph/
+.devin/
+.openhands/
+
+# AI agent instruction files (tool-specific, keep local)
+CLAUDE.md
+.cursorrules
+.cursor.rules
+.windsurfrules
