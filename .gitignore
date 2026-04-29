@@ -96,6 +96,7 @@ instance/
 .claude/
 claude.local.md
 CLAUDE.local.md
+sessions/
 
 # Personal artifacts (PDFs, screenshots, course materials)
 presentation.pdf
