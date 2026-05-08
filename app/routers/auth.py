@@ -8,7 +8,8 @@ from app.database import get_db
 from app.deps import get_current_user, get_current_user_optional, login_session, logout_session
 from app.email import send_email, send_verification_email
 from app.models import User
-from app.security import hash_password, is_hashed, verify_password
+from app.security import hash_password
+from app.services import auth_service
 from app.templating import templates
 from app.tokens import (
     TokenError,
@@ -19,8 +20,6 @@ from app.tokens import (
 
 router = APIRouter()
 
-
-# ---------- helpers ----------
 
 def _send_password_reset_email(user: User) -> None:
     token = make_reset_token(user.email)
@@ -55,20 +54,20 @@ async def start_page_post(
     password: str = Form(...),
     db: AsyncSession = Depends(get_db),
 ):
-    user = await crud.get_user_by_email(db, email)
-    if user is None:
+    try:
+        user = await auth_service.authenticate(db, email, password)
+    except auth_service.InvalidCredentials:
+        # Сохраняем прежнее UX-поведение: разное сообщение для "юзер не найден"
+        # vs "пароль не подошёл" — для учебной демки это удобнее, чем
+        # security-by-obscurity на странице логина.
+        existing = await crud.get_user_by_email(db, email)
+        message = "Неправильный логин" if existing is None else "Неправильный пароль"
         return templates.TemplateResponse(
-            request, "start.html", {"error": "Неправильный логин"}
+            request, "start.html", {"error": message}
         )
-    if not verify_password(password, user.password):
-        return templates.TemplateResponse(
-            request, "start.html", {"error": "Неправильный пароль"}
-        )
-
-    if not is_hashed(user.password):
-        await crud.update_user_password(db, user.id, hash_password(password))
 
     login_session(request, user)
+    await auth_service.record_login(db, user)
     return RedirectResponse(url="/main", status_code=303)
 
 
@@ -95,23 +94,23 @@ async def register_page_post(
     patronymic: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
 ):
-    if await crud.get_user_by_email(db, email) is not None:
+    try:
+        user = await auth_service.register(
+            db,
+            email=email,
+            name=name,
+            surname=surname,
+            password=password,
+            patronymic=patronymic,
+        )
+    except auth_service.UserAlreadyExists:
         return templates.TemplateResponse(
             request,
             "register.html",
             {"error": "Пользователь с такой почтой уже существует!"},
         )
-
-    user = await crud.add_user(
-        db,
-        email=email,
-        name=name,
-        surname=surname,
-        password=hash_password(password),
-        patronymic=patronymic,
-    )
-    send_verification_email(user.email, user.name)
     login_session(request, user)
+    await auth_service.record_login(db, user)
     return RedirectResponse(url="/main", status_code=303)
 
 

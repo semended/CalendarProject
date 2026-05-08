@@ -10,13 +10,11 @@ from app.database import get_db
 from app.deps import get_current_user
 from app.models import Task, User
 from app.permissions import (
-    P_CREATE_SUBTASK,
-    P_EDIT_SETTINGS,
-    P_MANAGE_MEMBERS,
     P_VIEW,
     has_permission,
     user_perms,
 )
+from app.services import task_service
 from app.templating import templates
 
 router = APIRouter()
@@ -134,10 +132,6 @@ async def create_task_post(
     # формы (шаблон current_task.html шлёт POST на /create_task с hidden parent_task_id).
     effective_parent_id = parent_task_id if parent_task_id is not None else parent_task_id_form
 
-    if effective_parent_id is not None:
-        if not await has_permission(db, user.id, effective_parent_id, P_CREATE_SUBTASK):
-            raise HTTPException(status_code=403, detail="Нет прав на создание подзадачи")
-
     if not taskName or not taskName.strip():
         tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
         candidates = await crud.get_assignee_candidates(db, effective_parent_id, user.id)
@@ -154,29 +148,23 @@ async def create_task_post(
             },
         )
 
-    if taskDeadline:
-        ended_at = datetime.fromisoformat(taskDeadline)
-        duration = int((ended_at - datetime.now()).total_seconds())
-    else:
-        ended_at = None
-        duration = 2_147_000_000
+    deadline = datetime.fromisoformat(taskDeadline) if taskDeadline else None
 
-    if assignee_id is not None:
-        candidates = await crud.get_assignee_candidates(db, effective_parent_id, user.id)
-        if not any(c.id == assignee_id for c in candidates):
-            assignee_id = None
+    try:
+        await task_service.create_task(
+            db,
+            user,
+            name=taskName,
+            description=taskDescription,
+            color=taskColor,
+            deadline=deadline,
+            parent_task_id=effective_parent_id,
+            assignee_id=assignee_id,
+            strict_assignee=False,
+        )
+    except task_service.PermissionDenied as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
 
-    await crud.create_task_bundle(
-        db,
-        creator_id=user.id,
-        name=taskName.strip(),
-        description=taskDescription.strip(),
-        color=taskColor,
-        duration=duration,
-        parent_task_id=effective_parent_id,
-        ended_at=ended_at,
-        assignee_id=assignee_id,
-    )
     if effective_parent_id is not None:
         return RedirectResponse(url=f"/task/{effective_parent_id}", status_code=303)
     return RedirectResponse(url="/main", status_code=303)
@@ -405,29 +393,39 @@ async def task_management_post(
     db: AsyncSession = Depends(get_db),
 ):
     if email is not None:
-        if not await has_permission(db, user.id, task_id, P_MANAGE_MEMBERS):
-            raise HTTPException(status_code=403, detail="Нет прав на управление участниками")
-        target = await crud.get_user_by_email(db, email)
-        if target is None:
-            return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
-        # TODO: валидация что role_id принадлежит этой таске
-        await crud.assign_user_to_task_role(db, target.id, task_id, int(role_id))
+        try:
+            await task_service.add_member(
+                db, user, task_id, email=email, role_id=int(role_id) if role_id else 0
+            )
+        except task_service.PermissionDenied as exc:
+            raise HTTPException(status_code=403, detail=str(exc))
         return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
 
-    if not await has_permission(db, user.id, task_id, P_EDIT_SETTINGS):
-        raise HTTPException(status_code=403, detail="Нет прав на редактирование задачи")
+    new_assignee: Optional[int] = None
+    apply_assignee = assignee_id is not None
+    if apply_assignee and assignee_id and assignee_id.strip():
+        new_assignee = int(assignee_id)
 
-    await crud.update_task_info(db, task_id, task_name, task_description, task_color)
+    state_to_set = task_state if (
+        task_state and task_state in ("todo", "in_progress", "review", "done", "paused")
+    ) else None
 
-    if assignee_id is not None:
-        new_assignee = int(assignee_id) if assignee_id.strip() else None
-        if new_assignee is not None:
-            candidates = await crud.get_assignee_candidates(db, task_id, user.id)
-            if not any(c.id == new_assignee for c in candidates):
-                new_assignee = None
-        await crud.update_task_assignee(db, task_id, new_assignee)
-
-    if task_state and task_state in ("todo", "in_progress", "review", "done", "paused"):
-        await crud.update_task_state(db, task_id, task_state)
+    try:
+        await task_service.update_task(
+            db,
+            user,
+            task_id,
+            name=task_name,
+            description=task_description,
+            color=task_color,
+            state=state_to_set,
+            assignee_id=new_assignee,
+            apply_assignee=apply_assignee,
+            strict_assignee=False,
+        )
+    except task_service.TaskNotFound:
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+    except task_service.PermissionDenied as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
 
     return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)

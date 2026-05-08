@@ -12,6 +12,7 @@ from app.config import ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from app.database import get_db
 from app.deps import get_current_user, get_current_user_optional
 from app.models import User
+from app.services import user_service
 from app.templating import templates
 
 router = APIRouter()
@@ -109,7 +110,7 @@ async def settings_post(
             continue
         user_dict[key] = value
 
-    await crud.update_user(db, user_id, user_dict)
+    await user_service.update_profile(db, user_id, user_dict)
     return RedirectResponse(url="/user/settings", status_code=303)
 
 

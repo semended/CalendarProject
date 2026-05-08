@@ -2,10 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import crud
 from app.database import get_db
 from app.deps import get_current_user_api, login_session, logout_session
-from app.email import send_verification_email
 from app.jwt_auth import encode_access_token
 from app.models import User
 from app.schemas import (
@@ -15,7 +13,7 @@ from app.schemas import (
     TokenResponse,
     UserMe,
 )
-from app.security import hash_password, is_hashed, verify_password
+from app.services import auth_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -26,12 +24,12 @@ async def api_login(
     payload: LoginRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    user = await crud.get_user_by_email(db, payload.email)
-    if user is None or not verify_password(payload.password, user.password):
+    try:
+        user = await auth_service.authenticate(db, payload.email, payload.password)
+    except auth_service.InvalidCredentials:
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
-    if not is_hashed(user.password):
-        await crud.update_user_password(db, user.id, hash_password(payload.password))
     login_session(request, user)
+    await auth_service.record_login(db, user)
     return user
 
 
@@ -50,18 +48,19 @@ async def api_register(
     payload: RegisterRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    if await crud.get_user_by_email(db, payload.email) is not None:
+    try:
+        user = await auth_service.register(
+            db,
+            email=payload.email,
+            name=payload.name,
+            surname=payload.surname,
+            password=payload.password,
+            patronymic=payload.patronymic,
+        )
+    except auth_service.UserAlreadyExists:
         raise HTTPException(status_code=409, detail="Пользователь с такой почтой уже существует")
-    user = await crud.add_user(
-        db,
-        email=payload.email,
-        name=payload.name,
-        surname=payload.surname,
-        password=hash_password(payload.password),
-        patronymic=payload.patronymic,
-    )
-    send_verification_email(user.email, user.name)
     login_session(request, user)
+    await auth_service.record_login(db, user)
     return user
 
 
@@ -79,9 +78,9 @@ async def api_issue_token(
 
     Отдельно от /login: /login ставит cookie-сессию (для Jinja / браузера),
     а /token выдаёт stateless Bearer-токен (для мобилок / внешних клиентов)."""
-    user = await crud.get_user_by_email(db, form_data.username)
-    if user is None or not verify_password(form_data.password, user.password):
+    try:
+        user = await auth_service.authenticate(db, form_data.username, form_data.password)
+    except auth_service.InvalidCredentials:
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
-    if not is_hashed(user.password):
-        await crud.update_user_password(db, user.id, hash_password(form_data.password))
+    await auth_service.record_login(db, user)
     return TokenResponse(access_token=encode_access_token(user.id))
