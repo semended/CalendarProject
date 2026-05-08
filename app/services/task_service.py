@@ -16,6 +16,15 @@ from app.permissions import (
     P_MANAGE_MEMBERS,
     has_permission,
 )
+from app.services.events_service import (
+    EVT_TASK_ASSIGNED,
+    EVT_TASK_CREATED,
+    EVT_TASK_INFO_UPDATED,
+    EVT_TASK_STATE_CHANGED,
+    NOTIF_TASK_ASSIGNED,
+    notify_user,
+    record_task_event,
+)
 
 
 # Sentinel для "duration без дедлайна" — legacy-поле требует не-NULL значения,
@@ -109,7 +118,7 @@ async def create_task(
     if assignee_id is not None and validated_assignee is None and strict_assignee:
         raise InvalidAssignee("Этот пользователь не может быть назначен на задачу")
 
-    return await crud.create_task_bundle(
+    task = await crud.create_task_bundle(
         db,
         creator_id=creator.id,
         name=name.strip(),
@@ -120,6 +129,28 @@ async def create_task(
         ended_at=deadline_naive,
         assignee_id=validated_assignee,
     )
+
+    await record_task_event(
+        db,
+        task_id=task.id,
+        actor_user_id=creator.id,
+        event_type=EVT_TASK_CREATED,
+        payload={
+            "name": task.name,
+            "parent_task_id": parent_task_id,
+            "assignee_id": validated_assignee,
+        },
+    )
+    if validated_assignee is not None and validated_assignee != creator.id:
+        await notify_user(
+            db,
+            user_id=validated_assignee,
+            notification_type=NOTIF_TASK_ASSIGNED,
+            task_id=task.id,
+            payload={"task_name": task.name, "by": creator.id},
+        )
+
+    return task
 
 
 async def update_task(
@@ -146,8 +177,19 @@ async def update_task(
     if not await has_permission(db, user.id, task_id, P_EDIT_SETTINGS):
         raise PermissionDenied("Нет прав на редактирование задачи")
 
-    if name is not None or description is not None or color is not None:
+    info_changed = name is not None or description is not None or color is not None
+    if info_changed:
         await crud.update_task_info(db, task_id, name, description, color)
+        await record_task_event(
+            db,
+            task_id=task_id,
+            actor_user_id=user.id,
+            event_type=EVT_TASK_INFO_UPDATED,
+            payload={
+                k: v for k, v in {"name": name, "description": description, "color": color}.items()
+                if v is not None
+            },
+        )
 
     if apply_assignee:
         validated_assignee = await _validate_assignee(
@@ -158,10 +200,34 @@ async def update_task(
         )
         if assignee_id is not None and validated_assignee is None and strict_assignee:
             raise InvalidAssignee("Этот пользователь не может быть назначен на задачу")
+        prev_assignee = task.assignee_id
         await crud.update_task_assignee(db, task_id, validated_assignee)
+        if prev_assignee != validated_assignee:
+            await record_task_event(
+                db,
+                task_id=task_id,
+                actor_user_id=user.id,
+                event_type=EVT_TASK_ASSIGNED,
+                payload={"prev": prev_assignee, "new": validated_assignee},
+            )
+            if validated_assignee is not None and validated_assignee != user.id:
+                await notify_user(
+                    db,
+                    user_id=validated_assignee,
+                    notification_type=NOTIF_TASK_ASSIGNED,
+                    task_id=task_id,
+                    payload={"task_name": task.name, "by": user.id},
+                )
 
-    if state is not None:
+    if state is not None and state != task.state:
         await crud.update_task_state(db, task_id, state)
+        await record_task_event(
+            db,
+            task_id=task_id,
+            actor_user_id=user.id,
+            event_type=EVT_TASK_STATE_CHANGED,
+            payload={"prev": task.state, "new": state},
+        )
 
     refreshed = await crud.get_task_by_id(db, task_id)
     if refreshed is None:

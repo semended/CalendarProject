@@ -75,6 +75,8 @@ async def record_login(db: AsyncSession, user: User) -> None:
     """
     if not hasattr(user, "last_login_at"):
         return
-    user.last_login_at = datetime.utcnow()
+    # DB column хранит naive datetime, как и created_at — используем local
+    # naive вместо UTC, чтобы не плодить разнобоя по таймзонам.
+    user.last_login_at = datetime.now()
     db.add(user)
     await db.commit()

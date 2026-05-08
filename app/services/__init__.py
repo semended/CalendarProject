@@ -26,6 +26,15 @@ from app.services.user_service import (
     update_password,
     update_profile,
 )
+from app.services.events_service import (
+    EVT_TASK_ASSIGNED,
+    EVT_TASK_CREATED,
+    EVT_TASK_INFO_UPDATED,
+    EVT_TASK_STATE_CHANGED,
+    NOTIF_TASK_ASSIGNED,
+    notify_user,
+    record_task_event,
+)
 
 __all__ = [
     "AuthError",
@@ -44,4 +53,11 @@ __all__ = [
     "update_avatar",
     "update_password",
     "update_profile",
+    "EVT_TASK_CREATED",
+    "EVT_TASK_STATE_CHANGED",
+    "EVT_TASK_ASSIGNED",
+    "EVT_TASK_INFO_UPDATED",
+    "NOTIF_TASK_ASSIGNED",
+    "record_task_event",
+    "notify_user",
 ]

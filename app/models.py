@@ -2,6 +2,7 @@ from sqlalchemy import (
     BigInteger, Boolean, Column, DateTime, ForeignKey, Index, String, Text,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -31,6 +32,7 @@ class User(Base):
     privacy_company   = Column(String(16), nullable=False, server_default="authed")
     privacy_workplace = Column(String(16), nullable=False, server_default="authed")
     created_at = Column(DateTime, nullable=False, server_default=func.now())
+    last_login_at = Column(DateTime, nullable=True)
 
     created_tasks = relationship("Task", back_populates="creator", foreign_keys="Task.creator_id")
     task_roles = relationship("TaskUserRole", back_populates="user")
@@ -148,3 +150,80 @@ class TaskUserRole(Base):
 
     def __repr__(self):
         return f"<TaskUserRole(id={self.id}, user_id={self.user_id}, task_id={self.task_id}, task_role_id={self.task_role_id})>"
+
+
+class TaskEvent(Base):
+    """История бизнес-событий по задаче (создание, смена статуса, assign, ...).
+
+    Пишется из task_service. Не связана с UI напрямую — данные нужны для
+    аудита, аналитики и будущих лент активности.
+    """
+    __tablename__ = "task_events"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    task_id = Column(BigInteger, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    actor_user_id = Column(BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    event_type = Column(String(64), nullable=False)
+    payload = Column(JSONB, nullable=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+    task = relationship("Task")
+    actor = relationship("User")
+
+    __table_args__ = (
+        Index("task_events_task_id_idx", "task_id"),
+        Index("task_events_created_at_idx", "created_at"),
+    )
+
+    def __repr__(self):
+        return f"<TaskEvent(id={self.id}, task_id={self.task_id}, type='{self.event_type}')>"
+
+
+class TaskComment(Base):
+    """Комментарии к задачам. UI пока нет; модель и API готовы для расширения."""
+    __tablename__ = "task_comments"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    task_id = Column(BigInteger, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    author_user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    body = Column(Text, nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=True)
+
+    task = relationship("Task")
+    author = relationship("User")
+
+    __table_args__ = (
+        Index("task_comments_task_id_idx", "task_id"),
+    )
+
+    def __repr__(self):
+        return f"<TaskComment(id={self.id}, task_id={self.task_id}, author_user_id={self.author_user_id})>"
+
+
+class Notification(Base):
+    """Уведомления пользователю — назначение задачи, упоминание, смена статуса.
+
+    read_at = NULL → непрочитано. Связь с задачей опциональная (SET NULL),
+    чтобы удаление задачи не тащило за собой уведомления.
+    """
+    __tablename__ = "notifications"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    task_id = Column(BigInteger, ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
+    notification_type = Column(String(64), nullable=False)
+    payload = Column(JSONB, nullable=True)
+    read_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+    user = relationship("User", foreign_keys=[user_id])
+    task = relationship("Task", foreign_keys=[task_id])
+
+    __table_args__ = (
+        Index("notifications_user_unread_idx", "user_id", "read_at"),
+        Index("notifications_created_at_idx", "created_at"),
+    )
+
+    def __repr__(self):
+        return f"<Notification(id={self.id}, user_id={self.user_id}, type='{self.notification_type}')>"

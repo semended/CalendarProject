@@ -47,7 +47,8 @@ _app_db.SessionLocal = async_sessionmaker(
 _TRUNCATE_SQL = """
 TRUNCATE
   users, tasks, availability_slots,
-  task_roles, task_role_permissions, task_user_roles
+  task_roles, task_role_permissions, task_user_roles,
+  task_events, task_comments, notifications
 RESTART IDENTITY CASCADE
 """
 
