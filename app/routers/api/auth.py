@@ -84,3 +84,16 @@ async def api_issue_token(
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
     await auth_service.record_login(db, user)
     return TokenResponse(access_token=encode_access_token(user.id))
+
+
+@router.post("/refresh", response_model=TokenResponse)
+async def api_refresh_token(user: User = Depends(get_current_user_api)):
+    """Выдаёт свежий JWT по предъявлении валидного существующего.
+
+    `get_current_user_api` принимает и Bearer, и cookie — этого достаточно для
+    типичного клиентского флоу (стартовали с /token, периодически рефрешим
+    до истечения 7-дневного TTL). Без отдельной refresh-токен таблицы:
+    учебная схема не требует, а хранить отдельный токен дольше access'а
+    без revoke-инфраструктуры — самообман.
+    """
+    return TokenResponse(access_token=encode_access_token(user.id))

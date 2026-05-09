@@ -88,6 +88,43 @@ def test_missing_auth_still_returns_401(client):
     assert r.status_code == 401
 
 
+def test_refresh_endpoint_returns_new_token(client):
+    """POST /api/v1/auth/refresh с валидным Bearer выдаёт новый токен."""
+    _register(client, email="rf@example.com", password="pw123456")
+    client.cookies.clear()
+
+    r = _issue_token(client, "rf@example.com", "pw123456")
+    old_token = r.json()["access_token"]
+
+    r = client.post(
+        "/api/v1/auth/refresh",
+        headers={"Authorization": f"Bearer {old_token}"},
+    )
+    assert r.status_code == 200, r.text
+    new_token = r.json()["access_token"]
+    assert isinstance(new_token, str) and len(new_token) > 20
+
+    # Новый токен валиден
+    r = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {new_token}"},
+    )
+    assert r.status_code == 200
+
+
+def test_refresh_endpoint_rejects_unauthorized(client):
+    r = client.post("/api/v1/auth/refresh")
+    assert r.status_code == 401
+
+
+def test_refresh_endpoint_rejects_bad_bearer(client):
+    r = client.post(
+        "/api/v1/auth/refresh",
+        headers={"Authorization": "Bearer not-a-jwt"},
+    )
+    assert r.status_code == 401
+
+
 def test_jwt_does_not_authorize_html_page(client):
     """GET /main под Bearer без cookie не должен залогинить —
     HTML-зависимости (get_current_user) смотрят только на сессию."""
