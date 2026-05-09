@@ -94,3 +94,13 @@ def client():
     from app.main import app
 
     return TestClient(app)
+
+
+def pytest_addoption(parser):
+    """Флаг для test_openapi_snapshot.py — по умолчанию выключен."""
+    parser.addoption(
+        "--snapshot-update",
+        action="store_true",
+        default=False,
+        help="Перезаписать snapshot-файлы (OpenAPI и т.п.) текущим состоянием",
+    )

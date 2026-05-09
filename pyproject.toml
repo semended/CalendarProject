@@ -1,0 +1,15 @@
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint]
+# Дефолтный набор Ruff (E/F/W) подходит для учебного проекта;
+# I (isort) пока не включён — слишком много шумных правок одной волной.
+extend-ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+# DATABASE_URL должен быть установлен до импорта app.main, поэтому
+# часть импортов лежит ниже env-setup'а намеренно.
+"tests/conftest.py" = ["E402"]
+# В test_csrf.py importlib.reload использует модули, импортированные
+# выше; ruff не видит этой связи.
+"tests/test_csrf.py" = ["F401"]

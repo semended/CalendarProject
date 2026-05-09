@@ -41,5 +41,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run pytest
-        run: pytest -v
+      - name: Ruff lint
+        run: ruff check app/ tests/
+
+      - name: Run pytest with coverage
+        run: pytest --cov=app --cov-report=term --cov-report=xml --cov-fail-under=65 -q
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml

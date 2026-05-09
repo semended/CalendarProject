@@ -7,7 +7,6 @@
 
 import re
 
-import pytest
 
 
 def _register_form(client, email="flow@example.com", password="pw123456",

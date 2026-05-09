@@ -2,7 +2,6 @@
 производят одинаковый результат в БД. Смысл — поймать дрифт между путями
 после рефакторинга в сервисный слой.
 """
-import re
 
 
 def _register_jinja(client, email, password="pw123456", name="J", surname="User"):
