@@ -138,6 +138,7 @@ async def wipe_demo(db, user_id: int) -> None:
 
 async def add_task_with_role(
     db, *, creator_id, name, description, color, duration, parent_task_id, ended_at, state,
+    created_at=None,
 ) -> Task:
     task = Task(
         creator_id=creator_id,
@@ -149,6 +150,8 @@ async def add_task_with_role(
         ended_at=ended_at,
         state=state,
     )
+    if created_at is not None:
+        task.created_at = created_at
     db.add(task)
     await db.commit()
     await db.refresh(task)
@@ -166,6 +169,184 @@ async def add_task_with_role(
         db.add(TaskUserRole(user_id=creator_id, task_id=task.id, task_role_id=teamlead.id))
         await db.commit()
     return task
+
+
+async def seed_gantt_showcase(db, user_id: int) -> Task:
+    """Показательный проект для диаграммы Ганта.
+
+    В отличие от остальных проектов в seed (рандомизированных, ~80 задач),
+    этот собран под конкретное визуальное сообщение: последовательность фаз,
+    параллельные треки, вложенность подзадач, разные статусы, и линия "сегодня"
+    проходит через текущую активную фазу. created_at явно задан, чтобы
+    задачи на оси времени располагались как реальный план, а не одной
+    точкой "сейчас".
+    """
+    today = datetime.now().replace(hour=9, minute=0, second=0, microsecond=0)
+
+    def d(days: int, hour: int = 18) -> datetime:
+        return today.replace(hour=hour) + timedelta(days=days)
+
+    # Корневой проект: 14 дней назад → +76 (всего 90 дней).
+    root = await add_task_with_role(
+        db,
+        creator_id=user_id,
+        name="✦ Запуск нового продукта (демо Гант)",
+        description=(
+            "Учебный пример для диаграммы Ганта: показывает 4 параллельных трека "
+            "(Аналитика → UX → Бэкенд → Маркетинг), вложенные подзадачи, и линию «сегодня». "
+            "Каждый трек закрашен своим цветом, статусы task.state — done/in_progress/todo/overdue."
+        ),
+        color="#0ea5e9",
+        duration=int((d(76) - today).total_seconds()),
+        parent_task_id=None,
+        ended_at=d(76),
+        created_at=d(-14, hour=9),
+        state="in_progress",
+    )
+
+    # Трек 1 — Аналитика (закончен).
+    await add_task_with_role(
+        db, creator_id=user_id,
+        name="Аналитика и customer research",
+        description="Интервью с пользователями + анализ конкурентов. Завершено.",
+        color="#10b981",
+        duration=int((d(0) - d(-14, hour=9)).total_seconds()),
+        parent_task_id=root.id,
+        ended_at=d(0),
+        created_at=d(-14, hour=9),
+        state="done",
+    )
+
+    # Трек 2 — UX/UI (в работе, две вложенные подзадачи).
+    ux = await add_task_with_role(
+        db, creator_id=user_id,
+        name="UX/UI дизайн",
+        description="Прототипы → финальный UI-кит. Сейчас на этапе UI-кита.",
+        color="#a855f7",
+        duration=int((d(21) - d(-7, hour=10)).total_seconds()),
+        parent_task_id=root.id,
+        ended_at=d(21),
+        created_at=d(-7, hour=10),
+        state="in_progress",
+    )
+    await add_task_with_role(
+        db, creator_id=user_id,
+        name="Прототипы основных экранов",
+        description="Lo-fi → mid-fi прототипы.",
+        color="#a855f7",
+        duration=int((d(0) - d(-7, hour=10)).total_seconds()),
+        parent_task_id=ux.id,
+        ended_at=d(0),
+        created_at=d(-7, hour=10),
+        state="done",
+    )
+    await add_task_with_role(
+        db, creator_id=user_id,
+        name="Финальный UI-кит и компоненты",
+        description="Дизайн-система, готовая под фронт.",
+        color="#a855f7",
+        duration=int((d(21) - d(0, hour=10)).total_seconds()),
+        parent_task_id=ux.id,
+        ended_at=d(21),
+        created_at=d(0, hour=10),
+        state="in_progress",
+    )
+
+    # Трек 3 — Бэкенд (последовательная цепочка из 3 этапов).
+    backend = await add_task_with_role(
+        db, creator_id=user_id,
+        name="Бэкенд",
+        description="API контракты → реализация → нагрузочное. Линейная зависимость по фазам.",
+        color="#f97316",
+        duration=int((d(63) - d(0, hour=11)).total_seconds()),
+        parent_task_id=root.id,
+        ended_at=d(63),
+        created_at=d(0, hour=11),
+        state="in_progress",
+    )
+    await add_task_with_role(
+        db, creator_id=user_id,
+        name="API контракты и схемы",
+        description="OpenAPI + согласование с фронтом.",
+        color="#f97316",
+        duration=int((d(14) - d(0, hour=11)).total_seconds()),
+        parent_task_id=backend.id,
+        ended_at=d(14),
+        created_at=d(0, hour=11),
+        state="done",
+    )
+    await add_task_with_role(
+        db, creator_id=user_id,
+        name="Реализация фич",
+        description="Сервисы, миграции БД, эндпоинты.",
+        color="#f97316",
+        duration=int((d(49) - d(14, hour=11)).total_seconds()),
+        parent_task_id=backend.id,
+        ended_at=d(49),
+        created_at=d(14, hour=11),
+        state="in_progress",
+    )
+    await add_task_with_role(
+        db, creator_id=user_id,
+        name="Нагрузочное тестирование",
+        description="k6 + замер пиковой нагрузки.",
+        color="#f97316",
+        duration=int((d(63) - d(49, hour=11)).total_seconds()),
+        parent_task_id=backend.id,
+        ended_at=d(63),
+        created_at=d(49, hour=11),
+        state="todo",
+    )
+
+    # Трек 4 — Маркетинг (две последовательные подзадачи в будущем).
+    marketing = await add_task_with_role(
+        db, creator_id=user_id,
+        name="Маркетинг и запуск",
+        description="Лендинг → кампания → публичный релиз.",
+        color="#ef4444",
+        duration=int((d(76) - d(35, hour=12)).total_seconds()),
+        parent_task_id=root.id,
+        ended_at=d(76),
+        created_at=d(35, hour=12),
+        state="todo",
+    )
+    await add_task_with_role(
+        db, creator_id=user_id,
+        name="Лендинг и пресс-кит",
+        description="Запускающая страница + материалы для прессы.",
+        color="#ef4444",
+        duration=int((d(63) - d(35, hour=12)).total_seconds()),
+        parent_task_id=marketing.id,
+        ended_at=d(63),
+        created_at=d(35, hour=12),
+        state="todo",
+    )
+    await add_task_with_role(
+        db, creator_id=user_id,
+        name="Кампания и публичный релиз",
+        description="Платная реклама, рассылка, твиттер-тред в день запуска.",
+        color="#ef4444",
+        duration=int((d(76) - d(63, hour=12)).total_seconds()),
+        parent_task_id=marketing.id,
+        ended_at=d(76),
+        created_at=d(63, hour=12),
+        state="todo",
+    )
+
+    # Просроченная задача — для контраста (overdue chip в UI).
+    await add_task_with_role(
+        db, creator_id=user_id,
+        name="Закрыть техдолг по auth-модулю",
+        description="Должно было закрыться неделю назад. Висит в overdue.",
+        color="#eab308",
+        duration=int((d(-2) - d(-7, hour=14)).total_seconds()),
+        parent_task_id=root.id,
+        ended_at=d(-2),
+        created_at=d(-7, hour=14),
+        state="todo",
+    )
+
+    return root
 
 
 async def seed_availability(db, user_id: int) -> None:
@@ -240,7 +421,20 @@ async def main() -> None:
         rng = random.Random(1)
         total = 0
 
-        # 2) Проекты
+        # 2a) Showcase-проект для демонстрации Ганта (компактный, наглядный).
+        showcase_root = await seed_gantt_showcase(db, user.id)
+        # Считаем подзадачи внутри showcase, чтобы total сошёлся.
+        showcase_count = (
+            await db.execute(
+                select(Task).where(
+                    (Task.id == showcase_root.id) | (Task.parent_task_id == showcase_root.id)
+                )
+            )
+        ).scalars().all()
+        # Учитываем только корневые + первый уровень здесь; остальные посчитаются ниже.
+        # Точный итоговый счётчик добавим отдельной выборкой.
+
+        # 2b) Большие proj’ы — для демо календаря/занятости.
         for proj_idx, proj in enumerate(PROJECTS):
             proj_end = offset(30 + proj_idx * 10, hour=18)
             proj_color = COLORS[proj_idx % len(COLORS)]
@@ -291,7 +485,16 @@ async def main() -> None:
                     )
                     total += 1
 
-        print(f"[+] Создал {total} задач ({len(PROJECTS)} проектов + блоки + листья).")
+        # Точный счётчик включает showcase
+        total_in_db = (
+            await db.execute(
+                select(Task).where(Task.creator_id == user.id)
+            )
+        ).scalars().all()
+        print(
+            f"[+] Создал {len(total_in_db)} задач "
+            f"({len(PROJECTS) + 1} проектов + Гант-показатель + блоки + листья)."
+        )
 
         # 3) Занятость
         await seed_availability(db, user.id)
