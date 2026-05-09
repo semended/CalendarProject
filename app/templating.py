@@ -28,4 +28,18 @@ def _url_for_ctx(request: Request):
     return {"url_for": _url_for}
 
 
-templates = Jinja2Templates(directory="templates", context_processors=[_url_for_ctx])
+def _csrf_ctx(request: Request):
+    """Прокидываем csrf_token() как функцию (а не значение) — чтобы шаблон
+    мог дёргать только там, где реально нужна форма (а не на каждой странице)."""
+    from app.csrf import get_csrf_token
+
+    def csrf_token() -> str:
+        return get_csrf_token(request)
+
+    return {"csrf_token": csrf_token}
+
+
+templates = Jinja2Templates(
+    directory="templates",
+    context_processors=[_url_for_ctx, _csrf_ctx],
+)

@@ -41,6 +41,7 @@
                 {% endif %}
 
                 <form class="task-form" id="createtaskForm" method="POST">
+                    {% include '_csrf.html' %}
                     {% if parent_task_id %}
                         <input type="hidden" name="parent_task_id" value="{{ parent_task_id }}">
                     {% elif parent_task %}

@@ -43,6 +43,7 @@
                 {% endif %}
 
                 <form class="task-form" method="POST" action="{{ url_for('settings_page') }}" enctype="multipart/form-data">
+                    {% include '_csrf.html' %}
                     <input type="hidden" id="remove_avatar" name="remove_avatar" value="false">
                     <input type="hidden" id="cropped_image" name="cropped_image" value="">
 

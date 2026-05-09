@@ -54,6 +54,7 @@
                 <form class="form-row form-row--tight"
                       method="POST"
                       action="{{ url_for('task_management_page', task_id=task.id) }}">
+                    {% include '_csrf.html' %}
                     <div class="form-group form-group--grow">
                         <label for="userEmail">Email участника</label>
                         <input type="email" id="userEmail" name="email"
@@ -93,6 +94,7 @@
                       style="display:flex; flex-wrap:wrap; gap:.75rem; align-items:center;
                              padding:.6rem .75rem; border:1px solid var(--border, #ddd);
                              border-radius:6px; margin-bottom:.5rem;">
+                    {% include '_csrf.html' %}
                     <input type="text" name="role_name" value="{{ r.name }}"
                            {% if r.is_system %}readonly{% endif %} maxlength="255"
                            style="flex:0 0 180px;">
@@ -126,6 +128,7 @@
                           style="display:flex; flex-wrap:wrap; gap:.75rem; align-items:center;
                                  padding:.6rem .75rem; border:1px dashed var(--border, #ddd);
                                  border-radius:6px; margin-top:.5rem;">
+                        {% include '_csrf.html' %}
                         <input type="text" name="role_name" placeholder="Например, Дизайнер"
                                required maxlength="255" style="flex:0 0 180px;">
                         <div style="display:flex; gap:.75rem; flex-wrap:wrap; flex:1;">
@@ -150,6 +153,7 @@
                 <form class="task-form"
                       method="POST"
                       action="{{ url_for('task_management_page', task_id=task.id) }}">
+                    {% include '_csrf.html' %}
                     <div class="form-group">
                         <label for="taskName">Название</label>
                         <input type="text" id="taskName" name="task_name"

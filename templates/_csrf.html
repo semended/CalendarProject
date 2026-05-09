@@ -1,0 +1,2 @@
+{# Скрытое CSRF-поле. Подключается во все mutating-формы Jinja-страниц. #}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

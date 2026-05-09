@@ -16,6 +16,10 @@ else:
     DATABASE_URL = _raw_db_url
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-insecure-secret-change-me")
 SQL_ECHO = os.getenv("SQL_ECHO", "false").lower() in {"1", "true", "yes"}
+# CSRF выключен по умолчанию для обратной совместимости тестов и ранних
+# демок; в проде/staging выставлять CSRF_ENFORCE=1. JWT-эндпоинты под
+# /api/v1/* и любой запрос с Authorization: Bearer всё равно пропускаются.
+CSRF_ENFORCE = os.getenv("CSRF_ENFORCE", "0").lower() in {"1", "true", "yes"}
 
 APP_BASE_URL = os.getenv("APP_BASE_URL", "http://127.0.0.1:8000")
 

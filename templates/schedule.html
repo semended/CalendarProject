@@ -79,6 +79,7 @@
             <div class="form-block">
                 <h2 class="form-block-title">Добавить слот</h2>
                 <form method="POST" action="/user/{{ target.id }}/schedule" class="sched-form">
+                    {% include '_csrf.html' %}
                     <input type="hidden" name="action" value="add">
                     <div class="form-group">
                         <label for="slot_date">Дата</label>
@@ -124,6 +125,7 @@
                             {% if rs.note %}<span class="sched-slot-note">{{ rs.note }}</span>{% endif %}
                         </div>
                         <form method="POST" action="/user/{{ target.id }}/schedule">
+                            {% include '_csrf.html' %}
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="slot_id" value="{{ rs.slot_id }}">
                             <input type="hidden" name="slot_date" value="{{ rs.start_at.date().isoformat() }}">

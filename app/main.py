@@ -5,6 +5,7 @@ from starlette.responses import RedirectResponse
 import os
 
 from app.config import SECRET_KEY, UPLOAD_FOLDER
+from app.csrf import CSRFMiddleware
 from app.deps import RedirectToLogin
 from app.routers import auth, tasks, users
 from app.routers.api import api_router
@@ -18,6 +19,11 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+# Порядок middleware важен: SessionMiddleware должен идти ПОСЛЕ CSRFMiddleware
+# в add_middleware-стеке, чтобы при обработке запроса session был доступен
+# до CSRF-проверки. Starlette применяет middleware в обратном порядке
+# регистрации (последний добавленный — первый, который встречает запрос).
+app.add_middleware(CSRFMiddleware)
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, max_age=60 * 60 * 24 * 30)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

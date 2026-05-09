@@ -86,3 +86,22 @@ def test_missing_auth_still_returns_401(client):
     # ни Bearer, ни cookie
     r = client.get("/api/v1/auth/me")
     assert r.status_code == 401
+
+
+def test_jwt_does_not_authorize_html_page(client):
+    """GET /main под Bearer без cookie не должен залогинить —
+    HTML-зависимости (get_current_user) смотрят только на сессию."""
+    _register(client, email="htmluser@example.com", password="pw123456")
+    client.cookies.clear()
+
+    r = _issue_token(client, "htmluser@example.com", "pw123456")
+    token = r.json()["access_token"]
+
+    r = client.get(
+        "/main",
+        headers={"Authorization": f"Bearer {token}"},
+        follow_redirects=False,
+    )
+    # RedirectToLogin → 303 на /
+    assert r.status_code == 303
+    assert r.headers["location"].endswith("/")
