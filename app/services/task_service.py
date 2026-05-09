@@ -11,9 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud
 from app.models import Task, TaskUserRole, User
 from app.permissions import (
-    P_CREATE_SUBTASK,
     P_EDIT_SETTINGS,
     P_MANAGE_MEMBERS,
+    P_MANAGE_SUBTASKS,
     has_permission,
 )
 from app.services.events_service import (
@@ -103,7 +103,7 @@ async def create_task(
     с дефолтными правами и назначает creator-у роль Тимлида.
     """
     if parent_task_id is not None:
-        if not await has_permission(db, creator.id, parent_task_id, P_CREATE_SUBTASK):
+        if not await has_permission(db, creator.id, parent_task_id, P_MANAGE_SUBTASKS):
             raise PermissionDenied("Нет прав на создание подзадачи")
 
     deadline_naive = _naive(deadline) if deadline is not None else None
@@ -239,6 +239,39 @@ async def update_task(
     if refreshed is None:
         raise TaskNotFound()
     return refreshed
+
+
+async def delete_task(db: AsyncSession, user: User, task_id: int) -> int:
+    """Soft-delete задачи и её поддерева. Возвращает число затронутых строк.
+
+    Право:
+    - subtask (parent_task_id is not None): MANAGE_SUBTASKS на parent.
+    - root (parent_task_id is None): EDIT_SETTINGS на самой задаче — это
+      Тимлид по дефолтному набору; "выкинуть свой проект" должен мочь его
+      владелец, но не любой участник.
+
+    После soft-delete пишем task.deleted событие — для аудита.
+    """
+    task = await crud.get_task_by_id(db, task_id)
+    if task is None:
+        raise TaskNotFound()
+
+    if task.parent_task_id is None:
+        if not await has_permission(db, user.id, task_id, P_EDIT_SETTINGS):
+            raise PermissionDenied("Нет прав на удаление проекта")
+    else:
+        if not await has_permission(db, user.id, task.parent_task_id, P_MANAGE_SUBTASKS):
+            raise PermissionDenied("Нет прав на удаление подзадачи")
+
+    affected = await crud.soft_delete_task_subtree(db, task_id)
+    await record_task_event(
+        db,
+        task_id=task_id,
+        actor_user_id=user.id,
+        event_type="task.deleted",
+        payload={"affected": affected, "is_root": task.parent_task_id is None},
+    )
+    return affected
 
 
 async def add_member(

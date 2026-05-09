@@ -158,6 +158,45 @@ async def get_root_task(db: AsyncSession, task_id: int) -> Optional[Task]:
     return task
 
 
+async def soft_delete_task(db: AsyncSession, task_id: int) -> Optional[Task]:
+    """Помечает задачу как удалённую (deleted_at = now). Подзадачи остаются
+    физически, но не показываются в выборках, потому что фильтр идёт по
+    parent_task — а корень помечен deleted. Для каскадного soft-delete по
+    дереву используется отдельный обход в task_service.
+    """
+    task = await db.get(Task, task_id)
+    if task is None:
+        return None
+    if task.deleted_at is None:
+        task.deleted_at = datetime.now()
+        await db.commit()
+        await db.refresh(task)
+    return task
+
+
+async def soft_delete_task_subtree(db: AsyncSession, task_id: int) -> int:
+    """Soft-delete задачи И всех её потомков. Возвращает число затронутых
+    строк (для отчёта в логах/тестах). Обход BFS по parent_task_id."""
+    affected = 0
+    queue = [task_id]
+    while queue:
+        cur = queue.pop()
+        children = await db.execute(
+            select(Task.id).where(
+                Task.parent_task_id == cur, Task.deleted_at.is_(None)
+            )
+        )
+        queue.extend(children.scalars().all())
+        result = await db.execute(
+            Task.__table__.update()
+            .where(Task.id == cur, Task.deleted_at.is_(None))
+            .values(deleted_at=datetime.now())
+        )
+        affected += result.rowcount or 0
+    await db.commit()
+    return affected
+
+
 async def get_assignee_candidates(
     db: AsyncSession, task_id: Optional[int], creator_id: int
 ) -> List[User]:
@@ -195,16 +234,29 @@ async def update_task_state(db: AsyncSession, task_id: int, state: str) -> Optio
 
 
 async def get_tasks_by_assignee(db: AsyncSession, user_id: int) -> List[Task]:
-    result = await db.execute(select(Task).where(Task.assignee_id == user_id))
+    result = await db.execute(
+        select(Task).where(Task.assignee_id == user_id, Task.deleted_at.is_(None))
+    )
     return list(result.scalars().all())
 
 
 async def get_task_by_id(db: AsyncSession, task_id: int) -> Optional[Task]:
-    return await db.get(Task, task_id)
+    """Возвращает задачу, если она существует и НЕ помечена удалённой.
+
+    Soft-deleted задачи возвращаем как None — для UI/API они не существуют.
+    Если нужен прямой доступ к удалённой записи (восстановление, аудит) —
+    дёргать `db.get(Task, task_id)` напрямую.
+    """
+    task = await db.get(Task, task_id)
+    if task is None or task.deleted_at is not None:
+        return None
+    return task
 
 
 async def get_tasks_by_creator(db: AsyncSession, creator_id: int) -> List[Task]:
-    result = await db.execute(select(Task).where(Task.creator_id == creator_id))
+    result = await db.execute(
+        select(Task).where(Task.creator_id == creator_id, Task.deleted_at.is_(None))
+    )
     return list(result.scalars().all())
 
 
@@ -221,7 +273,7 @@ async def get_tasks_by_user_id(
     task_ids = {row for row in tur_result.scalars().all()}
     if not task_ids:
         return []
-    stmt = select(Task).where(Task.id.in_(task_ids))
+    stmt = select(Task).where(Task.id.in_(task_ids), Task.deleted_at.is_(None))
     if roots_only:
         stmt = stmt.where(Task.parent_task_id.is_(None))
     stmt = stmt.order_by(Task.id)
@@ -239,7 +291,7 @@ async def get_subtasks(
 ) -> List[Task]:
     stmt = (
         select(Task)
-        .where(Task.parent_task_id == parent_task_id)
+        .where(Task.parent_task_id == parent_task_id, Task.deleted_at.is_(None))
         .order_by(Task.id)
     )
     if limit is not None:

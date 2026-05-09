@@ -55,6 +55,9 @@ class Task(Base):
     state = Column(String(20), nullable=False, server_default="todo")
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     ended_at = Column(DateTime, nullable=True)
+    # Soft delete: заполненный deleted_at = задача "удалена" — фильтруется
+    # в выборках crud, но физически остаётся в БД до жёсткой очистки.
+    deleted_at = Column(DateTime, nullable=True)
 
     creator = relationship("User", back_populates="created_tasks", foreign_keys=[creator_id])
     assignee = relationship("User", foreign_keys=[assignee_id])

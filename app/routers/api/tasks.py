@@ -105,3 +105,19 @@ async def api_update_task(
         raise HTTPException(status_code=403, detail=str(exc))
     except task_service.InvalidAssignee as exc:
         raise HTTPException(status_code=422, detail=str(exc))
+
+
+@router.delete("/{task_id}", status_code=204)
+async def api_delete_task(
+    task_id: int,
+    user: User = Depends(get_current_user_api),
+    db: AsyncSession = Depends(get_db),
+):
+    """Soft-delete задачи и её поддерева."""
+    try:
+        await task_service.delete_task(db, user, task_id)
+    except task_service.TaskNotFound:
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+    except task_service.PermissionDenied as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
+    return None
