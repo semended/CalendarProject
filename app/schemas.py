@@ -84,6 +84,7 @@ class TaskUpdate(BaseModel):
     color: Optional[str] = None
     state: Optional[str] = Field(default=None, pattern=_TASK_STATE_PATTERN)
     assignee_id: Optional[int] = None
+    ended_at: Optional[datetime] = None
 
 
 class TaskResponse(BaseModel):

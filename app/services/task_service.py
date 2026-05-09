@@ -165,6 +165,8 @@ async def update_task(
     assignee_id: Optional[int] = None,
     apply_assignee: bool = False,
     strict_assignee: bool = False,
+    deadline: Optional[datetime] = None,
+    apply_deadline: bool = False,
 ) -> Task:
     """Изменить задачу. apply_assignee=True значит "перезаписать assignee на
     переданное значение" (включая None — снять). Это нужно потому, что для
@@ -228,6 +230,10 @@ async def update_task(
             event_type=EVT_TASK_STATE_CHANGED,
             payload={"prev": task.state, "new": state},
         )
+
+    if apply_deadline:
+        deadline_naive = _naive(deadline) if deadline is not None else None
+        await crud.update_task_deadline(db, task_id, deadline_naive)
 
     refreshed = await crud.get_task_by_id(db, task_id)
     if refreshed is None:

@@ -76,6 +76,34 @@ def test_state_change_writes_event(client):
     assert state_events == 1
 
 
+def test_patch_ended_at_recomputes_duration(client):
+    """PATCH /api/v1/tasks/{id} с ended_at обновляет ended_at И duration —
+    дубль legacy-поля раньше уезжал в drift, что ломало гантт-расчёты."""
+    _register(client, "deadline@example.com")
+    r = client.post(
+        "/create_task",
+        data={"taskName": "С дедлайном", "taskDescription": "", "taskColor": "#666666"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    task_id = client.get("/api/v1/tasks").json()[0]["id"]
+
+    new_deadline = "2030-01-01T12:00:00"
+    r = client.patch(
+        f"/api/v1/tasks/{task_id}",
+        json={"ended_at": new_deadline},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["ended_at"].startswith("2030-01-01")
+
+    # Проверим duration напрямую в БД
+    duration = _scalar(f"SELECT duration FROM tasks WHERE id = {task_id}")
+    assert duration > 0
+    # минимум 3 года в секундах (today=2026-05, deadline=2030-01)
+    assert duration > 60 * 60 * 24 * 365 * 3
+
+
 def test_assign_task_creates_notification(client):
     # Создаём двух юзеров, добавляем второго в проект как разработчика, назначаем
     # на подзадачу — должно появиться notification.

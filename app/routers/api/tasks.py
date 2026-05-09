@@ -83,6 +83,7 @@ async def api_update_task(
     db: AsyncSession = Depends(get_db),
 ):
     apply_assignee = "assignee_id" in payload.model_fields_set
+    apply_deadline = "ended_at" in payload.model_fields_set
     try:
         return await task_service.update_task(
             db,
@@ -95,6 +96,8 @@ async def api_update_task(
             assignee_id=payload.assignee_id,
             apply_assignee=apply_assignee,
             strict_assignee=True,
+            deadline=payload.ended_at,
+            apply_deadline=apply_deadline,
         )
     except task_service.TaskNotFound:
         raise HTTPException(status_code=404, detail="Задача не найдена")

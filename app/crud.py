@@ -269,14 +269,22 @@ async def update_task_info(
     return task
 
 
-async def update_task_status(
-    db: AsyncSession, task_id: int, ended_at: Optional[datetime] = None
+async def update_task_deadline(
+    db: AsyncSession, task_id: int, ended_at: Optional[datetime]
 ) -> Optional[Task]:
+    """Изменить дедлайн задачи и пересчитать legacy-поле duration.
+
+    duration хранится в секундах от created_at и осталось от Flask-схемы;
+    мы пишем туда сами при изменении дедлайна, потому что server_default
+    func.now() для created_at не пересчитывается, а UI-расчёты местами
+    опираются на duration.
+    """
     task = await db.get(Task, task_id)
     if task is None:
         return None
-    if ended_at is not None:
-        task.ended_at = ended_at
+    task.ended_at = ended_at
+    if ended_at is not None and task.created_at is not None:
+        task.duration = max(0, int((ended_at - task.created_at).total_seconds()))
     await db.commit()
     await db.refresh(task)
     return task
