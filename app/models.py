@@ -105,6 +105,10 @@ class TaskRole(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     task_id = Column(BigInteger, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False)
+    # is_system=True — это дефолтная роль, созданная при создании проекта
+    # (Тимлид/Менеджер/Разработчик). Нельзя удалить/переименовать, права
+    # менять можно. Кастомные роли — is_system=False.
+    is_system = Column(Boolean, nullable=False, server_default="false")
 
     task = relationship("Task", back_populates="task_roles")
     permissions = relationship("TaskRolePermission", back_populates="task_role", cascade="all, delete-orphan")

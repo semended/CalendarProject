@@ -14,10 +14,20 @@ from app.permissions import (
     has_permission,
     user_perms,
 )
-from app.services import task_service
+from app.permissions import ALL_PERMS
+from app.services import roles_service, task_service
 from app.templating import templates
 
 router = APIRouter()
+
+# UI-метки для кодов прав (источник кодов — app/permissions.py).
+_PERM_LABELS = {
+    "task.view": "Просмотр",
+    "task.edit_settings": "Редактирование",
+    "task.manage_members": "Управление участниками",
+    "task.create_subtask": "Создание подзадач",
+    "task.delete_subtask": "Удаление подзадач",
+}
 
 
 async def _decorate_tasks_with_counts(db: AsyncSession, tasks):
@@ -362,6 +372,17 @@ async def task_management_get(
     for member in team:
         member.role_name = await crud.get_user_role_in_task(db, member.id, task_id)
     candidates = await crud.get_assignee_candidates(db, task_id, user.id)
+    roles = await roles_service.list_roles(db, task_id)
+    # Подготовим plain-структуру для шаблона: имя/перечень кодов прав/системность.
+    roles_view = [
+        {
+            "id": r.id,
+            "name": r.name,
+            "is_system": r.is_system,
+            "permissions": [p.permission for p in r.permissions],
+        }
+        for r in roles
+    ]
 
     return templates.TemplateResponse(
         request,
@@ -373,6 +394,9 @@ async def task_management_get(
             "task": task,
             "team": team,
             "assignee_candidates": candidates,
+            "roles": roles_view,
+            "all_permissions": list(ALL_PERMS),
+            "perm_labels": _PERM_LABELS,
             "perms": await user_perms(db, user.id, task_id),
         },
     )
@@ -428,4 +452,68 @@ async def task_management_post(
     except task_service.PermissionDenied as exc:
         raise HTTPException(status_code=403, detail=str(exc))
 
+    return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
+
+
+# ----- управление ролями проекта (Jinja-формы) -----
+
+@router.post("/task_management/{task_id}/roles", name="role_create")
+async def role_create_post(
+    task_id: int,
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    form = await request.form()
+    name = (form.get("role_name") or "").strip()
+    perms = form.getlist("permissions") if hasattr(form, "getlist") else []
+    try:
+        await roles_service.create_custom_role(
+            db, user, task_id, name=name, permissions=perms
+        )
+    except roles_service.PermissionDenied as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
+    except roles_service.InvalidRoleName:
+        # просто редиректим назад — UX чистый, валидация на стороне формы
+        pass
+    return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
+
+
+@router.post("/task_management/{task_id}/roles/{role_id}", name="role_update")
+async def role_update_post(
+    task_id: int,
+    role_id: int,
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    form = await request.form()
+    action = form.get("action") or "update"
+    if action == "delete":
+        try:
+            await roles_service.delete_role(db, user, role_id)
+        except roles_service.PermissionDenied as exc:
+            raise HTTPException(status_code=403, detail=str(exc))
+        except roles_service.SystemRoleProtected as exc:
+            raise HTTPException(status_code=409, detail=str(exc))
+        except roles_service.RoleNotFound:
+            raise HTTPException(status_code=404, detail="Роль не найдена")
+        return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
+
+    new_name = form.get("role_name")
+    perms = form.getlist("permissions") if hasattr(form, "getlist") else []
+    try:
+        await roles_service.update_role(
+            db, user, role_id,
+            name=new_name if new_name is not None else None,
+            permissions=perms,  # пустой список = снять все права
+        )
+    except roles_service.PermissionDenied as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
+    except roles_service.SystemRoleProtected as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except roles_service.RoleNotFound:
+        raise HTTPException(status_code=404, detail="Роль не найдена")
+    except roles_service.InvalidRoleName:
+        pass
     return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)

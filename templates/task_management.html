@@ -63,9 +63,9 @@
                         <label for="userRole">Роль</label>
                         <select id="userRole" name="role_id" class="form-select" required>
                             <option value="">—</option>
-                            <option value="1">Тимлид</option>
-                            <option value="2">Менеджер</option>
-                            <option value="3">Разработчик</option>
+                            {% for r in roles %}
+                            <option value="{{ r.id }}">{{ r.name }}{% if not r.is_system %} ✦{% endif %}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     <div class="form-group form-group--action">
@@ -76,6 +76,72 @@
                 <p class="field-hint">У тебя нет прав добавлять участников.</p>
                 {% endif %}
             </section>
+
+            {% if perms and perms['task.manage_members'] %}
+            <section class="form-block">
+                <h2 class="form-block-title">Роли проекта</h2>
+                <p class="field-hint">
+                    Системные роли (Тимлид / Менеджер / Разработчик) нельзя удалить
+                    или переименовать, но набор прав можно менять.
+                    Кастомные роли отмечены ✦.
+                </p>
+
+                {% for r in roles %}
+                <form class="role-row"
+                      method="POST"
+                      action="{{ url_for('role_update', task_id=task.id, role_id=r.id) }}"
+                      style="display:flex; flex-wrap:wrap; gap:.75rem; align-items:center;
+                             padding:.6rem .75rem; border:1px solid var(--border, #ddd);
+                             border-radius:6px; margin-bottom:.5rem;">
+                    <input type="text" name="role_name" value="{{ r.name }}"
+                           {% if r.is_system %}readonly{% endif %} maxlength="255"
+                           style="flex:0 0 180px;">
+                    <div style="display:flex; gap:.75rem; flex-wrap:wrap; flex:1;">
+                        {% for code in all_permissions %}
+                        <label style="display:inline-flex; gap:.25rem; align-items:center;">
+                            <input type="checkbox" name="permissions" value="{{ code }}"
+                                   {% if code in r.permissions %}checked{% endif %}>
+                            {{ perm_labels.get(code, code) }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <div style="display:flex; gap:.5rem;">
+                        <button type="submit" class="btn-secondary btn-small">Сохранить</button>
+                        {% if not r.is_system %}
+                        <button type="submit" name="action" value="delete"
+                                class="btn-secondary btn-small"
+                                onclick="return confirm('Удалить роль «{{ r.name }}»?');">Удалить</button>
+                        {% endif %}
+                    </div>
+                </form>
+                {% endfor %}
+
+                <details style="margin-top:.75rem;">
+                    <summary class="btn-secondary btn-small" style="display:inline-block;">
+                        + Создать роль
+                    </summary>
+                    <form class="role-row"
+                          method="POST"
+                          action="{{ url_for('role_create', task_id=task.id) }}"
+                          style="display:flex; flex-wrap:wrap; gap:.75rem; align-items:center;
+                                 padding:.6rem .75rem; border:1px dashed var(--border, #ddd);
+                                 border-radius:6px; margin-top:.5rem;">
+                        <input type="text" name="role_name" placeholder="Например, Дизайнер"
+                               required maxlength="255" style="flex:0 0 180px;">
+                        <div style="display:flex; gap:.75rem; flex-wrap:wrap; flex:1;">
+                            {% for code in all_permissions %}
+                            <label style="display:inline-flex; gap:.25rem; align-items:center;">
+                                <input type="checkbox" name="permissions" value="{{ code }}"
+                                       {% if code == 'task.view' %}checked{% endif %}>
+                                {{ perm_labels.get(code, code) }}
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="btn-primary btn-small">Создать</button>
+                    </form>
+                </details>
+            </section>
+            {% endif %}
 
             {% if perms and perms['task.edit_settings'] %}
             <section class="form-block">

@@ -35,6 +35,7 @@ from app.services.events_service import (
     notify_user,
     record_task_event,
 )
+from app.services import roles_service  # noqa: F401  (для импорта `from app.services import roles_service`)
 
 __all__ = [
     "AuthError",

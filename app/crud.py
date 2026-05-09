@@ -142,9 +142,9 @@ async def create_task_bundle(
     task = await create_task(
         db, creator_id, name, description, color, duration, parent_task_id, ended_at, assignee_id
     )
-    teamlead = await create_task_role(db, task.id, "Тимлид")
-    manager = await create_task_role(db, task.id, "Менеджер")
-    dev = await create_task_role(db, task.id, "Разработчик")
+    teamlead = await create_task_role(db, task.id, "Тимлид", is_system=True)
+    manager = await create_task_role(db, task.id, "Менеджер", is_system=True)
+    dev = await create_task_role(db, task.id, "Разработчик", is_system=True)
     for role in (teamlead, manager, dev):
         await ensure_role_permissions(db, role)
     await assign_user_to_task_role(db, creator_id, task.id, teamlead.id)
@@ -284,8 +284,10 @@ async def update_task_status(
 
 # ----- roles -----
 
-async def create_task_role(db: AsyncSession, task_id: int, name: str) -> TaskRole:
-    task_role = TaskRole(task_id=task_id, name=name)
+async def create_task_role(
+    db: AsyncSession, task_id: int, name: str, is_system: bool = False
+) -> TaskRole:
+    task_role = TaskRole(task_id=task_id, name=name, is_system=is_system)
     db.add(task_role)
     await db.commit()
     await db.refresh(task_role)
