@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import Task, TaskRole, TaskRolePermission, TaskUserRole, User
+from app.models import TaskRole, TaskRolePermission, TaskUserRole, User
 from app.permissions import (
     ALL_PERMS,
     P_MANAGE_MEMBERS,

@@ -63,18 +63,25 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8080
 ```
 app/
   main.py          — FastAPI app, middleware, роутеры
-  config.py        — переменные из .env
-  database.py      — SQLAlchemy engine + Session + get_db
-  models.py        — ORM-модели (User, Task, TaskRole, TaskRolePermission, TaskUserRole)
-  crud.py          — CRUD-операции
+  config.py        — переменные из .env (DATABASE_URL, SECRET_KEY, CSRF_ENFORCE)
+  database.py      — async SQLAlchemy engine + AsyncSession + get_db
+  models.py        — ORM-модели (User, Task, TaskRole, TaskRolePermission,
+                      TaskUserRole, AvailabilitySlot, TaskEvent, TaskComment, Notification)
+  crud.py          — низкоуровневые CRUD-операции (раздел используется сервисами)
+  services/        — бизнес-логика (auth_service, task_service, user_service,
+                      roles_service, events_service); единая точка для Jinja и /api/v1
+  csrf.py          — CSRFMiddleware (включается флагом CSRF_ENFORCE)
+  permissions.py   — RBAC, has_permission с наследованием по дереву
   security.py      — bcrypt-хеширование паролей (с fallback на legacy plaintext)
-  deps.py          — зависимости FastAPI (get_current_user и пр.)
-  templating.py    — Jinja2Templates с Flask-совместимым url_for
+  deps.py          — get_current_user (cookie) / get_current_user_api (cookie+JWT)
+  jwt_auth.py      — выпуск/декодирование Bearer-токенов
+  templating.py    — Jinja2Templates с Flask-совместимым url_for + csrf_token()
   routers/
-    auth.py        — / (start), /registration, /logout
-    tasks.py       — /main, /create_task, /task/{id}, /task_management/{id}
-    users.py       — /user/settings, /user/{id}
-templates/         — Jinja-шаблоны (те же, что были при Flask)
+    auth.py        — / (start), /registration, /logout, password reset
+    tasks.py       — /main, /create_task, /task/{id}, /task_management/{id}, /roles
+    users.py       — /user/settings, /user/{id}, /user/{id}/schedule
+    api/{auth,tasks,users,roles}.py — JSON под /api/v1
+templates/         — Jinja-шаблоны (включая _csrf.html макрос)
 static/            — CSS и загружаемые аватарки
 ```
 
@@ -94,27 +101,58 @@ static/            — CSS и загружаемые аватарки
 - `POST /api/v1/auth/register` — регистрация (JSON body)
 - `POST /api/v1/auth/login` — логин (ставит ту же session cookie)
 - `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/token` — OAuth2 password grant → Bearer JWT (form-data)
 - `GET  /api/v1/auth/me`, `GET /api/v1/users/me`
 - `GET  /api/v1/users/{id}` — публичный профиль с учётом privacy
 - `GET  /api/v1/tasks` — задачи текущего юзера
 - `POST /api/v1/tasks` — создать задачу/подзадачу
 - `GET  /api/v1/tasks/{id}`, `PATCH /api/v1/tasks/{id}`
 - `GET  /api/v1/tasks/{id}/subtasks`
+- `GET  /api/v1/tasks/{id}/roles` — все роли проекта (системные + кастомные)
+- `POST /api/v1/tasks/{id}/roles` — создать кастомную роль с произвольным набором прав
+- `PATCH /api/v1/roles/{id}` — менять имя/набор прав (системные роли — только права)
+- `DELETE /api/v1/roles/{id}` — удалить кастомную роль (системные защищены 409)
+- `GET  /api/v1/permissions` — справочник кодов прав (для UI с чекбоксами)
 
-Аутентификация — те же cookie-сессии что и у Jinja-страниц (нет двойной системы логина). Для неавторизованных API отдаёт `401 JSON`, а не редирект.
+Аутентификация: cookie-сессия (та же, что у Jinja) **или** `Authorization: Bearer <jwt>` —
+JWT берёт приоритет. Для неавторизованных API отдаёт `401 JSON`. JWT на HTML-страницах
+игнорируется (HTML смотрит только на cookie).
+
+### CSRF
+
+HTML-формы под cookie-сессиями защищены CSRF-токеном; включается флагом `CSRF_ENFORCE=1`
+(по умолчанию off для разработки/тестов). `/api/v1/*` и любой запрос с
+`Authorization: Bearer ...` пропускаются. Шаблон вставляет токен макросом
+`{% include '_csrf.html' %}`.
 
 Интерактивная документация:
 
 - Swagger UI: <http://127.0.0.1:8080/docs>
 - ReDoc: <http://127.0.0.1:8080/redoc>
 
-## Тесты
+## Тесты и линтер
 
 ```bash
-pytest
+pytest                  # все тесты (нужен Postgres; testdb_test поднимется автоматически)
+pytest -k parity        # только parity между Jinja и /api/v1
+pytest -k csrf          # CSRF-сценарии (форсит CSRF_ENFORCE=1 через monkeypatch)
+
+ruff check app/         # линт (без конфига — дефолтные правила)
 ```
 
-Сейчас есть только smoke-тесты (`tests/test_api_smoke.py`) — проверяют что API-роуты зарегистрированы и гейтятся авторизацией. Покрытие будет расширяться.
+Тесты ходят в **реальный** Postgres (`testdb_test`) — фикстуры в `tests/conftest.py`
+поднимают БД, прогоняют `alembic upgrade head` и делают TRUNCATE между тестами.
+
+## Демо-данные
+
+```bash
+python -m scripts.seed_demo
+```
+
+Создаёт пользователя `demo@demo.ru` / пароль `demo` с 7 проектами и 84 слотами
+занятости. Один из проектов — **«✦ Запуск нового продукта (демо Гант)»** —
+собран специально под показ диаграммы Ганта (4 параллельных трека, иерархия,
+смешанные статусы, линия «сегодня»).
 
 ## TODO
 
