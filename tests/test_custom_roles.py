@@ -42,6 +42,39 @@ def test_default_three_roles_exist_and_are_system(client):
         assert role["is_system"] is True
 
 
+def test_default_roles_have_merged_subtask_permission(client):
+    """После объединения create_subtask + delete_subtask дефолтные роли
+    должны видеть единый код task.manage_subtasks."""
+    _register(client, "owner@example.com")
+    pid = _make_project(client)
+
+    roles = client.get(f"/api/v1/tasks/{pid}/roles").json()
+
+    teamlead = next(r for r in roles if r["name"] == "Тимлид")
+    assert "task.manage_subtasks" in teamlead["permissions"]
+    assert "task.create_subtask" not in teamlead["permissions"]
+    assert "task.delete_subtask" not in teamlead["permissions"]
+
+    manager = next(r for r in roles if r["name"] == "Менеджер")
+    assert "task.manage_subtasks" in manager["permissions"]
+
+    dev = next(r for r in roles if r["name"] == "Разработчик")
+    assert "task.manage_subtasks" in dev["permissions"]
+
+
+def test_known_permissions_endpoint_returns_four_codes(client):
+    _register(client, "anyone@example.com")
+    r = client.get("/api/v1/permissions")
+    assert r.status_code == 200
+    perms = set(r.json())
+    assert perms == {
+        "task.view",
+        "task.edit_settings",
+        "task.manage_members",
+        "task.manage_subtasks",
+    }
+
+
 def test_create_custom_role(client):
     _register(client, "owner@example.com")
     pid = _make_project(client)

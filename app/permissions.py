@@ -9,21 +9,24 @@ from app.models import Task, TaskRole, TaskRolePermission, TaskUserRole
 P_VIEW = "task.view"
 P_EDIT_SETTINGS = "task.edit_settings"
 P_MANAGE_MEMBERS = "task.manage_members"
-P_CREATE_SUBTASK = "task.create_subtask"
-P_DELETE_SUBTASK = "task.delete_subtask"
+P_MANAGE_SUBTASKS = "task.manage_subtasks"
+
+# Обратно-совместимые алиасы для внешнего кода. Внутри has_permission
+# проверка идёт по P_MANAGE_SUBTASKS — старые коды перенесены миграцией.
+P_CREATE_SUBTASK = P_MANAGE_SUBTASKS
+P_DELETE_SUBTASK = P_MANAGE_SUBTASKS
 
 ALL_PERMS: List[str] = [
     P_VIEW,
     P_EDIT_SETTINGS,
     P_MANAGE_MEMBERS,
-    P_CREATE_SUBTASK,
-    P_DELETE_SUBTASK,
+    P_MANAGE_SUBTASKS,
 ]
 
 ROLE_DEFAULTS: Dict[str, List[str]] = {
     "Тимлид":      ALL_PERMS,
-    "Менеджер":    [P_VIEW, P_EDIT_SETTINGS, P_CREATE_SUBTASK, P_DELETE_SUBTASK],
-    "Разработчик": [P_VIEW, P_CREATE_SUBTASK],
+    "Менеджер":    [P_VIEW, P_EDIT_SETTINGS, P_MANAGE_SUBTASKS],
+    "Разработчик": [P_VIEW, P_MANAGE_SUBTASKS],
 }
 
 

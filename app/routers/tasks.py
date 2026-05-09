@@ -25,8 +25,7 @@ _PERM_LABELS = {
     "task.view": "Просмотр",
     "task.edit_settings": "Редактирование",
     "task.manage_members": "Управление участниками",
-    "task.create_subtask": "Создание подзадач",
-    "task.delete_subtask": "Удаление подзадач",
+    "task.manage_subtasks": "Управление подзадачами",
 }
 
 

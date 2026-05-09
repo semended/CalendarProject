@@ -21,7 +21,7 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    {% if perms and perms['task.create_subtask'] %}
+                    {% if perms and perms['task.manage_subtasks'] %}
                     <a href="{{ url_for('create_task_page', parent_task_id=task.id) }}" class="btn-primary">
                         {{ icons.plus(14) }}
                         <span>Новая подзадача</span>
