@@ -94,6 +94,10 @@ instance/
 
 # Claude / AI tooling
 .claude/
+.agents/
+.codex/
+AGENTS.md
+claude_code_migration_prompt.md
 claude.local.md
 CLAUDE.local.md
 sessions/
