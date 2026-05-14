@@ -10,7 +10,10 @@ from app.database import get_db
 from app.deps import get_current_user
 from app.models import Task, User
 from app.permissions import (
+    P_MANAGE_SUBTASKS,
     P_VIEW,
+    can_open_task_container,
+    has_descendant_permission,
     has_permission,
     user_perms,
 )
@@ -36,14 +39,32 @@ async def _decorate_tasks_with_counts(db: AsyncSession, tasks):
     return tasks
 
 
+async def _decorate_task_access(db: AsyncSession, user_id: int, task: Task) -> Task:
+    task.can_view = await has_permission(db, user_id, task.id, P_VIEW)
+    task.can_open = task.can_view or await has_descendant_permission(db, user_id, task.id, P_VIEW)
+    return task
+
+
+async def _decorate_tasks_with_access(db: AsyncSession, user_id: int, tasks):
+    for t in tasks:
+        await _decorate_task_access(db, user_id, t)
+    return tasks
+
+
+async def _sidebar_tasks(db: AsyncSession, user_id: int):
+    tasks = await crud.get_root_tasks_available_to_user(db, user_id)
+    await _decorate_tasks_with_counts(db, tasks)
+    await _decorate_tasks_with_access(db, user_id, tasks)
+    return tasks
+
+
 @router.get("/main", name="main_page")
 async def main_page(
     request: Request,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
-    await _decorate_tasks_with_counts(db, tasks)
+    tasks = await _sidebar_tasks(db, user.id)
     return templates.TemplateResponse(
         request,
         "main.html",
@@ -65,7 +86,7 @@ async def calendar_page(
         except ValueError:
             pass
     rendered = await availability.render_month(db, user.id, anchor)
-    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
+    tasks = await _sidebar_tasks(db, user.id)
 
     first = rendered["month_first"]
     prev_first = (first - timedelta(days=1)).replace(day=1)
@@ -106,7 +127,11 @@ async def create_task_get(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
+    tasks = await _sidebar_tasks(db, user.id)
+    if parent_task_id is not None and not await has_permission(
+        db, user.id, parent_task_id, P_MANAGE_SUBTASKS
+    ):
+        raise HTTPException(status_code=403, detail="Нет прав на создание подзадачи")
     candidates = await crud.get_assignee_candidates(db, parent_task_id, user.id)
     parent_task = await crud.get_task_by_id(db, parent_task_id) if parent_task_id else None
     return templates.TemplateResponse(
@@ -141,8 +166,13 @@ async def create_task_post(
     # формы (шаблон current_task.html шлёт POST на /create_task с hidden parent_task_id).
     effective_parent_id = parent_task_id if parent_task_id is not None else parent_task_id_form
 
+    if effective_parent_id is not None and not await has_permission(
+        db, user.id, effective_parent_id, P_MANAGE_SUBTASKS
+    ):
+        raise HTTPException(status_code=403, detail="Нет прав на создание подзадачи")
+
     if not taskName or not taskName.strip():
-        tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
+        tasks = await _sidebar_tasks(db, user.id)
         candidates = await crud.get_assignee_candidates(db, effective_parent_id, user.id)
         return templates.TemplateResponse(
             request,
@@ -187,12 +217,19 @@ async def task_get(
     db: AsyncSession = Depends(get_db),
 ):
     task = await crud.get_task_by_id(db, task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+    if not await can_open_task_container(db, user.id, task_id):
+        raise HTTPException(status_code=403, detail="Нет доступа к этой задаче")
+    await _decorate_task_access(db, user.id, task)
+
     in_progress_tasks = await crud.get_subtasks(db, task_id)
     for t in in_progress_tasks:
         t.tasks = len(await crud.get_subtasks(db, t.id))
         t.members = len(await crud.get_users_in_task(db, t.id))
-    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
-    team = await crud.get_users_in_task(db, task_id)
+    await _decorate_tasks_with_access(db, user.id, in_progress_tasks)
+    tasks = await _sidebar_tasks(db, user.id)
+    team = await crud.get_users_in_task(db, task_id) if task.can_view else []
     for member in team:
         member.role_name = await crud.get_user_role_in_task(db, member.id, task_id)
 
@@ -212,8 +249,14 @@ async def task_get(
 
 
 @router.post("/task/{task_id}")
-async def task_post(task_id: int, user: User = Depends(get_current_user)):
+async def task_post(
+    task_id: int,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     # Original Flask behaviour: POST on /task/<id> redirects to create subtask.
+    if not await has_permission(db, user.id, task_id, P_MANAGE_SUBTASKS):
+        raise HTTPException(status_code=403, detail="Нет прав на создание подзадачи")
     return RedirectResponse(url=f"/create_task/{task_id}", status_code=303)
 
 
@@ -225,12 +268,18 @@ async def task_overview_get(
     db: AsyncSession = Depends(get_db),
 ):
     root = await crud.get_task_by_id(db, task_id)
-    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
+    if root is None:
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+    if not await can_open_task_container(db, user.id, task_id):
+        raise HTTPException(status_code=403, detail="Нет доступа к этой задаче")
+    await _decorate_task_access(db, user.id, root)
+    tasks = await _sidebar_tasks(db, user.id)
 
     async def collect_descendants(node: Task):
         children = await crud.get_subtasks(db, node.id)
         out = []
         for c in children:
+            await _decorate_task_access(db, user.id, c)
             out.append({"task": c, "children": await collect_descendants(c)})
         return out
 
@@ -308,9 +357,11 @@ async def task_overview_get(
             "left": round(left, 2),
             "width": round(width, 2),
             "cls": cls,
-            "color": track_color_by_id.get(track_id, "#b84a28"),
+            "color": track_color_by_id.get(track_id, "#b84a28") if t.can_view else "#9ca3af",
             "track_start": track_id != current_track,
             "track_id": track_id,
+            "can_view": t.can_view,
+            "can_open": t.can_open,
         })
         current_track = track_id
 
@@ -326,8 +377,9 @@ async def task_overview_get(
     for i, n in enumerate(first_level):
         track_legend.append({
             "name": n["task"].name,
-            "color": track_color_by_id[i],
+            "color": track_color_by_id[i] if n["task"].can_view else "#9ca3af",
             "count": 1 + _count_descendants(n["children"]),
+            "can_view": n["task"].can_view,
         })
 
     return templates.TemplateResponse(
@@ -367,17 +419,24 @@ async def task_management_get(
 
     task = await crud.get_task_by_id(db, task_id)
     team = await crud.get_users_in_task(db, task_id)
-    tasks = await crud.get_tasks_by_user_id(db, user.id, roots_only=True)
+    tasks = await _sidebar_tasks(db, user.id)
     for member in team:
         member.role_name = await crud.get_user_role_in_task(db, member.id, task_id)
     candidates = await crud.get_assignee_candidates(db, task_id, user.id)
     roles = await roles_service.list_roles(db, task_id)
+    role_task_names = {}
+    for role in roles:
+        if role.task_id not in role_task_names:
+            role_task = task if role.task_id == task_id else await db.get(Task, role.task_id)
+            role_task_names[role.task_id] = role_task.name if role_task else "проект"
     # Подготовим plain-структуру для шаблона: имя/перечень кодов прав/системность.
     roles_view = [
         {
             "id": r.id,
             "name": r.name,
             "is_system": r.is_system,
+            "is_inherited": r.task_id != task_id,
+            "source_task_name": role_task_names.get(r.task_id, "проект"),
             "permissions": [p.permission for p in r.permissions],
         }
         for r in roles
@@ -393,7 +452,8 @@ async def task_management_get(
             "task": task,
             "team": team,
             "assignee_candidates": candidates,
-            "roles": roles_view,
+            "member_roles": roles_view,
+            "project_roles": [r for r in roles_view if not r["is_inherited"]],
             "all_permissions": list(ALL_PERMS),
             "perm_labels": _PERM_LABELS,
             "perms": await user_perms(db, user.id, task_id),
@@ -422,6 +482,8 @@ async def task_management_post(
             )
         except task_service.PermissionDenied as exc:
             raise HTTPException(status_code=403, detail=str(exc))
+        except task_service.InvalidRoleForTask as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
         return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
 
     new_assignee: Optional[int] = None
@@ -451,6 +513,26 @@ async def task_management_post(
     except task_service.PermissionDenied as exc:
         raise HTTPException(status_code=403, detail=str(exc))
 
+    return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
+
+
+@router.post("/task_management/{task_id}/members/{member_id}/delete", name="member_delete")
+async def member_delete_post(
+    task_id: int,
+    member_id: int,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await task_service.remove_member(db, user, task_id, user_id=member_id)
+    except task_service.TaskNotFound:
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+    except task_service.PermissionDenied as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
+    except task_service.MemberNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except task_service.LastManagerRemovalDenied as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
     return RedirectResponse(url=f"/task_management/{task_id}", status_code=303)
 
 

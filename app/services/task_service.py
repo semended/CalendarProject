@@ -9,7 +9,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
-from app.models import Task, TaskUserRole, User
+from app.models import Task, TaskRole, TaskUserRole, User
 from app.permissions import (
     P_EDIT_SETTINGS,
     P_MANAGE_MEMBERS,
@@ -42,6 +42,18 @@ class PermissionDenied(TaskServiceError):
 
 class InvalidAssignee(TaskServiceError):
     """Этот юзер не входит в число кандидатов на assignee для данной таски."""
+
+
+class InvalidRoleForTask(TaskServiceError):
+    """Роль не принадлежит задаче или её предкам."""
+
+
+class MemberNotFound(TaskServiceError):
+    """Пользователь не является прямым участником этой задачи."""
+
+
+class LastManagerRemovalDenied(TaskServiceError):
+    """Удаление оставит корневой проект без управляющего участника."""
 
 
 class TaskNotFound(TaskServiceError):
@@ -80,6 +92,21 @@ async def _validate_assignee(
     if not any(c.id == assignee_id for c in candidates):
         return None
     return assignee_id
+
+
+async def _role_belongs_to_tree(db: AsyncSession, task_id: int, role_id: int) -> bool:
+    role = await db.get(TaskRole, role_id)
+    if role is None:
+        return False
+    cur_id: Optional[int] = task_id
+    while cur_id is not None:
+        if cur_id == role.task_id:
+            return True
+        task = await db.get(Task, cur_id)
+        if task is None:
+            return False
+        cur_id = task.parent_task_id
+    return False
 
 
 async def create_task(
@@ -287,7 +314,38 @@ async def add_member(
     """
     if not await has_permission(db, actor.id, task_id, P_MANAGE_MEMBERS):
         raise PermissionDenied("Нет прав на управление участниками")
+    if not await _role_belongs_to_tree(db, task_id, role_id):
+        raise InvalidRoleForTask("Эта роль не принадлежит проекту")
     target = await crud.get_user_by_email(db, email)
     if target is None:
         return None
     return await crud.assign_user_to_task_role(db, target.id, task_id, role_id)
+
+
+async def remove_member(
+    db: AsyncSession,
+    actor: User,
+    task_id: int,
+    *,
+    user_id: int,
+) -> int:
+    task = await crud.get_task_by_id(db, task_id)
+    if task is None:
+        raise TaskNotFound()
+    if not await has_permission(db, actor.id, task_id, P_MANAGE_MEMBERS):
+        raise PermissionDenied("Нет прав на управление участниками")
+    if not await crud.has_direct_task_member(db, user_id, task_id):
+        raise MemberNotFound("Пользователь не входит в команду этой задачи")
+
+    if task.parent_task_id is None:
+        has_remaining_manager = False
+        for member in await crud.get_users_in_task(db, task_id):
+            if member.id == user_id:
+                continue
+            if await has_permission(db, member.id, task_id, P_MANAGE_MEMBERS):
+                has_remaining_manager = True
+                break
+        if not has_remaining_manager and await has_permission(db, user_id, task_id, P_MANAGE_MEMBERS):
+            raise LastManagerRemovalDenied("Нельзя оставить проект без участника с правом управления командой")
+
+    return await crud.remove_user_from_task(db, user_id, task_id)

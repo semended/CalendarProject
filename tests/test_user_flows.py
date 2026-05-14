@@ -195,6 +195,159 @@ def test_subtask_not_shown_as_root_on_main(client):
     assert "Не-должен-быть-в-ленте" not in r.text
 
 
+def test_subtask_only_member_sees_root_container_but_not_siblings(client):
+    _register_form(client, email="owner@example.com")
+    root_id = _create_root_task(client, name="Проект с частичным доступом")
+
+    r = client.post(
+        "/api/v1/tasks",
+        json={"name": "Доступная подзадача", "parent_task_id": root_id},
+    )
+    assert r.status_code == 201, r.text
+    accessible_subtask_id = r.json()["id"]
+    r = client.post(
+        "/api/v1/tasks",
+        json={"name": "Закрытая подзадача", "parent_task_id": root_id},
+    )
+    assert r.status_code == 201, r.text
+    closed_subtask_id = r.json()["id"]
+
+    roles = client.get(f"/api/v1/tasks/{root_id}/roles").json()
+    dev_role_id = next(r["id"] for r in roles if r["name"] == "Разработчик")
+
+    _register_form(client, email="guest@example.com")
+    _login_form(client, email="owner@example.com")
+    r = client.post(
+        f"/task_management/{accessible_subtask_id}",
+        data={"email": "guest@example.com", "role_id": str(dev_role_id)},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303, r.text
+
+    _login_form(client, email="guest@example.com")
+
+    r = client.get("/main")
+    assert r.status_code == 200, r.text
+    assert f'data-task-id="{root_id}"' in r.text
+    assert 'data-can-view="0"' in r.text
+    assert "Доступны отдельные подзадачи" in r.text
+
+    r = client.get(f"/task/{root_id}")
+    assert r.status_code == 200, r.text
+    # url_for в Starlette отдаёт абсолютный URL (http://testserver/task/N),
+    # поэтому проверяем подстроку пути, а не префикс href=.
+    assert f'/task/{accessible_subtask_id}"' in r.text
+    assert f'data-task-id="{closed_subtask_id}"' in r.text
+    assert f'/task/{closed_subtask_id}"' not in r.text
+    assert "task-card--locked" in r.text
+
+    r = client.get(f"/task/{accessible_subtask_id}")
+    assert r.status_code == 200, r.text
+
+    r = client.get(f"/task/{closed_subtask_id}")
+    assert r.status_code == 403
+
+    r = client.get(f"/create_task/{closed_subtask_id}")
+    assert r.status_code == 403
+
+    r = client.get(f"/task/{root_id}/overview")
+    assert r.status_code == 200, r.text
+    assert "tree-node--locked" in r.text
+    assert "bar--locked" in r.text
+
+
+def test_remove_direct_subtask_member_revokes_access(client):
+    _register_form(client, email="owner@example.com")
+    root_id = _create_root_task(client, name="Проект с удалением")
+    r = client.post(
+        "/api/v1/tasks",
+        json={"name": "Подзадача для удаления", "parent_task_id": root_id},
+    )
+    assert r.status_code == 201, r.text
+    subtask_id = r.json()["id"]
+
+    role_id = next(
+        r["id"] for r in client.get(f"/api/v1/tasks/{root_id}/roles").json()
+        if r["name"] == "Разработчик"
+    )
+
+    _register_form(client, email="guest@example.com")
+    guest_id = _get_user_id(client)
+    _login_form(client, email="owner@example.com")
+    r = client.post(
+        f"/task_management/{subtask_id}",
+        data={"email": "guest@example.com", "role_id": str(role_id)},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303, r.text
+
+    r = client.get(f"/task_management/{subtask_id}")
+    assert r.status_code == 200, r.text
+    assert f"/task_management/{subtask_id}/members/{guest_id}/delete" in r.text
+
+    r = client.post(
+        f"/task_management/{subtask_id}/members/{guest_id}/delete",
+        follow_redirects=False,
+    )
+    assert r.status_code == 303, r.text
+
+    _login_form(client, email="guest@example.com")
+    r = client.get(f"/task/{subtask_id}")
+    assert r.status_code == 403
+
+
+def test_inherited_member_cannot_be_removed_from_subtask(client):
+    _register_form(client, email="owner@example.com")
+    root_id = _create_root_task(client, name="Проект с наследованием")
+    r = client.post(
+        "/api/v1/tasks",
+        json={"name": "Подзадача с наследованием", "parent_task_id": root_id},
+    )
+    assert r.status_code == 201, r.text
+    subtask_id = r.json()["id"]
+
+    role_id = next(
+        r["id"] for r in client.get(f"/api/v1/tasks/{root_id}/roles").json()
+        if r["name"] == "Разработчик"
+    )
+
+    _register_form(client, email="guest@example.com")
+    guest_id = _get_user_id(client)
+    _login_form(client, email="owner@example.com")
+    r = client.post(
+        f"/task_management/{root_id}",
+        data={"email": "guest@example.com", "role_id": str(role_id)},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303, r.text
+
+    r = client.get(f"/task_management/{subtask_id}")
+    assert r.status_code == 200, r.text
+    assert f"/task_management/{subtask_id}/members/{guest_id}/delete" not in r.text
+
+    r = client.post(
+        f"/task_management/{subtask_id}/members/{guest_id}/delete",
+        follow_redirects=False,
+    )
+    assert r.status_code == 404
+
+    _login_form(client, email="guest@example.com")
+    r = client.get(f"/task/{subtask_id}")
+    assert r.status_code == 200, r.text
+
+
+def test_cannot_remove_last_root_manager(client):
+    _register_form(client, email="owner@example.com")
+    owner_id = _get_user_id(client)
+    root_id = _create_root_task(client, name="Проект с последним управляющим")
+
+    r = client.post(
+        f"/task_management/{root_id}/members/{owner_id}/delete",
+        follow_redirects=False,
+    )
+    assert r.status_code == 422
+
+
 def test_create_subtask_without_permission_rejected(client):
     """Чужой юзер не должен мочь добавлять подзадачи в проект, где у него нет роли."""
     _register_form(client, email="owner@example.com")

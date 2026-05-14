@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import TaskRole, TaskRolePermission, TaskUserRole, User
+from app.models import Task, TaskRole, TaskRolePermission, TaskUserRole, User
 from app.permissions import (
     ALL_PERMS,
     P_MANAGE_MEMBERS,
@@ -46,14 +46,22 @@ def _validated_perms(perms: Iterable[str]) -> List[str]:
 
 
 async def list_roles(db: AsyncSession, task_id: int) -> List[TaskRole]:
-    """Все роли проекта (системные + кастомные), c подгруженными permissions."""
-    result = await db.execute(
-        select(TaskRole)
-        .options(selectinload(TaskRole.permissions))
-        .where(TaskRole.task_id == task_id)
-        .order_by(TaskRole.is_system.desc(), TaskRole.id)
-    )
-    return list(result.scalars().all())
+    """Роли задачи и предков, c подгруженными permissions."""
+    roles: List[TaskRole] = []
+    cur_id = task_id
+    while cur_id is not None:
+        result = await db.execute(
+            select(TaskRole)
+            .options(selectinload(TaskRole.permissions))
+            .where(TaskRole.task_id == cur_id)
+            .order_by(TaskRole.is_system.desc(), TaskRole.id)
+        )
+        roles.extend(result.scalars().all())
+        task = await db.get(Task, cur_id)
+        if task is None:
+            break
+        cur_id = task.parent_task_id
+    return roles
 
 
 async def _reload_role_with_perms(db: AsyncSession, role_id: int) -> TaskRole:

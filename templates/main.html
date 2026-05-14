@@ -100,11 +100,13 @@
                 <div class="tasks-grid" id="tasksGrid">
                     {% for task in tasks %}
                     <a href="/task/{{ task.id }}" class="task-link">
-                        <article class="task-card" style="--card-accent: {{ task.color }};"
+                        <article class="task-card {% if not task.can_view %}task-card--locked{% endif %}"
+                             style="--card-accent: {{ task.color if task.can_view else '#9ca3af' }};"
                              data-task-id="{{ task.id }}"
                              data-status="{{ task.status }}"
                              data-name="{{ task.name|lower }}"
-                             data-deadline="{{ task.ended_at or '' }}">
+                             data-deadline="{{ task.ended_at or '' }}"
+                             data-can-view="{{ '1' if task.can_view else '0' }}">
                             <div class="task-card-head">
                                 <span class="status-chip status-{{ task.status }}">
                                     {% if task.status == 'completed' %}Завершён
@@ -120,11 +122,21 @@
                                 {% endif %}
                             </div>
                             <h3 class="task-card-title">{{ task.name }}</h3>
-                            <p class="task-card-desc">{{ task.description or '—' }}</p>
+                            <p class="task-card-desc">
+                                {% if task.can_view %}
+                                {{ task.description or '—' }}
+                                {% else %}
+                                Доступны отдельные подзадачи. Детали проекта скрыты.
+                                {% endif %}
+                            </p>
                             <div class="task-card-foot">
+                                {% if task.can_view %}
                                 <span class="tabular">{{ task.tasks }} {% if task.tasks == 1 %}задача{% elif task.tasks < 5 %}задачи{% else %}задач{% endif %}</span>
                                 <span class="dot-sep">·</span>
                                 <span class="tabular">{{ task.members }} {% if task.members == 1 %}участник{% elif task.members < 5 %}участника{% else %}участников{% endif %}</span>
+                                {% else %}
+                                <span class="tabular">частичный доступ</span>
+                                {% endif %}
                             </div>
                         </article>
                     </a>

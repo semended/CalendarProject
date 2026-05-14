@@ -44,7 +44,8 @@
             {% for project in tasks %}
             <li class="nav-item {% if task and task.id == project.id %}active{% endif %}">
                 <a href="/task/{{ project.id }}" class="nav-link">
-                    <span class="nav-dot" style="background: {{ project.color }}"></span>
+                    <span class="nav-dot {% if not project.can_view %}nav-dot--locked{% endif %}"
+                          style="background: {{ project.color if project.can_view else '#9ca3af' }}"></span>
                     <span>{{ project.name }}</span>
                 </a>
             </li>

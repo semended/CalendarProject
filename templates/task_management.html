@@ -43,6 +43,18 @@
                             <div class="team-card-role">{{ member.role_name }}</div>
                         </div>
                         <span class="team-card-email tabular">{{ member.email }}</span>
+                        {% if perms and perms['task.manage_members'] %}
+                        <form method="POST"
+                              action="{{ url_for('member_delete', task_id=task.id, member_id=member.id) }}"
+                              class="team-card-action">
+                            {% include '_csrf.html' %}
+                            <button type="submit"
+                                    class="btn-secondary btn-small"
+                                    onclick="return confirm('Исключить {{ member.email }} из команды этой задачи?');">
+                                Исключить
+                            </button>
+                        </form>
+                        {% endif %}
                     </li>
                     {% endfor %}
                 </ul>
@@ -64,8 +76,8 @@
                         <label for="userRole">Роль</label>
                         <select id="userRole" name="role_id" class="form-select" required>
                             <option value="">—</option>
-                            {% for r in roles %}
-                            <option value="{{ r.id }}">{{ r.name }}{% if not r.is_system %} ✦{% endif %}</option>
+                            {% for r in member_roles %}
+                            <option value="{{ r.id }}">{{ r.name }}{% if r.is_inherited %} (из проекта {{ r.source_task_name }}){% endif %}{% if not r.is_system %} ✦{% endif %}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -84,10 +96,11 @@
                 <p class="field-hint">
                     Системные роли (Тимлид / Менеджер / Разработчик) нельзя удалить
                     или переименовать, но набор прав можно менять.
-                    Кастомные роли отмечены ✦.
+                    Кастомные роли отмечены ✦. Унаследованные роли доступны только при добавлении участника.
                 </p>
 
-                {% for r in roles %}
+                {% if project_roles %}
+                {% for r in project_roles %}
                 <form class="role-row"
                       method="POST"
                       action="{{ url_for('role_update', task_id=task.id, role_id=r.id) }}"
@@ -98,6 +111,9 @@
                     <input type="text" name="role_name" value="{{ r.name }}"
                            {% if r.is_system %}readonly{% endif %} maxlength="255"
                            style="flex:0 0 180px;">
+                    {% if r.is_inherited %}
+                    <span class="field-hint">из проекта {{ r.source_task_name }}</span>
+                    {% endif %}
                     <div style="display:flex; gap:.75rem; flex-wrap:wrap; flex:1;">
                         {% for code in all_permissions %}
                         <label style="display:inline-flex; gap:.25rem; align-items:center;">
@@ -117,6 +133,9 @@
                     </div>
                 </form>
                 {% endfor %}
+                {% else %}
+                <p class="empty-state">У этой задачи нет собственных ролей.</p>
+                {% endif %}
 
                 <details style="margin-top:.75rem;">
                     <summary class="btn-secondary btn-small" style="display:inline-block;">

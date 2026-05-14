@@ -2697,6 +2697,52 @@
         "summary": "Task Management Post"
       }
     },
+    "/task_management/{task_id}/members/{member_id}/delete": {
+      "post": {
+        "operationId": "member_delete_task_management__task_id__members__member_id__delete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "title": "Member Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Member Delete"
+      }
+    },
     "/task_management/{task_id}/roles": {
       "post": {
         "operationId": "role_create_task_management__task_id__roles_post",

@@ -142,11 +142,22 @@ async def create_task_bundle(
     task = await create_task(
         db, creator_id, name, description, color, duration, parent_task_id, ended_at, assignee_id
     )
-    teamlead = await create_task_role(db, task.id, "Тимлид", is_system=True)
-    manager = await create_task_role(db, task.id, "Менеджер", is_system=True)
-    dev = await create_task_role(db, task.id, "Разработчик", is_system=True)
-    for role in (teamlead, manager, dev):
-        await ensure_role_permissions(db, role)
+    if parent_task_id is None:
+        teamlead = await create_task_role(db, task.id, "Тимлид", is_system=True)
+        manager = await create_task_role(db, task.id, "Менеджер", is_system=True)
+        dev = await create_task_role(db, task.id, "Разработчик", is_system=True)
+        for role in (teamlead, manager, dev):
+            await ensure_role_permissions(db, role)
+    else:
+        root = await get_root_task(db, parent_task_id)
+        result = await db.execute(
+            select(TaskRole).where(
+                TaskRole.task_id == root.id,
+                TaskRole.is_system.is_(True),
+                TaskRole.name == "Тимлид",
+            )
+        )
+        teamlead = result.scalar_one()
     await assign_user_to_task_role(db, creator_id, task.id, teamlead.id)
     return task
 
@@ -283,6 +294,34 @@ async def get_tasks_by_user_id(
     return list(result.scalars().all())
 
 
+async def get_root_tasks_available_to_user(
+    db: AsyncSession,
+    user_id: int,
+    limit: Optional[int] = None,
+    offset: int = 0,
+) -> List[Task]:
+    from app.permissions import P_VIEW, has_permission
+
+    tur_result = await db.execute(
+        select(TaskUserRole.task_id).where(TaskUserRole.user_id == user_id)
+    )
+    root_by_id: dict[int, Task] = {}
+    for task_id in tur_result.scalars().all():
+        task = await get_task_by_id(db, task_id)
+        if task is None or not await has_permission(db, user_id, task.id, P_VIEW):
+            continue
+        root = await get_root_task(db, task.id)
+        if root is not None and root.deleted_at is None:
+            root_by_id[root.id] = root
+
+    roots = [root_by_id[root_id] for root_id in sorted(root_by_id)]
+    if offset:
+        roots = roots[offset:]
+    if limit is not None:
+        roots = roots[:limit]
+    return roots
+
+
 async def get_subtasks(
     db: AsyncSession,
     parent_task_id: int,
@@ -374,6 +413,26 @@ async def assign_user_to_task_role(
     return assignment
 
 
+async def has_direct_task_member(db: AsyncSession, user_id: int, task_id: int) -> bool:
+    result = await db.execute(
+        select(TaskUserRole.id)
+        .where(TaskUserRole.user_id == user_id, TaskUserRole.task_id == task_id)
+        .limit(1)
+    )
+    return result.scalar_one_or_none() is not None
+
+
+async def remove_user_from_task(db: AsyncSession, user_id: int, task_id: int) -> int:
+    result = await db.execute(
+        TaskUserRole.__table__.delete().where(
+            TaskUserRole.user_id == user_id,
+            TaskUserRole.task_id == task_id,
+        )
+    )
+    await db.commit()
+    return result.rowcount or 0
+
+
 async def get_users_in_task(db: AsyncSession, task_id: int) -> List[User]:
     result = await db.execute(
         select(User)
@@ -392,5 +451,3 @@ async def get_user_role_in_task(
         .where(TaskUserRole.user_id == user_id, TaskUserRole.task_id == task_id)
     )
     return result.scalar_one_or_none()
-
-

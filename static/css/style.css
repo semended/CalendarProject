@@ -469,6 +469,23 @@ body.task-page .container { grid-template-columns: 260px minmax(0, 1fr) 320px; }
     background: var(--accent);
 }
 .task-card:hover { border-color: var(--line-strong); transform: translateY(-2px); background: var(--surface); }
+.task-card--locked {
+    background: color-mix(in srgb, var(--bg-raised) 84%, #9ca3af 16%);
+    border-color: color-mix(in srgb, var(--line) 70%, #9ca3af 30%);
+    color: var(--text-muted);
+}
+.task-card--locked .task-card-title,
+.task-card--locked .task-card-desc,
+.task-card--locked .task-card-foot {
+    color: var(--text-faint);
+}
+.task-link--disabled { cursor: default; }
+.task-link--disabled .task-card { cursor: default; }
+.task-link--disabled .task-card:hover {
+    border-color: color-mix(in srgb, var(--line) 70%, #9ca3af 30%);
+    transform: none;
+    background: color-mix(in srgb, var(--bg-raised) 84%, #9ca3af 16%);
+}
 
 /* ========================================================
    Dropdown (фильтр/сорт)
@@ -644,6 +661,10 @@ body.task-page .container { grid-template-columns: 260px minmax(0, 1fr) 320px; }
     padding: 22px 24px;
     margin-bottom: 24px;
 }
+.task-summary--locked {
+    background: color-mix(in srgb, var(--bg-raised) 86%, #9ca3af 14%);
+    border-color: color-mix(in srgb, var(--line) 70%, #9ca3af 30%);
+}
 .task-summary-head {
     display: flex;
     align-items: center;
@@ -669,12 +690,13 @@ body.task-page .container { grid-template-columns: 260px minmax(0, 1fr) 320px; }
 
 .team-list--wide .team-card {
     display: grid;
-    grid-template-columns: 34px 1fr auto;
+    grid-template-columns: 34px 1fr auto auto;
     gap: 12px;
     align-items: center;
     padding: 12px 14px;
 }
 .team-list--wide .team-card-avatar { margin: 0; }
+.team-card-action { margin: 0; }
 .team-card-email {
     font-family: var(--font-mono);
     font-size: .72rem;
@@ -688,6 +710,7 @@ body.task-page .container { grid-template-columns: 260px minmax(0, 1fr) 320px; }
 @media (max-width: 720px) {
     .team-list--wide .team-card { grid-template-columns: 34px 1fr; }
     .team-card-email { display: none; }
+    .team-card-action { grid-column: 2; }
 }
 
 .meta-list {
@@ -1068,6 +1091,10 @@ body.task-page .container { grid-template-columns: 260px minmax(0, 1fr) 320px; }
     line-height: 1.2;
     max-width: 260px;
 }
+.gantt-track-chip--locked {
+    color: var(--text-faint);
+    border-color: color-mix(in srgb, var(--line) 70%, #9ca3af 30%);
+}
 .gantt-track-swatch {
     width: 10px;
     height: 10px;
@@ -1143,6 +1170,9 @@ body.task-page .container { grid-template-columns: 260px minmax(0, 1fr) 320px; }
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+.gantt-label--locked {
+    color: var(--text-faint);
+}
 .gantt-track {
     position: relative;
     border-top: 1px solid var(--line);
@@ -1173,6 +1203,11 @@ body.task-page .container { grid-template-columns: 260px minmax(0, 1fr) 320px; }
     min-width: 14px;
 }
 .bar:hover { transform: translateY(-50%) scale(1.02); filter: brightness(1.08); }
+.bar--locked {
+    opacity: .5;
+    filter: grayscale(.9);
+}
+.bar--locked:hover { filter: grayscale(.9); }
 /* Статус задачи на Ганте: не меняем базовый цвет (цвет = цепочка),
    подсказываем паттерном/прозрачностью. */
 .bar.done {
@@ -1331,6 +1366,14 @@ body.task-page .container { grid-template-columns: 260px minmax(0, 1fr) 320px; }
     letter-spacing: .08em;
     color: var(--text-faint);
     text-transform: uppercase;
+}
+.tree-node--locked {
+    color: var(--text-faint);
+    border-color: color-mix(in srgb, var(--line) 70%, #9ca3af 30%);
+}
+.tree-node--locked:hover {
+    color: var(--text-faint);
+    border-color: color-mix(in srgb, var(--line) 70%, #9ca3af 30%);
 }
 
 /* ========================================================

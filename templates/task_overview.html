@@ -39,7 +39,7 @@
                         {% if track_legend %}
                         <ul class="gantt-tracks">
                             {% for tr in track_legend %}
-                            <li class="gantt-track-chip">
+                            <li class="gantt-track-chip {% if not tr.can_view %}gantt-track-chip--locked{% endif %}">
                                 <span class="gantt-track-swatch" style="background: {{ tr.color }};"></span>
                                 <span class="gantt-track-name">{{ tr.name }}</span>
                                 <span class="gantt-track-count tabular">{{ tr.count }}</span>
@@ -59,13 +59,13 @@
                         </div>
 
                         {% for r in rows %}
-                        <div class="gantt-label {% if r.track_start and not loop.first %}gantt-row--track-start{% endif %}"
+                        <div class="gantt-label {% if r.track_start and not loop.first %}gantt-row--track-start{% endif %} {% if not r.can_view %}gantt-label--locked{% endif %}"
                              title="{{ r.task.name }}">
                             <span class="dot" style="background: {{ r.color }};"></span>
                             <span class="name" style="padding-left: {{ r.depth * 12 }}px;">{{ r.task.name }}</span>
                         </div>
                         <div class="gantt-track {% if r.track_start and not loop.first %}gantt-row--track-start{% endif %}">
-                            <div class="bar {{ r.cls }}"
+                            <div class="bar {{ r.cls }} {% if not r.can_view %}bar--locked{% endif %}"
                                  style="--left: {{ r.left }}%; --width: {{ r.width }}%; --bar-color: {{ r.color }};"
                                  aria-label="{{ r.task.name }}"
                                  title="{{ r.task.name }} · {% if r.task.ended_at %}до {{ r.task.ended_at.strftime('%d.%m') }}{% else %}без дедлайна{% endif %}"></div>
@@ -94,8 +94,8 @@
                     {% if tree %}
                     <ul class="tree">
                         <li>
-                            <a href="/task/{{ task.id }}" class="tree-node">
-                                <span class="dot" style="background: {{ task.color }}"></span>
+                            <a href="/task/{{ task.id }}" class="tree-node {% if not task.can_view %}tree-node--locked{% endif %}">
+                                <span class="dot" style="background: {{ task.color if task.can_view else '#9ca3af' }}"></span>
                                 <span>{{ task.name }}</span>
                                 <span class="meta">корень</span>
                             </a>
@@ -103,13 +103,24 @@
                             <ul>
                                 {% for n in nodes %}
                                 <li>
-                                    <a href="/task/{{ n.task.id }}" class="tree-node">
-                                        <span class="dot" style="background: {{ n.task.color }}"></span>
+                                    {% if n.task.can_open %}
+                                    <a href="/task/{{ n.task.id }}" class="tree-node {% if not n.task.can_view %}tree-node--locked{% endif %}">
+                                    {% else %}
+                                    <span class="tree-node tree-node--locked">
+                                    {% endif %}
+                                        <span class="dot" style="background: {{ n.task.color if n.task.can_view else '#9ca3af' }}"></span>
                                         <span>{{ n.task.name }}</span>
                                         {% if n.task.ended_at %}
                                         <span class="meta tabular">до {{ n.task.ended_at.strftime('%d.%m') }}</span>
                                         {% endif %}
+                                        {% if not n.task.can_view %}
+                                        <span class="meta">нет доступа</span>
+                                        {% endif %}
+                                    {% if n.task.can_open %}
                                     </a>
+                                    {% else %}
+                                    </span>
+                                    {% endif %}
                                     {% if n.children %}
                                         {{ render_nodes(n.children) }}
                                     {% endif %}

@@ -69,5 +69,28 @@ async def has_permission(db: AsyncSession, user_id: int, task_id: int, perm: str
     return False
 
 
+async def has_descendant_permission(
+    db: AsyncSession, user_id: int, task_id: int, perm: str
+) -> bool:
+    queue = [task_id]
+    while queue:
+        cur_id = queue.pop(0)
+        result = await db.execute(
+            select(Task.id).where(Task.parent_task_id == cur_id, Task.deleted_at.is_(None))
+        )
+        child_ids = list(result.scalars().all())
+        for child_id in child_ids:
+            if await has_permission(db, user_id, child_id, perm):
+                return True
+        queue.extend(child_ids)
+    return False
+
+
+async def can_open_task_container(db: AsyncSession, user_id: int, task_id: int) -> bool:
+    return await has_permission(db, user_id, task_id, P_VIEW) or await has_descendant_permission(
+        db, user_id, task_id, P_VIEW
+    )
+
+
 async def user_perms(db: AsyncSession, user_id: int, task_id: int) -> Dict[str, bool]:
     return {p: await has_permission(db, user_id, task_id, p) for p in ALL_PERMS}

@@ -31,7 +31,7 @@
                 </div>
             </header>
 
-            <section class="task-summary">
+            <section class="task-summary {% if not task.can_view %}task-summary--locked{% endif %}">
                 <div class="task-summary-head">
                     <span class="status-chip status-{{ task.status }}">
                         {% if task.status == 'completed' %}Завершён
@@ -49,7 +49,11 @@
                     {% endif %}
                 </div>
                 <p class="task-summary-desc">
+                    {% if task.can_view %}
                     {{ task.description if task.description else 'Описание не указано.' }}
+                    {% else %}
+                    Нет доступа к деталям этой задачи. Ниже показаны доступные подзадачи и закрытые соседние элементы дерева.
+                    {% endif %}
                 </p>
             </section>
 
@@ -65,10 +69,16 @@
                     <div class="task-list">
                         {% if open_tasks|length > 0 %}
                             {% for t in open_tasks %}
+                            {% if t.can_open %}
                             <a href="{{ url_for('task_page', task_id=t.id) }}" class="task-link">
-                                <article class="task-card" style="--card-accent: {{ t.color }};"
-                                         data-task-id="{{ t.id }}"
-                                         data-status="{{ t.status }}">
+                            {% else %}
+                            <div class="task-link task-link--disabled" aria-disabled="true">
+                            {% endif %}
+                                <article class="task-card {% if not t.can_view %}task-card--locked{% endif %}"
+                                         style="--card-accent: {{ t.color if t.can_view else '#9ca3af' }};"
+                                          data-task-id="{{ t.id }}"
+                                          data-status="{{ t.status }}"
+                                          data-can-view="{{ '1' if t.can_view else '0' }}">
                                     <div class="task-card-head">
                                         <span class="status-chip status-{{ t.status }}">
                                             {% if t.status == 'paused' %}На паузе
@@ -83,10 +93,13 @@
                                         {% endif %}
                                     </div>
                                     <h3 class="task-card-title">{{ t.name }}</h3>
-                                    {% if t.description %}
+                                    {% if t.can_view and t.description %}
                                     <p class="task-card-desc">{{ t.description }}</p>
+                                    {% elif not t.can_view %}
+                                    <p class="task-card-desc">Детали скрыты.</p>
                                     {% endif %}
                                     <div class="task-card-foot">
+                                        {% if t.can_view %}
                                         <span class="tabular">{{ t.tasks }} {% if t.tasks == 1 %}задача{% elif t.tasks < 5 %}задачи{% else %}задач{% endif %}</span>
                                         <span class="dot-sep">·</span>
                                         <span class="tabular">{{ t.members }} {% if t.members == 1 %}участник{% elif t.members < 5 %}участника{% else %}участников{% endif %}</span>
@@ -94,9 +107,18 @@
                                         <span class="dot-sep">·</span>
                                         <span>@{{ t.assignee.name }}</span>
                                         {% endif %}
+                                        {% elif t.can_open %}
+                                        <span class="tabular">частичный доступ</span>
+                                        {% else %}
+                                        <span class="tabular">нет доступа</span>
+                                        {% endif %}
                                     </div>
                                 </article>
+                            {% if t.can_open %}
                             </a>
+                            {% else %}
+                            </div>
+                            {% endif %}
                             {% endfor %}
                         {% else %}
                             <p class="empty-state">Пока нет задач — добавь подзадачу выше.</p>
@@ -112,15 +134,24 @@
                     <div class="task-list">
                         {% if done_tasks|length > 0 %}
                             {% for t in done_tasks %}
+                            {% if t.can_open %}
                             <a href="{{ url_for('task_page', task_id=t.id) }}" class="task-link">
-                                <article class="task-card task-card--done" style="--card-accent: {{ t.color }};"
-                                         data-task-id="{{ t.id }}">
+                            {% else %}
+                            <div class="task-link task-link--disabled" aria-disabled="true">
+                            {% endif %}
+                                <article class="task-card task-card--done {% if not t.can_view %}task-card--locked{% endif %}"
+                                         style="--card-accent: {{ t.color if t.can_view else '#9ca3af' }};"
+                                          data-task-id="{{ t.id }}">
                                     <div class="task-card-head">
                                         <span class="status-chip status-completed">Завершён</span>
                                     </div>
                                     <h3 class="task-card-title">{{ t.name }}</h3>
                                 </article>
+                            {% if t.can_open %}
                             </a>
+                            {% else %}
+                            </div>
+                            {% endif %}
                             {% endfor %}
                         {% else %}
                             <p class="empty-state">Пока ничего не завершено.</p>
@@ -145,7 +176,9 @@
 
             <div class="aside-section">
                 <h3 class="aside-title">Команда</h3>
-                {% if team and team|length > 0 %}
+                {% if not task.can_view %}
+                <p class="empty-state">Команда скрыта: нет права просмотра этой задачи.</p>
+                {% elif team and team|length > 0 %}
                 <ul class="team-list">
                     {% for member in team %}
                     <li class="team-card">
