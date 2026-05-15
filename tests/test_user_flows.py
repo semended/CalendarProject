@@ -6,6 +6,7 @@
 """
 
 import re
+from datetime import date
 
 
 
@@ -436,3 +437,84 @@ def test_task_overview_gantt_page(client):
     assert r.status_code == 200
     assert "gantt-grid" in r.text
     assert "gantt-label" in r.text
+
+
+def test_user_gantt_self_shows_assigned_task(client):
+    _register_form(client)
+    self_id = _get_user_id(client)
+    r = client.post(
+        "/api/v1/tasks",
+        json={"name": "Моя задача в Ганте", "assignee_id": self_id},
+    )
+    assert r.status_code == 201, r.text
+
+    r = client.get(f"/user/{self_id}/gantt", follow_redirects=False)
+    assert r.status_code == 200, f"status={r.status_code} headers={dict(r.headers)} body[:200]={r.text[:200]!r}"
+    assert "Моя задача в Ганте" in r.text
+    assert "gantt-grid" in r.text or "gantt" in r.text.lower()
+
+
+def test_user_gantt_hides_tasks_without_view_permission(client):
+    # Owner создаёт проект и назначает задачу на себя.
+    _register_form(client, email="owner@example.com")
+    owner_id = _get_user_id(client)
+    r = client.post(
+        "/api/v1/tasks",
+        json={"name": "Внутренний проект owner", "assignee_id": owner_id},
+    )
+    assert r.status_code == 201, r.text
+
+    # Guest регистрируется отдельно, на проект owner-а не приглашён.
+    _register_form(client, email="guest@example.com")
+    r = client.get(f"/user/{owner_id}/gantt")
+    assert r.status_code == 200, r.text
+    # Без P_VIEW guest не должен видеть имя чужой задачи — иначе кросс-проектный лик.
+    assert "Внутренний проект owner" not in r.text
+
+
+def test_user_gantt_missing_user_returns_404(client):
+    _register_form(client)
+    r = client.get("/user/9999999/gantt")
+    assert r.status_code == 404
+
+
+def test_user_schedule_add_and_delete_slot(client):
+    _register_form(client)
+    self_id = _get_user_id(client)
+
+    today = date.today().isoformat()
+    r = client.post(
+        f"/user/{self_id}/schedule",
+        data={
+            "action": "add",
+            "slot_date": today,
+            "start_time": "10:00",
+            "end_time": "11:00",
+            "kind": "busy",
+            "note": "тестовый слот",
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 303, r.text
+
+    r = client.get(f"/user/{self_id}/schedule")
+    assert r.status_code == 200, r.text
+    assert "тестовый слот" in r.text
+
+
+def test_user_schedule_post_other_user_forbidden(client):
+    _register_form(client, email="a@example.com")
+    a_id = _get_user_id(client)
+    _register_form(client, email="b@example.com")
+    today = date.today().isoformat()
+    r = client.post(
+        f"/user/{a_id}/schedule",
+        data={
+            "action": "add",
+            "slot_date": today,
+            "start_time": "10:00",
+            "end_time": "11:00",
+            "kind": "busy",
+        },
+    )
+    assert r.status_code == 403
