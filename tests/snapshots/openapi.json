@@ -2893,6 +2893,44 @@
         "summary": "User Page"
       }
     },
+    "/user/{user_id}/gantt": {
+      "get": {
+        "description": "Гант задач, где данный юзер — assignee_id.\n\nПлоский (без дерева подзадач): одна задача = одна полоска. Берём только\nнепомеченные удалёнными и видимые viewer'у через P_VIEW (с наследованием\nпо дереву задач). Без P_VIEW-фильтра был бы кросс-проектный лик: любой\nзалогиненный юзер видел бы имена/дедлайны задач из проектов, куда его\nне приглашали.",
+        "operationId": "user_gantt_page_user__user_id__gantt_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "User Gantt Page"
+      }
+    },
     "/user/{user_id}/schedule": {
       "get": {
         "operationId": "user_schedule_page_user__user_id__schedule_get",

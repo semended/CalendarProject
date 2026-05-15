@@ -1,5 +1,6 @@
 import base64
 import os
+import re
 from datetime import date, datetime, time, timedelta
 from typing import Optional
 
@@ -12,8 +13,18 @@ from app.config import ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from app.database import get_db
 from app.deps import get_current_user, get_current_user_optional
 from app.models import User
+from app.permissions import P_VIEW, has_permission
 from app.services import user_service
 from app.templating import templates
+
+# Жёсткая валидация цвета перед подстановкой в style="" — Jinja autoescape
+# защищает HTML-контекст, но не CSS-значения. Без regex кто-то может
+# записать в Task.color что-то, что сломает разметку.
+_HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{3,8}$")
+
+
+def _safe_color(value: Optional[str], default: str = "#0ea5e9") -> str:
+    return value if value and _HEX_COLOR_RE.match(value) else default
 
 router = APIRouter()
 
@@ -112,6 +123,94 @@ async def settings_post(
 
     await user_service.update_profile(db, user_id, user_dict)
     return RedirectResponse(url="/user/settings", status_code=303)
+
+
+@router.get("/user/{user_id}/gantt", name="user_gantt_page")
+async def user_gantt_get(
+    request: Request,
+    user_id: int,
+    viewer: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Гант задач, где данный юзер — assignee_id.
+
+    Плоский (без дерева подзадач): одна задача = одна полоска. Берём только
+    непомеченные удалёнными и видимые viewer'у через P_VIEW (с наследованием
+    по дереву задач). Без P_VIEW-фильтра был бы кросс-проектный лик: любой
+    залогиненный юзер видел бы имена/дедлайны задач из проектов, куда его
+    не приглашали.
+    """
+    target = await crud.get_user_by_id(db, user_id)
+    if target is None:
+        return templates.TemplateResponse(request, "not_found.html", status_code=404)
+
+    assigned = await crud.get_tasks_by_assignee(db, target.id)
+    visible: list = []
+    for t in assigned:
+        if await has_permission(db, viewer.id, t.id, P_VIEW):
+            visible.append(t)
+    tasks_sidebar = await crud.get_tasks_by_user_id(db, viewer.id, roots_only=True)
+
+    now = datetime.now()
+    starts = [t.created_at for t in visible if t.created_at]
+    ends = [t.ended_at for t in visible if t.ended_at]
+    start = min(starts) if starts else now
+    end = max(ends) if ends else (start + timedelta(days=30))
+    if end <= start:
+        end = start + timedelta(days=30)
+    total_seconds = max((end - start).total_seconds(), 1.0)
+
+    def pct(dt: datetime) -> float:
+        return max(0.0, min(100.0, (dt - start).total_seconds() / total_seconds * 100.0))
+
+    # Сортируем по дедлайну: ближайшие сверху, без срока — в конец. Так юзер
+    # сразу видит, что горит, а не получает рандомный порядок из БД.
+    visible_sorted = sorted(
+        visible,
+        key=lambda t: (t.ended_at is None, t.ended_at or datetime.max),
+    )
+
+    rows = []
+    for t in visible_sorted:
+        t_start = t.created_at or start
+        t_end = t.ended_at or end
+        left = pct(t_start)
+        width = max(1.5, pct(t_end) - left)
+        if t.state == "done":
+            cls = "done"
+        elif t.ended_at and t.ended_at < now:
+            cls = "overdue"
+        else:
+            cls = "open"
+        rows.append({
+            "task": t,
+            "left": round(left, 2),
+            "width": round(width, 2),
+            "cls": cls,
+            "color": _safe_color(t.color),
+        })
+
+    today_pct = round(pct(now), 2) if start <= now <= end else None
+    axis_ticks = [
+        (start + timedelta(seconds=total_seconds * i / 6)).strftime("%d.%m")
+        for i in range(6)
+    ]
+
+    return templates.TemplateResponse(
+        request,
+        "user_gantt.html",
+        {
+            "active_page": "user_gantt",
+            "user": viewer,
+            "target": target,
+            "is_self": viewer.id == target.id,
+            "tasks": tasks_sidebar,
+            "rows": rows,
+            "axis_ticks": axis_ticks,
+            "today_pct": today_pct,
+            "range_label": f"{start.strftime('%d.%m.%Y')} — {end.strftime('%d.%m.%Y')}",
+        },
+    )
 
 
 @router.get("/user/{user_id}/schedule", name="user_schedule_page")

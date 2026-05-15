@@ -30,6 +30,12 @@
                     <span>Календарь</span>
                 </a>
             </li>
+            <li class="nav-item {% if active_page == 'user_gantt' %}active{% endif %}">
+                <a href="/user/{{ user.id }}/gantt" class="nav-link">
+                    {{ icons.doc() }}
+                    <span>Моя диаграмма</span>
+                </a>
+            </li>
             <li class="nav-item {% if active_page == 'schedule' %}active{% endif %}">
                 <a href="/user/{{ user.id }}/schedule" class="nav-link">
                     {{ icons.clock() }}

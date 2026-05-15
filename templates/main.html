@@ -30,12 +30,20 @@
             <div class="notice notice--warn">
                 <span class="notice-icon">{{ icons.mail() }}</span>
                 <div class="notice-body">
-                    Почта <strong>{{ user.email }}</strong> не подтверждена. Проверь ящик или запроси письмо заново.
+                    {% if email_dev_mode %}
+                        Почта <strong>{{ user.email }}</strong> не подтверждена. SMTP не настроен — для локальной отладки подтверди по прямой ссылке:
+                    {% else %}
+                        Почта <strong>{{ user.email }}</strong> не подтверждена. Проверь ящик или запроси письмо заново.
+                    {% endif %}
                 </div>
+                {% if email_dev_mode %}
+                <a href="{{ make_verify_link(user.email) }}" class="btn-primary btn-small">Подтвердить</a>
+                {% else %}
                 <form method="POST" action="{{ url_for('resend_verification') }}">
                     {% include '_csrf.html' %}
                     <button type="submit" class="btn-secondary btn-small">Отправить ещё раз</button>
                 </form>
+                {% endif %}
             </div>
             {% endif %}
 

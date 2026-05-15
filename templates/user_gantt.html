@@ -1,0 +1,91 @@
+{% import "_icons.html" as icons %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гант — {{ target.name }} {{ target.surname }}</title>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        {% include 'sidebar.html' %}
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <h1>
+                        {% if is_self %}Моя диаграмма Ганта{% else %}Гант · {{ target.name }} {{ target.surname }}{% endif %}
+                    </h1>
+                    <div class="breadcrumb">
+                        <a href="/main">Проекты</a>
+                         / <a href="/user/{{ target.id }}">{{ target.name }} {{ target.surname }}</a>
+                         / Гант
+                    </div>
+                </div>
+                <div class="header-right">
+                    {% include '_user_menu.html' %}
+                </div>
+            </header>
+
+            <section class="overview-panel active">
+                <div class="gantt-wrap">
+                    <div class="gantt-legend">
+                        <div class="gantt-legend-range tabular">{{ range_label }}</div>
+                    </div>
+
+                    {% if rows %}
+                    <div class="gantt-grid" style="--cols: {{ axis_ticks|length }};">
+                        <div class="gantt-corner"></div>
+                        <div class="gantt-axis">
+                            {% for tick in axis_ticks %}
+                            <div class="tick tabular">{{ tick }}</div>
+                            {% endfor %}
+                        </div>
+
+                        {% for r in rows %}
+                        <div class="gantt-label" title="{{ r.task.name }}">
+                            <span class="dot" style="background: {{ r.color }};"></span>
+                            <a href="/task/{{ r.task.id }}" class="name">{{ r.task.name }}</a>
+                        </div>
+                        <div class="gantt-track">
+                            <div class="bar {{ r.cls }}"
+                                 style="--left: {{ r.left }}%; --width: {{ r.width }}%; --bar-color: {{ r.color }};"
+                                 aria-label="{{ r.task.name }}"
+                                 title="{{ r.task.name }} · {% if r.task.ended_at %}до {{ r.task.ended_at.strftime('%d.%m') }}{% else %}без дедлайна{% endif %}"></div>
+                            {% if loop.first and today_pct is not none %}
+                            <div class="gantt-today" style="left: {{ today_pct }}%;" aria-hidden="true"></div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <p class="gantt-note">
+                        <span class="legend-dot done" aria-hidden="true"></span> завершено
+                        <span class="dot-sep">·</span>
+                        <span class="legend-dot overdue" aria-hidden="true"></span> просрочено
+                        <span class="dot-sep">·</span>
+                        <span class="legend-dot open" aria-hidden="true"></span> в работе
+                    </p>
+                    {% else %}
+                    <p class="empty-state">
+                        {% if is_self %}На тебя пока ничего не назначено.{% else %}На этого пользователя задачи не назначены.{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('userMenuButton');
+            const dd  = document.getElementById('userDropdown');
+            if (btn && dd) {
+                btn.addEventListener('click', e => { e.stopPropagation(); dd.classList.toggle('show'); });
+                document.addEventListener('click', () => dd.classList.remove('show'));
+                dd.addEventListener('click', e => e.stopPropagation());
+            }
+        });
+    </script>
+</body>
+</html>
