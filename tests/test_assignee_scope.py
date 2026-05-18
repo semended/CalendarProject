@@ -160,7 +160,7 @@ def test_partial_access_user_can_open_root_project(client):
     assert r.status_code == 200, r.text
 
     # Регистрируем нового юзера N и добавляем его только на sid_visible
-    n_id = _register(client, "newuser@example.com")
+    _register(client, "newuser@example.com")
     _login(client, "owner2@example.com")
     _add_member(client, sid_visible, "newuser@example.com", "Разработчик")
 
