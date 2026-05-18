@@ -57,6 +57,10 @@ async def api_register(
             password=payload.password,
             patronymic=payload.patronymic,
         )
+    except auth_service.InvalidEmail:
+        # На практике сюда не дойдём: RegisterRequest.email — EmailStr,
+        # отлуп прилетит 422 ещё до сервиса. Оставлено как явный контракт.
+        raise HTTPException(status_code=422, detail="Некорректный адрес почты")
     except auth_service.UserAlreadyExists:
         raise HTTPException(status_code=409, detail="Пользователь с такой почтой уже существует")
     login_session(request, user)

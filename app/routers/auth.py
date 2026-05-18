@@ -103,6 +103,12 @@ async def register_page_post(
             password=password,
             patronymic=patronymic,
         )
+    except auth_service.InvalidEmail:
+        return templates.TemplateResponse(
+            request,
+            "register.html",
+            {"error": "Введи корректный адрес почты (например, you@example.com)."},
+        )
     except auth_service.UserAlreadyExists:
         return templates.TemplateResponse(
             request,

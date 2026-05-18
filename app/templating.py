@@ -16,6 +16,16 @@ def _static_mtime(rel_path: str) -> str:
         return "0"
 
 
+def _relative(url) -> str:
+    """Starlette `request.url_for` отдаёт абсолютный URL (scheme+host), а Flask —
+    root-relative путь. Шаблоны и тесты писались под Flask-семантику
+    (`href="/task/2"`, а не `http://host/task/2`), поэтому срезаем до path+query."""
+    rel = url.path
+    if url.query:
+        rel = f"{rel}?{url.query}"
+    return rel
+
+
 def _url_for_ctx(request: Request):
     def _url_for(name: str, **kwargs):
         # Flask templates call url_for('static', filename=...); Starlette uses path=
@@ -24,8 +34,8 @@ def _url_for_ctx(request: Request):
             url = request.url_for(name, path=filename)
             # cache-bust: ?v={mtime} — чтобы браузер не держал старую статику,
             # когда мы правим CSS/JS
-            return f"{url}?v={_static_mtime(filename)}"
-        return request.url_for(name, **kwargs)
+            return f"{_relative(url)}?v={_static_mtime(filename)}"
+        return _relative(request.url_for(name, **kwargs))
 
     return {"url_for": _url_for}
 

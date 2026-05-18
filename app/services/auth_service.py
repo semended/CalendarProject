@@ -7,12 +7,18 @@
 from datetime import datetime
 from typing import Optional
 
+from pydantic import EmailStr, TypeAdapter, ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
 from app.email import send_verification_email
 from app.models import User
 from app.security import hash_password, is_hashed, verify_password
+
+# Jinja-форма регистрации шлёт голый Form(str) мимо RegisterRequest, поэтому
+# формат email здесь проверяем сами — той же email-validator, что и EmailStr
+# в /api/v1, чтобы правила не разъезжались между двумя UI-слоями.
+_email_adapter = TypeAdapter(EmailStr)
 
 
 class AuthError(Exception):
@@ -25,6 +31,10 @@ class InvalidCredentials(AuthError):
 
 class UserAlreadyExists(AuthError):
     """Email уже занят."""
+
+
+class InvalidEmail(AuthError):
+    """Email синтаксически некорректен (например, `123@123`)."""
 
 
 async def authenticate(db: AsyncSession, email: str, password: str) -> User:
@@ -52,8 +62,15 @@ async def register(
 ) -> User:
     """Создать пользователя и отправить письмо подтверждения.
 
-    Поднимает UserAlreadyExists, если email уже зарегистрирован.
+    Поднимает InvalidEmail при некорректном формате почты,
+    UserAlreadyExists — если email уже зарегистрирован.
     """
+    try:
+        # Возвращает нормализованную форму (lowercase домена и т.п.) —
+        # её и сохраняем, чтобы lookup'ы по email были консистентны.
+        email = _email_adapter.validate_python(email)
+    except ValidationError:
+        raise InvalidEmail()
     if await crud.get_user_by_email(db, email) is not None:
         raise UserAlreadyExists()
     user = await crud.add_user(
