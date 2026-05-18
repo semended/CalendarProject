@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models import Task, TaskRole, TaskRolePermission, TaskUserRole, User
 
@@ -211,15 +212,17 @@ async def soft_delete_task_subtree(db: AsyncSession, task_id: int) -> int:
 async def get_assignee_candidates(
     db: AsyncSession, task_id: Optional[int], creator_id: int
 ) -> List[User]:
-    """Кандидаты на assignee: участники корневого проекта + сам creator."""
+    """Кандидаты на assignee = прямые члены этой конкретной задачи.
+
+    Без наследования из родителя: член корня без явной роли на подзадаче
+    не может быть назначен на подзадачу. Это требование команды:
+    «никаких исключений, кандидат должен входить в команду самой сущности».
+    При создании корневого проекта (task_id is None) — только creator.
+    """
     if task_id is None:
         u = await db.get(User, creator_id)
         return [u] if u else []
-    root = await get_root_task(db, task_id)
-    if root is None:
-        u = await db.get(User, creator_id)
-        return [u] if u else []
-    return await get_users_in_task(db, root.id)
+    return await get_users_in_task(db, task_id)
 
 
 async def update_task_assignee(
@@ -330,6 +333,7 @@ async def get_subtasks(
 ) -> List[Task]:
     stmt = (
         select(Task)
+        .options(selectinload(Task.assignee))
         .where(Task.parent_task_id == parent_task_id, Task.deleted_at.is_(None))
         .order_by(Task.id)
     )
